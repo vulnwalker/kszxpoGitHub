@@ -1,0 +1,4 @@
+//Ananda Gondrong 26-02-2018
+Database : setting, general_setting, t_pengaturan
+File Directory : /var/www/atisisbada_demo_v2/pages/admin/settingDev.php
+File Directory : /var/www/atisisbada_demo_v2/js/admin/settingDev.js

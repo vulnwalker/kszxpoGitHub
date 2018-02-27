@@ -1,0 +1,867 @@
+var jurnal_keuanganSKPD = new SkpdCls({
+	prefix : 'jurnal_keuanganSKPD', formName:'jurnal_keuanganForm', kolomWidth:120,
+	
+});
+
+var jurnal_keuangan_ins = new DaftarObj2({
+	prefix : 'jurnal_keuangan_ins',
+	url : 'pages.php?Pg=jurnal_keuangan_ins', 
+	formName : 'jurnal_keuangan_insForm',
+	withPilih:true,
+	/*elaktiv:'', //id elemen filter yang aktiv
+	rowHead:2,*/
+	
+	leavePage : function(){
+		this.Batal();
+	},
+	
+	loading: function(){
+		
+		this.topBarRender();
+		this.filterRender();
+		
+	},	
+	
+	DaftarJurnal: function(){
+		var me = this;
+		var edit= document.getElementById('idubah').value;
+		
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.formName).serialize(),
+			url: this.url+'&tipe=DetailJurnal',
+			success: function(data) {	
+				var resp = eval('(' + data + ')');			
+				if(resp.err==''){
+					if (edit!=''){
+					//	document.getElementById('tbl_jurnal_detail').innerHTML = resp.content;
+					setTimeout(function myFunction() {me.bukarekening()},1000);
+					}else{
+						document.getElementById('tbl_jurnal_detail').innerHTML = resp.content;
+					setTimeout(function myFunction() {me.bukarekening()},1000);
+					}	
+					/*document.getElementById('tbl_jurnal_detail').innerHTML = resp.content;
+					setTimeout(function myFunction() {me.bukarekening()},1000);*/
+				//	me.bukarekening()
+				}else{
+					alert(resp.err);
+				}
+			}
+		});	
+		
+	},
+	
+	
+	EditJurnal: function(){
+		var me = this;
+	//	var edit= document.getElementById('idubah').value;
+		
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.formName).serialize(),
+			url: this.url+'&tipe=EditJurnal',
+			success: function(data) {	
+				var resp = eval('(' + data + ')');			
+				if(resp.err==''){
+					/*if (edit!=''){
+					//	document.getElementById('tbl_jurnal_detail').innerHTML = resp.content;
+					setTimeout(function myFunction() {me.bukarekening()},1000);
+					}else{*/
+					document.getElementById('Edit_jurnal').innerHTML = resp.content;
+					setTimeout(function myFunction() {me.nyalakandatepicker2()},1000);
+					setTimeout(function myFunction() {me.cek_saldo()},1000);
+					setTimeout(function myFunction() {me.bukarekening()},1000);
+				//	}	
+					/*document.getElementById('tbl_jurnal_detail').innerHTML = resp.content;
+					setTimeout(function myFunction() {me.bukarekening()},1000);*/
+				//	me.bukarekening()
+				}else{
+					alert(resp.err);
+				}
+			}
+		});	
+		
+	},
+	
+	TampilDataRincian: function(){
+		var me = this;
+		var edit= document.getElementById('idubah').value;
+		
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.formName).serialize(),
+			url: this.url+'&tipe=DetailJurnal',
+			success: function(data) {	
+				var resp = eval('(' + data + ')');			
+				if(resp.err==''){
+					if (edit!=''){
+					//	document.getElementById('tbl_jurnal_detail').innerHTML = resp.content;
+					setTimeout(function myFunction() {me.bukarekening()},1000);
+					}else{
+						document.getElementById('tbl_jurnal_detail').innerHTML = resp.content;
+					setTimeout(function myFunction() {me.bukarekening()},1000);
+					}	
+					/*document.getElementById('tbl_jurnal_detail').innerHTML = resp.content;
+					setTimeout(function myFunction() {me.bukarekening()},1000);*/
+				//	me.bukarekening()
+				}else{
+					alert(resp.err);
+				}
+			}
+		});	
+		
+	},
+	
+	cek_saldo: function(){
+	//alert('tes');
+		var me = this;
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.formName).serialize(),
+			url: this.url+'&tipe=cek_saldo_jurnal',
+			success: function(data) {	
+				var resp = eval('(' + data + ')');			
+				if(resp.err==''){
+					document.getElementById('cek_data_saldo').innerHTML = resp.content;
+					
+				}else{
+					alert(resp.err);
+				}
+			}
+		});	
+		
+	},
+	
+	bukarekening: function(){
+		var me = this;
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.formName).serialize(),
+			url: this.url+'&tipe=bukaRekening',
+			success: function(data) {	
+				var resp = eval('(' + data + ')');			
+				if(resp.err==''){
+					document.getElementById('tbl_jurnal').innerHTML = resp.content.tabel;
+					if(document.getElementById('Id_jurnal')){
+						document.getElementById('Id_jurnal').focus();
+						document.getElementById('atasbutton').innerHTML = resp.content.atasbutton;
+					
+					}
+				}else{
+					alert(resp.err);
+				}
+			}
+		});	
+		
+	},
+	
+	/*nyalakandatepicker: function(){
+		
+		$( ".datepicker" ).datepicker({ 
+			dateFormat: "dd-mm-yy", 
+			showAnim: "slideDown",
+			inline: true,
+			showOn: "button",
+			buttonImage: "datepicker/calender1.png",
+			buttonImageOnly: true,
+			changeMonth: true,
+			changeYear: true,
+			yearRange: "-100:+0",
+			buttonText : "",
+		});	
+	},*/
+	
+	nyalakandatepicker2: function(){
+		
+		$( ".datepicker2" ).datepicker({ 
+			dateFormat: "dd-mm", 
+			showAnim: "slideDown",
+			inline: true,
+			showOn: "button",
+			buttonImage: "datepicker/calender1.png",
+			buttonImageOnly: true,
+			changeMonth: true,
+			changeYear: true,
+			yearRange: "-100:+0",
+			buttonText : "",
+		});	
+	},
+	
+	nyalakandatepicker3: function(){
+		
+		$( ".datepicker3" ).datepicker({ 
+			dateFormat: "dd", 
+			showAnim: "slideDown",
+			inline: true,
+			showOn: "button",
+			buttonImage: "datepicker/calender1.png",
+			buttonImageOnly: true,
+			changeMonth: true,
+			changeYear: true,
+			yearRange: "-100:+0",
+			buttonText : "",
+		});	
+	},
+	
+	
+	
+	filterRenderAfter : function(){
+		var me = this;
+		var baru= document.getElementById('databaru').value;
+		var edit= document.getElementById('idubah').value;
+		if (baru!=''){
+			setTimeout(function myFunction() {me.nyalakandatepicker2()},1000);
+		//	setTimeout(function myFunction() {me.nyalakandatepicker3()},1000);
+		}
+		if (edit!=''){
+			setTimeout(function myFunction() {me.EditJurnal()},1000);
+			setTimeout(function myFunction() {me.nyalakandatepicker2()},1000);
+		}
+	},
+	
+	
+	Editinput2: function(idna){
+	//alert('tes');
+		$.ajax({
+				type:'POST', 
+				data:$('#'+this.formName).serialize(),
+				url: this.url+'&tipe=Editinput&idrekeningnya='+idna,
+				success: function(data) {	
+					var resp = eval('(' + data + ')');			
+					if(resp.err==''){
+						document.getElementById('kodejurnalEdit_'+resp.content.idrek).innerHTML = resp.content.koderek;
+						document.getElementById('jumlanya_'+resp.content.idrek).innerHTML = resp.content.jumlahnya;
+						document.getElementById('option_'+resp.content.idrek).innerHTML = resp.content.option;
+						document.getElementById('DebetKredit_'+resp.content.idrek).innerHTML = resp.content.DebetKredit;
+						document.getElementById('atasbutton').innerHTML = resp.content.atasbutton;
+						//document.getElementById('namaakun_'+resp.content.idrek).innerHTML = resp.content.namarekening;
+					}else{
+						alert(resp.err);
+					}
+				}
+			});	
+	},
+	
+	Editinput: function(idna){
+		var me=this;
+	//	me.bukarekening();
+		setTimeout(function myFunction() {me.cariJurnal},100);
+		setTimeout(function myFunction() {jurnal_keuangan_ins.Editinput2(idna)},100);
+		
+	},
+	
+	cariJurnal: function(){
+		var me = this;	
+		cari_jurnal.windowShow();	
+	},
+	
+	HapusJurnal_1: function(isi){
+		var konfrim = confirm("Hapus Data Jurnal ?");
+		var me=this;
+		var edit= document.getElementById('idubah').value;
+		if(konfrim == true){
+			$.ajax({
+				type:'POST', 
+				data:$('#'+this.formName).serialize(),
+				url: this.url+'&tipe=HapusJurnal&idrekei='+isi,
+				success: function(data) {	
+					var resp = eval('(' + data + ')');			
+					if(resp.err==''){
+					if (edit==''){
+						me.TampilDataRincian();
+						me.bukarekening();
+					}else{
+						setTimeout(function myFunction() {me.EditJurnal()},1000);
+					}
+					
+					
+					}else{
+						alert(resp.err);
+					}
+				}
+			});	
+		}
+		
+	},
+	
+	inputjurnal: function(){
+		
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.formName).serialize(),
+			url: this.url+'&tipe=InputJurnal',
+			success: function(data) {	
+				var resp = eval('(' + data + ')');			
+				if(resp.err==''){
+				//	document.getElementById('tbl_jurnal').innerHTML = resp.content.tabel;
+				}else{
+					alert(resp.err);
+				}
+			}
+		});	
+		
+	},
+		
+	inputrekening: function(){
+		
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.formName).serialize(),
+			url: this.url+'&tipe=inputRekening',
+			success: function(data) {	
+				var resp = eval('(' + data + ')');			
+				if(resp.err==''){
+					document.getElementById('tbl_jurnal').innerHTML = resp.content.tabel;
+					if(document.getElementById('Id_jurnal')){
+						document.getElementById('Id_jurnal').focus();
+						document.getElementById('atasbutton').innerHTML = resp.content.atasbutton;
+						}
+				}else{
+					alert(resp.err);
+				}
+			}
+		});	
+		
+	},
+	
+	inputjurnal_det: function(){
+				
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.formName).serialize(),
+			url: this.url+'&tipe=inputJurnalKeuanganDET',
+			success: function(data) {	
+				var resp = eval('(' + data + ')');			
+				if(resp.err==''){
+					document.getElementById('databarangnya').innerHTML = resp.content;
+				}else{
+					alert(resp.err);
+				}
+			}
+		});	
+		
+	},
+	
+	cariJurnal1: function(){
+		var me = this;	
+		cari_jurnal.windowShow();	
+	},
+	
+	
+	formatCurrency:function(num) {
+		num = num.toString().replace(/\$|\,/g,'');
+		if(isNaN(num))
+		num = "0";
+		sign = (num == (num = Math.abs(num)));
+		num = Math.floor(num*100+0.50000000001);
+		cents = num%100;
+		num = Math.floor(num/100).toString();
+		if(cents<10)
+		cents = "0" + cents;
+		for (var i = 0; i < Math.floor((num.length-(1+i))/3); i++)
+		num = num.substring(0,num.length-(4*i+3))+'.'+
+		num.substring(num.length-(4*i+3));
+		return (((sign)?'':'-') + '' + num + ',' + cents);
+	},
+	
+	updKodeJurnal: function(){
+		var me=this;
+		var edit= document.getElementById('idubah').value;
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.formName).serialize(),
+			url: this.url+'&tipe=updKodeJurnal',
+			success: function(data) {	
+				var resp = eval('(' + data + ')');			
+				if(resp.err==''){
+				if (edit==''){
+					setTimeout(function myFunction() {me.TampilDataRincian()},1000);
+				}else{
+					setTimeout(function myFunction() {me.EditJurnal()},1000);
+				}
+				
+			//	setTimeout(function myFunction() {me.TampilDataRincian()},1000);	
+				}else{
+					alert(resp.err);
+				}
+			}
+		});	
+	},
+	
+	
+	BaruJnsJurnal: function(){	
+		var me = this;
+		var err='';
+	
+		if (err =='' ){		
+			var cover = this.prefix+'_formcoverKA';
+			document.body.style.overflow='hidden';
+			addCoverPage2(cover,1,true,false);	
+			$.ajax({
+				type:'POST', 
+				data:$('#jurnal_keuangan_insForm').serialize(),
+			  	url: this.url+'&tipe=BaruJnsJurnal',
+			  	success: function(data) {		
+					var resp = eval('(' + data + ')');			
+					document.getElementById(cover).innerHTML = resp.content;			
+					//me.AfterFormBaru();
+			  	}
+			});
+		}else{
+		 	alert(err);
+		}	
+		
+	},	
+	
+	EditJnsJurnal: function(){	
+		var me = this;
+		var err='';
+		var jnsJurnal =document.getElementById('fmJnsJurnal').value;
+		if(err=='' && (jnsJurnal=='') ) err='Jenis Jurnal Belum Di Pilih !!';
+		if (err =='' ){		
+			var cover = this.prefix+'_formcoverKA';
+			document.body.style.overflow='hidden';
+			addCoverPage2(cover,1,true,false);	
+			$.ajax({
+				type:'POST', 
+				data:$('#jurnal_keuangan_insForm').serialize(),
+			  	url: this.url+'&tipe=EditJnsJurnal',
+			  	success: function(data) {		
+					var resp = eval('(' + data + ')');			
+					document.getElementById(cover).innerHTML = resp.content;			
+					//me.AfterFormBaru();
+			  	}
+			});
+		}else{
+		 	alert(err);
+		}	
+		
+	},	
+	
+	SimpanJnsJurnal: function(){
+		var me= this;
+		var err='';
+		
+		this.OnErrorClose = false	
+		document.body.style.overflow='hidden';
+		var cover = this.prefix+'_formsimpanKA';
+		addCoverPage2(cover,1,true,false);	
+		
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.prefix+'_KAform').serialize(),
+			url: this.url+'&tipe=simpanJnsJurnal',
+		  	success: function(data) {		
+				var resp = eval('(' + data + ')');	
+				delElem(cover);		
+				
+				if(resp.err==''){
+					me.refreshJnsJurnal(resp.content);
+					me.Close1();
+				}else{
+					alert(resp.err);
+				}
+		  	}
+		});
+	},
+	
+	refreshJnsJurnal : function(id_JnsJurnalBaru){
+	var me = this; //alert('tes');	//alert(this.prefix);
+		$.ajax({
+		  url: 'pages.php?Pg=jurnal_keuangan_ins&tipe=refreshJnsJurnal&id_JnsJurnalBaru='+id_JnsJurnalBaru,
+		  type : 'POST',
+		  data:$('#jurnal_keuangan_ins_form').serialize(),
+		  success: function(data) {		
+			var resp = eval('(' + data + ')');			
+			document.getElementById('cont_JnsJurnal').innerHTML = resp.content.JnsJurnal;
+			
+		  }
+		});
+	},
+	
+	Close1:function(){//alert(this.elCover);
+		var cover = this.prefix+'_formcoverKA';
+		if(document.getElementById(cover)) delElem(cover);			
+		if(tipe==null){
+			document.body.style.overflow='auto';						
+		}
+	},
+		
+	detail: function(){
+		//alert('detail');
+		var me = this;
+		errmsg = this.CekCheckbox();
+		if(errmsg ==''){ 
+			var box = this.GetCbxChecked();					
+		}else{
+			alert(errmsg);
+		}	
+	},
+	
+	daftarRender:function(){
+		var me =this; //render daftar 
+		addCoverPage2(
+			'daftar_cover',	1, 	true, true,	{renderTo: this.prefix+'_cont_daftar',
+			imgsrc: 'images/wait.gif',
+			style: {position:'absolute', top:'5', left:'5'}
+			}
+		);
+		$.ajax({
+		  	url: this.url+'&tipe=daftar',
+		 	type:'POST', 
+			data:$('#'+this.formName).serialize(), 
+		  	success: function(data) {		
+				var resp = eval('(' + data + ')');
+				document.getElementById(me.prefix+'_cont_daftar').innerHTML = resp.content;
+				me.sumHalRender();
+		  	}
+		});
+	},
+	
+	Baru: function(){	
+	var me = this;
+		c1 = document.getElementById('ref_jurnal_keuanganSKPDfmURUSAN').value;
+		c = document.getElementById('ref_jurnal_keuanganSKPDfmSKPD').value;
+		d = document.getElementById('ref_jurnal_keuanganSKPDfmUNIT').value;
+		e = document.getElementById('ref_jurnal_keuanganSKPDfmSUBUNIT').value;
+		e1 = document.getElementById('ref_jurnal_keuanganSKPDfmSEKSI').value;
+		err='';
+		if(err == '' && c1=='00')err = 'Urusan Belum Dipilih';
+		if(err == '' && c=='00')err = 'Bidang Belum Dipilih';
+		if(err == '' && d=='00')err = 'SKPD Belum Dipilih';
+		if(err == '' && e=='00')err = 'Unit Belum Dipilih';
+		if(err == '' && e1=='000')err = 'Sub Unit Belum Dipilih';
+		
+		if (err =='' ){		
+			var aForm = document.getElementById(this.formName);		
+			aForm.action= this.url+'_ins';	
+			aForm.target='_blank';
+			aForm.submit();	
+			aForm.target='';	
+		
+		}else{
+		 	alert(err);
+		}
+	},
+	
+	jadiinput: function(idna){
+		var me=this;
+		me.tabelRekening();
+		setTimeout(function myFunction() {jurnal_keuangan_ins.JADIKANINPUT(idna)},100);
+	},
+	
+	Edit:function(){
+		var me = this;
+		
+		errmsg = this.CekCheckbox();
+		if(errmsg ==''){ 
+			var box = this.GetCbxChecked();
+			
+			//this.Show ('formedit',{idplh:box.value}, false, true);			
+			var cover = this.prefix+'_formcover';
+			document.body.style.overflow='hidden';
+			addCoverPage2(cover,1,true,false);	
+			
+			$.ajax({
+				type:'POST', 
+				data:$('#'+this.formName).serialize(),
+				url: this.url+'&tipe=formEdit',
+			  	success: function(data) {		
+					var resp = eval('(' + data + ')');	
+					if (resp.err ==''){		
+						document.getElementById(cover).innerHTML = resp.content;
+						me.AfterFormEdit(resp);
+						document.getElementById('ref_jenis').disabled = true;
+					}else{
+						alert(resp.err);
+						delElem(cover);
+						document.body.style.overflow='auto';
+					}
+			  	}
+			});
+		}else{
+			alert(errmsg);
+		}
+		
+	},
+	
+	BatalJurnal: function(){
+		var me= this;	
+		this.OnErrorClose = false	
+		document.body.style.overflow='hidden';
+		var cover = this.prefix+'_formsimpan';
+		addCoverPage2(cover,1,true,false);
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.formName).serialize(),
+			
+			url: this.url+'&tipe=batalJurnal',
+		  	success: function(data) {		
+				var resp = eval('(' + data + ')');	
+				delElem(cover);		
+				if(resp.err==''){
+					window.close();
+					window.opener.location.reload();
+				}else{
+					alert(resp.err);
+				}
+		  	}
+		});
+	},
+	
+	BatalJurnalDet: function(){
+		var me= this;	
+		this.OnErrorClose = false	
+		document.body.style.overflow='hidden';
+		var cover = this.prefix+'_formsimpan';
+		addCoverPage2(cover,1,true,false);
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.formName).serialize(),
+			
+			url: this.url+'&tipe=batalJurnalDet',
+		  	success: function(data) {		
+				var resp = eval('(' + data + ')');	
+				delElem(cover);		
+				if(resp.err==''){
+					window.close();
+					window.opener.location.reload();
+				}else{
+					alert(resp.err);
+				}
+		  	}
+		});
+	},
+	
+	BatalSimpan: function(){
+		var me= this;	
+		this.OnErrorClose = false	
+		document.body.style.overflow='hidden';
+		var cover = this.prefix+'_formsimpan';
+		addCoverPage2(cover,1,true,false);
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.formName).serialize(),
+			
+			url: this.url+'&tipe=batalJurnalDetSimpan',
+		  	success: function(data) {		
+				var resp = eval('(' + data + ')');	
+				delElem(cover);		
+				if(resp.err==''){
+					window.close();
+					window.opener.location.reload();
+				}else{
+					alert(resp.err);
+				}
+		  	}
+		});
+	},
+	
+	
+	Hapus:function(){
+		
+		var me =this;
+		if(document.getElementById(this.prefix+'_jmlcek')){
+			var jmlcek = document.getElementById(this.prefix+'_jmlcek').value ;	
+		}else{
+			var jmlcek = '';
+		}
+		
+		if(jmlcek ==0){
+			alert('Data Belum Dipilih!');
+		}else{
+			if(confirm('Hapus '+jmlcek+' Data ?')){
+				//document.body.style.overflow='hidden'; 
+				var cover = this.prefix+'_hapuscover';
+				addCoverPage2(cover,1,true,false);
+				$.ajax({
+					type:'POST', 
+					data:$('#'+this.formName).serialize(),
+					url: this.url+'&tipe=hapus',
+				  	success: function(data) {		
+						var resp = eval('(' + data + ')');		
+						delElem(cover);		
+						if(resp.err==''){							
+							me.Close();
+							me.refreshList(true)
+						}else{
+							alert(resp.err);
+						}							
+						
+				  	}
+				});
+				
+			}	
+		}
+	},
+	
+	pilihJns : function(){
+	var me = this; 
+		
+		$.ajax({
+		  url: 'pages.php?Pg=jurnal_keuangan_ins&tipe=pilihJns',
+		  type : 'POST',
+		  data:$('#jurnal_keuangan_ins_form').serialize(),
+		  success: function(data) {		
+			var resp = eval('(' + data + ')');			
+			document.getElementById('fmJnsJurnal').value = resp.content;
+		  }
+		});
+	},
+	
+	SimpanJurnal: function(){
+		var me= this;
+		
+		//document.getElementById('ref_jenis').disabled = false;
+		this.OnErrorClose = false	
+		document.body.style.overflow='hidden';
+		var cover = this.prefix+'_formsimpan';
+		addCoverPage2(cover,1,true,false);	
+		/*this.sendReq(
+			this.url,
+			{ idprs: 0, daftarProses: new Array('simpan')},
+			this.formDialog);*/
+		$.ajax({
+			type:'POST', 
+		//	data:$('#'+this.prefix+'_form').serialize(),
+			data:$('#jurnal_keuangan_insForm').serialize(),
+			url: this.url+'&tipe=simpanJurnal',
+		  	success: function(data) {		
+				var resp = eval('(' + data + ')');	
+				delElem(cover);		
+				//document.getElementById(cover).innerHTML = resp.content;
+				if(resp.err==''){
+					document.body.style.overflow='auto';
+					me.TampilDataRincian();
+					me.bukarekening();
+				//	setTimeout(function myFunction() {me.hitung()},1000);
+					
+					/*me.Close();
+					me.AfterSimpan();*/
+				}else{
+					alert(resp.err);
+				}
+		  	}
+		});
+	},
+	
+	SimpanAll: function(){
+	//	idna = document.getElementById('pemasukan_ins_idplh').value;
+		var cover = this.prefix+'_formsimpan';
+		addCoverPage2(cover,1,true,false);
+		
+		$.ajax({
+				type:'POST', 
+				data:$('#'+this.formName).serialize(),
+				url: this.url+'&tipe=SimpanAll',
+				success: function(data) {	
+					var resp = eval('(' + data + ')');	
+					delElem(cover);			
+					if(resp.err==''){
+						alert("Data Berhasil Disimpan !");
+						window.close();
+						window.opener.location.reload();						
+					}else{
+						alert(resp.err);
+					}
+				}
+			});	
+	},
+	
+	SimpanAllEdit: function(){
+	//	idna = document.getElementById('pemasukan_ins_idplh').value;
+		var cover = this.prefix+'_formsimpan';
+		addCoverPage2(cover,1,true,false);
+		
+		$.ajax({
+				type:'POST', 
+				data:$('#'+this.formName).serialize(),
+				url: this.url+'&tipe=SimpanAllEdit',
+				success: function(data) {	
+					var resp = eval('(' + data + ')');	
+					delElem(cover);			
+					if(resp.err==''){
+						alert("Data Berhasil Disimpan !");
+						window.close();
+						window.opener.location.reload();						
+					}else{
+						alert(resp.err);
+					}
+				}
+			});	
+	},
+	
+	SimpanEditJurnal: function(){
+	//	idna = document.getElementById('pemasukan_ins_idplh').value;
+		var cover = this.prefix+'_formsimpan';
+		addCoverPage2(cover,1,true,false);
+		
+		$.ajax({
+				type:'POST', 
+				data:$('#'+this.formName).serialize(),
+				url: this.url+'&tipe=SimpanEditJurnal',
+				success: function(data) {	
+					var resp = eval('(' + data + ')');	
+					delElem(cover);			
+					if(resp.err==''){
+						alert("Data Berhasil Disimpan !");
+						/*window.close();
+						window.opener.location.reload();*/						
+					}else{
+						alert(resp.err);
+					}
+				}
+			});	
+	},
+	
+	Batal: function(){
+		
+		$.ajax({
+				type:'POST', 
+				data:$('#'+this.formName).serialize(),
+				url: this.url+'&tipe=Batal',
+				success: function(data) {	
+					var resp = eval('(' + data + ')');			
+					if(resp.err==''){
+							/*window.close();
+							window.opener.location.reload();		*/							
+					}else{
+						alert(resp.err);
+					}
+				}
+			});	
+	},
+	
+	
+	formatRupiah:function(objek, separator) {
+	  a = objek.value;
+	  b = a.replace(/[^\d]/g,"");
+	  c = "";
+	  panjang = b.length;
+	  j = 0;
+	  for (i = panjang; i > 0; i--) {
+	    j = j + 1;
+	    if (((j % 3) == 1) && (j != 1)) {
+	      c = b.substr(i-1,1) + separator + c;
+	    } else {
+	      c = b.substr(i-1,1) + c;
+	    }
+	  }
+	  objek.value = c;
+   },
+   
+   
+	GetCbxChecked : function(){
+		var jmldata= document.getElementById( this.prefix+'_jmldatapage' ).value;
+		for(var i=0; i < jmldata; i++){
+			if( document.getElementById( this.prefix+'_cb' + i)){
+				var box = document.getElementById( this.prefix+'_cb' + i);
+				if( box.checked){ 
+					break;
+				}	
+			}
+		}
+		return box;			
+	},
+	
+});

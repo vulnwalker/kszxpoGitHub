@@ -1,0 +1,144 @@
+var InventarisSkpd = new SkpdCls({
+	prefix : 'InventarisSkpd', formName:'InventarisForm',
+	
+	pilihBidangAfter : function(){Inventaris.refreshList(true);},
+	pilihUnitAfter : function(){Inventaris.refreshList(true);},
+	pilihSubUnitAfter : function(){Inventaris.refreshList(true);},
+	pilihSeksiAfter : function(){Inventaris.refreshList(true);}
+});
+
+
+var Inventaris = new DaftarObj2({
+	prefix : 'Inventaris',
+	url : 'pages.php?Pg=Inventaris', 
+	formName : 'InventarisForm',
+	
+	loading:function(){
+		//alert('loading');
+		this.topBarRender();
+		this.filterRender();
+		this.daftarRender();
+		this.sumHalRender();
+	},
+		
+	ProsesInventaris : function(mode,idbi){
+		var me= this;
+		var idbiaktif=document.getElementById("idbiplh");
+		if(idbiaktif == null){
+			var idbiplh = 0;	
+		}else{
+			var idbiplh = idbiaktif.value;			
+		}	
+		//alert(idbiplh);
+		//me.daftarRender();
+		$.ajax({
+			type:'POST', 
+			data:$('#InventarisForm').serialize()+"&mode="+mode+"&idbi="+idbi+"&idbiplh="+idbiplh,
+			url: this.url+'&tipe=prosesInventaris',
+		  	success: function(data) {		
+				var resp = eval('(' + data + ')');	
+				
+				//$("#cmbBidang").html(resp.content.cmbBidang);
+				//alert("test - "+mode+" - "+idbi);
+					document.getElementById("kondisi_"+idbi).innerHTML=resp.content.kondisi;
+					document.getElementById("ada_"+idbi).innerHTML=resp.content.ada;
+					document.getElementById("status_"+idbi).innerHTML=resp.content.status;
+					document.getElementById("tombol_"+idbi).innerHTML=resp.content.tombol;				
+					if(idbiplh != 0){				
+						//alert(idbiaktif.value);
+						document.getElementById("kondisi_"+idbiplh).innerHTML=resp.content.kondisiawl;
+						document.getElementById("ada_"+idbiplh).innerHTML=resp.content.adaawl;
+						document.getElementById("status_"+idbiplh).innerHTML=resp.content.statusawl;
+						document.getElementById("tombol_"+idbiplh).innerHTML=resp.content.tombolawl;			
+					}
+		  	}
+		});
+	},
+	
+	Updinventaris: function(mode,idbi){
+		var me = this;
+		var idbiaktif=document.getElementById("idbiplh");		
+		
+		//this.formName = 'adminForm';
+		$.ajax({
+		  url: this.url+'&tipe=updInventaris',
+		  type : 'POST',
+		  data:$('#'+this.formName).serialize()+"&mode="+mode+"&idbi="+idbi,
+		  success: function(data) {
+			var resp = eval('(' + data + ')');	//console.info(me);	//console.info('id='+me.prefix+'CbxBagi
+				//document.getElementById('fmSKPDSubUnit2').innerHTML=resp.content;
+				if(resp.err==''){							
+					document.getElementById("kondisi_"+idbi).innerHTML=resp.content.kondisi;
+					document.getElementById("ada_"+idbi).innerHTML=resp.content.ada;
+					document.getElementById("status_"+idbi).innerHTML=resp.content.status;
+					document.getElementById("tombol_"+idbi).innerHTML=resp.content.tombol;		
+				}else{
+					alert(resp.err);
+				}	
+		  }
+		});
+	},
+	
+	formPengaturan: function(){
+		var me = this;
+		var cover = this.prefix+'_formcover';
+		document.body.style.overflow='hidden';
+		addCoverPage2(cover,1,true,false);	
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.formName).serialize(),
+		  	url: this.url+'&tipe=formPengaturan',
+		  	success: function(data) {		
+				var resp = eval('(' + data + ')');
+				
+					 
+				if (resp.err ==''){						
+					document.getElementById(cover).innerHTML = resp.content;
+					me.TmplInfo();
+				}else{
+					delElem(cover);
+					document.body.style.overflow='auto';
+					alert(resp.err);
+					
+				}			
+				
+		  	}
+		});
+	},			
+		
+	Batal : function(){
+		var me =this;
+		if(document.getElementById(this.prefix+'_jmlcek')){
+			var jmlcek = document.getElementById(this.prefix+'_jmlcek').value ;	
+		}else{
+			var jmlcek = '';
+		}
+		
+		if(jmlcek ==0){
+			alert('Data Belum Dipilih!');
+		}else{
+			if(confirm('Batalkan '+jmlcek+' Data ?')){
+				//document.body.style.overflow='hidden'; 
+				var cover = this.prefix+'_hapuscover';
+				addCoverPage2(cover,1,true,false);
+				$.ajax({
+					type:'POST', 
+					data:$('#'+this.formName).serialize(),
+					url: this.url+'&tipe=batal',
+				  	success: function(data) {		
+						var resp = eval('(' + data + ')');		
+						delElem(cover);		
+						if(resp.err==''){							
+							alert('Data berhasil dibatalkan');
+							//me.AfterHapus();	
+						}else{
+							alert(resp.err);
+						}							
+						
+				  	}
+				});
+				
+			}	
+		}
+	},
+});

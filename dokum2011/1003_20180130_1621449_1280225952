@@ -1,0 +1,466 @@
+
+
+
+
+<html><head>
+	<title>:: MANTAP (Mobile Asset Management Application)</title>	
+	<style>
+	table.rangkacetak {
+	background-color: #FFFFFF;
+	margin: 0cm;
+	padding: 0px;
+	border: 0px;
+	width: 30cm;
+	border-collapse: collapse;
+	font-family : Arial,  sans-serif;
+}
+table.cetak {
+	background-color: #FFFFFF;
+	font-family : Arial,  sans-serif;
+	margin: 0px;
+	border: 0px;
+	width: 30cm;
+	border-collapse: collapse;
+	color: #000000;
+	font-size : 9pt;
+}
+table.cetak th.th01 {
+
+	color: #000000;
+	text-align: center;
+	background-color: #DBDBDB;
+}
+table.cetak th.th02 {
+
+	color: #000000;
+	text-align: center;
+	background-color: #DBDBDB;
+}
+/*table.cetak tr.row0 {
+	background-color: #DBDBDB;
+	text-align: left;
+}
+table.cetak tr.row1 {
+	background-color: #FFF;
+	text-align: left;
+}*/
+table.cetak input {
+	font-family: Arial Narrow;
+	font-size: 9pt;
+}
+/* untuk repeat header */
+thead { 
+	display: table-header-group; 
+}
+/* untuk repeat footer */
+tfoot { 
+	display: table-footer-group; 
+}
+.judulcetak {
+	width: 30cm;
+	font-size: 16px;
+
+	font-weight: bold;
+}
+.subjudulcetak {
+	font-size: 12px;
+
+	font-weight: bold;
+}
+.GCTK {
+
+	background-color: white;
+	vertical-align: middle;
+}
+.nfmt1 {
+	mso-number-format:'\#\,\#\#0_\)\;\[Red\]\(\#\,\#\#0\)';
+	
+}
+.nfmt2 {
+	mso-number-format:'0\.00_';
+	
+}
+.nfmt3 {
+	mso-number-format:'0000';
+	
+}
+.nfmt4 {
+	mso-number-format:'\#\,\#\#0.00_\)\;\[Red\]\(\#\,\#\#0\)';
+}	
+table{
+	mso-displayed-decimal-separator:'\.';
+	mso-displayed-thousand-separator:'\,';
+}
+
+   br {mso-data-placement:same-cell;}
+	
+			
+			.nfmt5 {mso-number-format:'\@';}			
+			</style>	
+</head>
+<body><table width='100%' border="0">
+		<tr>
+			<td class="judulcetak" colspan='14'><DIV ALIGN=CENTER>Buku Inventaris Barang</td>
+		</tr>
+	</table>
+
+	<table width="100%" border="0">
+		<tr>
+			<td class="subjudulcetak"><table cellpadding=0 cellspacing=0 border=0 width='100%'>
+			<tr valign=top> <td colspan='2'  style='font-weight:bold;font-size:10pt'>PROVINSI</td><td style='width:10;font-weight:bold;font-size:10pt' >:</td><td style='font-weight:bold;font-size:10pt' >JAWA BARAT </td> </tr> 
+			<tr valign=top> <td colspan='2'  style='font-weight:bold;font-size:10pt' >KABUPATEN/KOTA</td><td style='width:10;font-weight:bold;font-size:10pt' >:</td><td style='font-weight:bold;font-size:10pt' > Kota Bandung</td> </tr> 
+			
+			<tr valign=top> <td colspan='2'  style='font-weight:bold;font-size:10pt' >BIDANG</td><td style='width:10;font-weight:bold;font-size:10pt' >:</td><td  style='font-weight:bold;font-size:10pt' > Bidang Kecamatan</td> </tr> 
+			<tr valign=top> <td colspan='2'  style='font-weight:bold;font-size:10pt' >SKPD</td><td style='width:10;font-weight:bold;font-size:10pt' >:</td><td  style='font-weight:bold;font-size:10pt' > Kecamatan Bojongloa Kaler</td> </tr> 
+			<tr valign=top> <td colspan='2'  style='font-weight:bold;font-size:10pt' >UNIT</td><td style='width:10;font-weight:bold;font-size:10pt' >:</td><td  style='font-weight:bold;font-size:10pt' > </td> </tr> 
+			<tr valign=top> <td colspan='2'  style='font-weight:bold;font-size:10pt' >SUB UNIT</td><td style='width:10;font-weight:bold;font-size:10pt' >:</td><td  style='font-weight:bold;font-size:10pt' > </td> </tr> 
+			</table></td>
+		</tr>
+		
+		
+	</table>
+	
+	<table width="100%" border="0">
+		<tr>	
+			<td></td>		
+			<td class="subjudulcetak" align=right colspan='14'>NO. KODE LOKASI : 12.10.17.50.12.00.000</td>
+		</tr>
+	</table>
+<br>
+
+	<table class="cetak" style='width:100%' border=1>
+		<thead><tr>
+								<th class="th02" colspan='3'>Nomor</th>
+								<th class="th02" colspan='3'>Spesifikasi Barang</th>
+								<th class="th01" rowspan='2'>Bahan</th>
+								<th class="th01" rowspan='2'>Cara Perolehan /<br>Sumber Dana /<br>Status Barang /<br>Penggunaan</th>
+								<th class="th01" rowspan='2'>Tahun Perolehan</th>
+								<th class="th01" rowspan='2'>Ukuran Barang / Konstruksi (P,SP,D)</th>
+								<th class="th01" rowspan='2'>Keadaan Barang (B,KB,RB)</th>
+								<th class="th02" colspan='2'>Jumlah</th>	
+								<th class='th01' rowspan='2'>BAST/<br>Kegiatan</th>
+								<th class='th01' rowspan='2'>Kontrak</th>
+								<th class="th01" rowspan='2' style='min-width:100;'>Keterangan/<br>Tgl. Buku/<br>Tahun Sensus</th>
+								
+									
+															
+								
+								
+								
+								
+								</tr>
+								<tr>
+								<th class="th01">No.</th>				
+								
+								<th class="th01">Kode Barang/<br>ID Barang/<br>ID Awal</th>
+								<th class="th01">Reg.</th>
+								<th class="th01"  width="100">Nama / Jenis Barang</th>
+								<th class="th01"  width="100">Merk / Tipe / Alamat</th>
+								<th class="th01">No. Sertifikat / No. Pabrik / No. Chasis / No. Mesin / No. Polisi</th>
+								<th class="th01" width='70'>Barang</th>
+								<th class="th01"> Harga </th>
+								
+								</tr>
+								<th class='GarisCetak' style='padding:0'></th><th class='GarisCetak' style='padding:0'></th><th class='GarisCetak' style='padding:0'></th><th class='GarisCetak' style='padding:0'></th><th class='GarisCetak' style='padding:0'></th><th class='GarisCetak' style='padding:0'></th><th class='GarisCetak' style='padding:0'></th><th class='GarisCetak' style='padding:0'></th><th class='GarisCetak' style='padding:0'></th><th class='GarisCetak' style='padding:0'></th><th class='GarisCetak' style='padding:0'></th><th class='GarisCetak' style='padding:0'></th><th class='GarisCetak' style='padding:0'></th><th class='GarisCetak' style='padding:0'></th></tr></thead>
+									<tr class="row0" valign='top'  >
+									<td class="GarisCetak" align=center> 1.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600233/<br>1600233</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0001</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>Kain Busa</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip. 19671225 200604 1 008 / Endang Sukarya <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	
+									<tr class="row1" valign='top'  >
+									<td class="GarisCetak" align=center> 2.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600234/<br>1600234</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0002</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>Kain Berbusa</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip. 19671225 200604 1 008 / Endang Sukarya <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	
+									<tr class="row0" valign='top'  >
+									<td class="GarisCetak" align=center> 3.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600235/<br>1600235</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0003</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>Kain Berbusa</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip. 19671225 200604 1 008 / Endang Sukarya <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	
+									<tr class="row1" valign='top'  >
+									<td class="GarisCetak" align=center> 4.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600236/<br>1600236</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0004</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>Kain Berbusa</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip. 19671225 200604 1 008 / Endang Sukarya <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	
+									<tr class="row0" valign='top'  >
+									<td class="GarisCetak" align=center> 5.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600237/<br>1600237</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0005</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>Kain Berbusa</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip. 19671225 200604 1 008 / Endang Sukarya <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	
+									<tr class="row1" valign='top'  >
+									<td class="GarisCetak" align=center> 6.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600238/<br>1600238</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0006</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>Kain Berbusa</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip. 19671225 200604 1 008 / Endang Sukarya <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	
+									<tr class="row0" valign='top'  >
+									<td class="GarisCetak" align=center> 7.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600239/<br>1600239</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0007</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>Kain Berbusa</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip. 19671225 200604 1 008 / Endang Sukarya <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	
+									<tr class="row1" valign='top'  >
+									<td class="GarisCetak" align=center> 8.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600240/<br>1600240</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0008</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>Kain Berbusa</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip. 19671225 200604 1 008 / Endang Sukarya <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	
+									<tr class="row0" valign='top'  >
+									<td class="GarisCetak" align=center> 9.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600241/<br>1600241</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0009</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>Kain Berbusa</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip. 19671225 200604 1 008 / Endang Sukarya <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	
+									<tr class="row1" valign='top'  >
+									<td class="GarisCetak" align=center> 10.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600242/<br>1600242</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0010</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>Kain Berbusa</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip. 19671225 200604 1 008 / Endang Sukarya <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	
+									<tr class="row0" valign='top'  >
+									<td class="GarisCetak" align=center> 11.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600243/<br>1600243</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0011</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>Kain Berbusa</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip. 19671225 200604 1 008 / Endang Sukarya <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	
+									<tr class="row1" valign='top'  >
+									<td class="GarisCetak" align=center> 12.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600244/<br>1600244</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0012</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>Kain Berbusa</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip. 19671225 200604 1 008 / Endang Sukarya <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	
+									<tr class="row0" valign='top'  >
+									<td class="GarisCetak" align=center> 13.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600245/<br>1600245</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0013</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>Kain Berbusa</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip. 19671225 200604 1 008 / Endang Sukarya <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	
+									<tr class="row1" valign='top'  >
+									<td class="GarisCetak" align=center> 14.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600246/<br>1600246</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0014</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>-</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip.  /  <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	
+									<tr class="row0" valign='top'  >
+									<td class="GarisCetak" align=center> 15.  </td>
+									
+									<td class="GarisCetak" align=left>02.06.02.01.027/<br>1600247/<br>1600247</td>
+									<td class="GarisCetak" align=center><div class='nfmt3'> 0015</div></td>
+									<td class="GarisCetak">Kursi Rapat</td>						
+									<td class="GarisCetak"><div class='nfmt5'>Tipe Sakata N, Uk. 435x512x895 mm, jok dan sandaran pakai kain berbusa, rangka chrome plating</div></td>
+									<td class="GarisCetak"><div class='nfmt5'> /<br>  /<br>  /<br> </div></td>
+									<td class="GarisCetak"><div class='nfmt5'>Kain Berbusa</div></td>
+									<td class="GarisCetak">Pembelian/<br>APBD/<br>Inventaris/<br>/<br></td>
+									<td class="GarisCetak" align=center>2017</td>
+									<td class="GarisCetak">-</td>
+									<td class="GarisCetak" align=center>Baik</td>
+									<td class="GarisCetak" align=right>1 Buah</td>
+									<td class="GarisCetak" align=right>632500.00</td>
+									<td class="GarisCetak">03/KW.JP/VI/17/<br>14-06-2017/<br></td>
+									<td class="GarisCetak">027/22.02/27.28/SP.PPBJ/Kopo/17/<br>22-05-2017</td>
+									<td class="GarisCetak">Dipergunakan untuk keperluan PIPPK PKK Kelurahan Kopo /<br>25-07-2017 /<br> <br>Gambar : 2 <br>Nip. 19671225 200604 1 008 / Endang Sukarya <br>SKPD: 02. Kelurahan Kopo - 001. Kelurahan Kopo</td></tr>	<tr class="">
+					<td class="GarisCetak" colspan=12 >Jumlah Harga </td>
+					<td class="GarisCetak" align=right><b>9.487.500,00</td>
+					<td class="GarisCetak" colspan=2 align=right>&nbsp;</td>
+					
+					</tr>
+					</table>
+<br>	
+ <table style='width:32cm' border=0>
+				<tr> 
+				<td width=100 colspan='1'>&nbsp;</td> 
+				<td align=center width=300 colspan='4'>
+					<B><span STYLE='background:none;border:none;text-align:center;font-weight:bold' size=50 >MENGETAHUI</span><BR> 
+					<span STYLE='background:none;border:none;text-align:center;font-weight:bold' size=50 >KEPALA OPD</span>
+					<BR><BR><BR><BR><BR><BR>
+					<span STYLE='background:none;border:none;text-align:center;font-weight:bold' size=50 >(.................................................)</span>
+					<br>
+					<span STYLE='background:none;border:none;text-align:center;font-weight:bold' size=50 >NIP.                                           </span> 
+				</td> 
+					
+				<td width=400 colspan='4'>&nbsp;</td> 
+				<td align=center width=300 colspan='4'>
+					<B><span STYLE='background:none;border:none;text-align:center;font-weight:bold' size=50 >Demo, 25 Juli 2017</span><BR> 
+					<B><span STYLE='background:none;border:none;text-align:center;font-weight:bold' size=50 >PENGURUS BARANG</span>
+					<BR><BR><BR><BR><BR><BR>
+					<span STYLE='background:none;border:none;text-align:center;font-weight:bold' size=50 >(.................................................)</span>
+					<br> 					
+					<span STYLE='background:none;border:none;text-align:center;font-weight:bold' size=50 >NIP.                                           </span>
+				</td> 
+				<td width='*' colspan='1'>&nbsp;</td> 
+				</tr> 
+			</table> </body>
+</html>

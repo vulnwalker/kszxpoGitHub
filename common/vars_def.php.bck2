@@ -1,0 +1,309 @@
+<?php
+
+
+$Main->Judul = "::ATISISBADA (Aplikasi Teknologi Informasi Siklus Barang Daerah)";
+$Main->CopyRight = "<br>
+<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" class=\"hakcipta\">
+<tr><td>
+	Hak Cipta &copy 2013.
+	Dinas Pengelola Keuangan dan Aset Daerah, Pemerintah Kabupaten Demo.
+	Semua Hak Dilindungi.
+</td></tr>
+</table>
+";
+$Main->CopyRight_isi = "Hak Cipta &copy 2013.
+	Dinas Pengelola Keuangan dan Aset Daerah, Pemerintah Kabupaten Demo. 	
+	Semua Hak Cipta Dilindungi.";
+$Main->HeadStyleico="<link rel=\"shortcut icon\" href=\"images/logo_web.ico\" />";
+$Main->ManualBook="Buku_Petunjuk_ATISISBADA.pdf";
+$Main->Image13='index_13.gif';
+$Main->Image14='index_14.gif';
+$Main->Logocetak='logo_barang.jpg';
+
+
+//---------- DEFAULT -----------------
+$USER_TIME_OUT = 30;//menit
+$Main->DB_Hostname = 'localhost';
+$Main->DB_Databasename = 'db_atsbd_srg';
+$Main->DB_User = 'operatordb';
+$Main->DB_Pass = 'Lupa321Zx';
+$Main->DB_Port = '50300';
+
+$Main->PagePerHal 		= 25;
+$Main->JmlDataHal 		= 0;
+$Main->DEF_KEPEMILIKAN 	= '12';//milik kota
+$Main->NM_KEPEMILIKAN = 'Pemerintah Kabupaten/Kota'; //'Propinsi'
+//Provinsi
+$Main->Provinsi =array("28","YYY");
+$Main->DEF_PROPINSI		= '28';
+$Main->DEF_WILAYAH 		= '01';
+$Main->NM_WILAYAH 		= 'Kabupaten Demo';
+$Main->NM_WILAYAH2		= 'PEMERINTAH KABUPATEN DEMO';
+$Main->NOREG_SIZE = 6;
+$Main->NOREG_SAMPLE = '000002';
+$Main->NOREG_MAX = 999999;
+$Main->BARCODE_ENABLE = TRUE;
+$Main->PENATAUSAHA_TOOLBARBAWAH = TRUE;
+
+$Main->MODUL_PEMELIHARAAN = TRUE;
+$Main->MODUL_PENGAMANAN = TRUE;
+$Main->MODUL_MUTASI = TRUE;
+$Main->MODUL_SENSUS = TRUE;
+$Main->MODUL_SENSUS_MANUAL = FALSE;
+
+
+$Main->MODUL_PERENCANAAN = TRUE;
+$Main->MODUL_PENGADAAN = TRUE;
+$Main->MODUL_PENERIMAAN = TRUE;
+$Main->MODUL_PENGGUNAAN = TRUE;
+$Main->MODUL_PENATAUSAHAAN = TRUE;
+$Main->MODUL_PEMANFAATAN = TRUE;
+$Main->MODUL_PENGAMANPELIHARA = TRUE;
+$Main->MODUL_PENILAIAN = FALSE;
+$Main->MODUL_PENGAPUSAN = TRUE;
+$Main->MODUL_PENGAPUSAN_SK = TRUE;
+$Main->MODUL_PENGAPUSAN_SEBAGIAN =TRUE;
+$Main->MODUL_PEMINDAHTANGAN = TRUE;
+$Main->MODUL_PEMBIAYAAN = FALSE;
+$Main->MODUL_GANTIRUGI = TRUE;
+$Main->MODUL_MONITORING = FALSE;
+$Main->MODUL_CHART = TRUE;
+$Main->MODUL_PEMBUKUAN = TRUE;
+$Main->MODUL_AKUNTANSI= TRUE;
+$Main->MODUL_RECLASS= TRUE;
+$Main->WITH_THN_ANGGARAN= TRUE;
+
+
+$Main->KEPALA_OPD	= 'KEPALA SKPD';
+$Main->CETAK_LOKASI = 'Demo';
+$Main->MODUL_ASET_LAINNYA = TRUE; //kib g
+
+$Main->SUBUNIT_DIGIT = 3; // ditampilkan 3
+$Main->LABEL_KODE_WIDTH = 248; //labael kode di kanan atas penatausahaan - edit
+$Main->LABEL_KODE_SUBUNIT_WIDTH = 32 ;// width utk kode e1 /seksi
+
+$Main->SUBSUBKEL_DIGIT = 3; // ditampilkan 3
+$Main->LABEL_KODE_SUBSUBKEL_WIDTH = 32 ;// width utk kode e1 /seksi
+
+$Main->PATH_IMAGES='gambar2011';
+$Main->PATH_DOKUMENS='dokum2011';
+
+
+
+$Main->TAHUN_CUTOFF = 1900; //<= : tahun tglbuku =  2012
+$Main->NILAI_EXTRACOMPATIBLE=0;
+$Main->TGL_CUTOFF = '31 Desember '.$Main->TAHUN_CUTOFF;
+$Main->VerifikasiEnable=FALSE;
+
+$Main->MODUL_PETA = TRUE;
+$Main->SUB_UNIT = TRUE;
+
+$Main->SHOW_CEK = TRUE;
+$Main->KOND_ADA_TIDAK = TRUE;
+
+
+$Main->BACKUP_DIR = '../../backup_sistem/atisisbada_bogor_kab/mysql/mysql/';
+
+//$Main->WEB_LOCATION = 'http://atisisbada.net/';
+
+if ($Main->KOND_ADA_TIDAK){
+	$Main->KondisiBarang = array(
+		array("1","Baik"),
+		array("2","Kurang Baik"),
+		array("3","Rusak Berat"),
+		array("4","Tidak Ada")
+	);	
+}else{
+	$Main->KondisiBarang = array(
+		array("1","Baik"),
+		array("2","Kurang Baik"),
+		array("3","Rusak Berat")		
+	);	
+}
+
+	$Main->KondisiBarangLainnya = array(
+		array("80","Ada Bukan Rusak Berat"),
+		array("81","Ada")
+	);
+
+$Main->KondisiEkstra=array(
+		array("02","02","00","00","00",1000000),
+		array("02","03","00","00","00",1000000),
+		array("02","04","00","00","00",500000),
+		array("02","05","00","00","00",500000),
+		array("02","06","00","00","00",500000),
+		array("02","07","00","00","00",500000),
+		array("02","08","00","00","00",1000000),
+		array("02","09","00","00","00",500000),
+		array("05","19","00","00","00",300000)
+		
+);
+
+
+$Main->CekIntraEkstra=FALSE;
+$Main->thnsensus_default = 2014;
+$Main->periode_sensus = 5;// tahun
+$Main->defTglBukuBelumSensus = '2014-12-31';
+$Main->GambarPath="/var/www/docs_atsb1/gambar2011";
+$Main->DokumenPath="/var/www/docs_atsb1/dokum2011";
+$Main->DownloadPath="/var/www/docs_atsb1/downloads2011";
+$Main->ProfilePath="/var/www/docs_atsb1/profile2011";
+$Main->TempPath="/var/www/tmps2011";
+
+
+$Main->JnsTrans2 = array(
+	array('1','Perolehan Pembelian'),
+	array('2','Perolehan Hibah'),
+	array('3','Pemeliharaan'),
+	array('4','Pengamanan'),
+	array('5','Hapus Sebagian'),
+	array('6','Penghapusan'),
+	array('7','Mutasi'),
+	array('8','Reclass'),
+	array('9','Perolehan Lainnya'),	//?
+	array('10','Pemindahtanganan'),
+	array('11','Tuntutan Ganti Rugi'),
+	array('12','Kemitraan dengan Pihak Tiga'),
+	array('13','Aset Tidak Berwujud'),
+	array('14','Aset Lain-lain'),//ke/dari aset lain2
+	array('15','Perolehan Extra'),// 
+	array('16','Kapitalisasi'), //intra extra
+	
+	array('17','Koreksi Aset Lain-lain'),
+	array('18','Koreksi Kapitalisasi'),
+	array('19','Koreksi Harga'),	
+	array('20','Koreksi Asal Usul'), //?
+	
+	array('21','Penilaian'), //?
+	
+	
+);
+
+$Main->MODUL_JURNAL = TRUE;
+$Main->MODUL_HISTORY = TRUE;
+
+
+
+
+/* default */
+$Main->MODUL_SUBUNIT = TRUE;
+$Main->SUBUNIT_DIGIT = 3;		
+$Main->KODEBARANGJ = '000';
+$Main->KODEBARANGJ_DIGIT = 3; //digit 
+$Main->NOREG_SIZE = 4;
+$Main->NOREG_SAMPLE = '0002';
+$Main->NOREG_MAX = 9999;
+$Main->TAHUN_MULAI_SUSUT = 0;
+$Main->MODUL_AKUNTANSI = TRUE;
+$Main->MODUL_ASET_LAINNYA = TRUE;		
+$Main->MODUL_SENSUS = TRUE;
+$Main->REKAP_NERACA_2 = TRUE;
+$Main->MENU_PERBANDINGAN = TRUE;
+$Main->MODUL_HISTORY = TRUE;
+$Main->PENYUSUTAN = TRUE;
+$Main->MODUL_ASETLAINLAIN = TRUE;
+$Main->STASET_OTOMATIS = FALSE;
+$Main->MODUL_KAPITALISASI = TRUE;
+$Main->STATUS_SURVEY = 1; //ket : 1 untuk di tampilkan, 0 untuk tidak ditampilkan
+$Main->TAMPIL_SUSUT = 1; //ket : 1 untuk di tampilkan, 0 untuk tidak ditampilkan
+
+$Main->VERSI_NAME = 'DEMO'; //GARUT, SERANG, JABAR, BOGOR, BDG_BARAT
+switch ($Main->VERSI_NAME){
+	case 'BOGOR':{
+		$Main->MODUL_SUBUNIT = TRUE;
+		$Main->SUBUNIT_DIGIT = 3;		
+		$Main->KODEBARANGJ = '000';
+		$Main->KODEBARANGJ_DIGIT = 3; //digit 
+		$Main->NOREG_SIZE = 4;
+		$Main->NOREG_SAMPLE = '0002';
+		$Main->NOREG_MAX = 9999;
+		$Main->PENYUSUTAN = TRUE;
+		$Main->TAHUN_MULAI_SUSUT = 0;
+		$Main->MODUL_AKUNTANSI = TRUE;
+		$Main->MODUL_ASET_LAINNYA = TRUE;		
+		$Main->MODUL_SENSUS = FALSE;
+		$Main->MENU_PERBANDINGAN = FALSE;
+		$Main->MODUL_HISTORY = FALSE;
+		break;
+	}
+	case 'SERANG' :{
+		$Main->MODUL_SUBUNIT = TRUE; //seksi
+		$Main->SUBUNIT_DIGIT = 3;		
+		$Main->KODEBARANGJ = '000';
+		$Main->KODEBARANGJ_DIGIT = 3; //digit 
+		$Main->NOREG_SIZE = 4;
+		$Main->NOREG_SAMPLE = '0002';
+		$Main->NOREG_MAX = 9999;
+		$Main->PENYUSUTAN = TRUE;
+		$Main->TAHUN_MULAI_SUSUT = 0;
+		$Main->MODUL_AKUNTANSI = TRUE;
+		$Main->MODUL_ASET_LAINNYA = TRUE;		
+		$Main->MODUL_SENSUS = TRUE;
+		$Main->REKAP_NERACA_2 = TRUE;
+		$Main->MENU_PERBANDINGAN = TRUE;
+		$Main->MODUL_HISTORY = TRUE;
+		break;
+	}
+	case 'BDG_BARAT':{
+		$Main->MODUL_SUBUNIT = TRUE;	
+		$Main->SUBUNIT_DIGIT = 3;		
+		$Main->KODEBARANGJ = '000';
+		$Main->KODEBARANGJ_DIGIT = 3; //digit 
+		$Main->NOREG_SIZE = 4;
+		$Main->NOREG_SAMPLE = '0002';
+		$Main->NOREG_MAX = 9999;
+		$Main->PENYUSUTAN = FALSE;
+		$Main->TAHUN_MULAI_SUSUT = 0;
+		$Main->MODUL_AKUNTANSI = TRUE;
+		$Main->MODUL_ASET_LAINNYA = TRUE;		
+		$Main->MODUL_SENSUS = TRUE;
+		$Main->REKAP_NERACA_2 = TRUE;
+		$Main->MENU_PERBANDINGAN = TRUE;
+		$Main->MODUL_HISTORY = TRUE;
+		$Main->STASET_OTOMATIS = TRUE;	
+		break;
+	}
+	case 'GARUT':{
+		$Main->MODUL_SUBUNIT = TRUE;		
+		break;
+	}
+	default:{//all
+		
+		break;
+	}
+	
+	
+	
+}
+
+$Main->KODE_BELANJA_MODAL = '5.2';
+$Main->KODE_BELANJA_BJ = '5.1.2';
+$Main->KODE_PENDAPATAN_HIBAH = '4.3.1'; // u/ perolehan hibah?
+$Main->KODE_BELANJA='5';
+$Main->KODE_ASET_TETAP = '1.3';
+$Main->KODE_AKUMSUSUT = '1.3.7';
+$Main->CLOSING_SKPD= TRUE;//
+
+//PP27 -----------------------------------------------
+//$Main->PP27_MAINMENU = TRUE;//
+$Main->PP27_PERENCANAAN = TRUE;
+$Main->PP27_PENGADAAN = TRUE;
+$Main->PP27_PENERIMAAN = TRUE;
+//$Main->PP27_PENGGUNAAN = TRUE;
+//$Main->PP27_PEMANFAATAN = TRUE;
+//$Main->PP27_PEMELIHARA = TRUE;
+$Main->PP27_PENILAIAN = TRUE;
+//$Main->PP27_PENGHAPUSAN = TRUE;
+$Main->PP27_PEMINDAHTANGAN = TRUE;
+$Main->PP27_GANTIRUGI = TRUE;
+
+$Main->MODUL_PENGGUNAAN = TRUE;
+$Main->MODUL_BAST = TRUE;
+$Main->MODUL_SPK = TRUE;
+$Main->MODUL_IDBARANG = TRUE;
+
+
+$Main->REF_URUSAN = 0;
+$Main->REFSKPD_URUSAN = 0;
+
+?>

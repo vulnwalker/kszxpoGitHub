@@ -1,0 +1,166 @@
+var CekbiSkpd = new SkpdCls({
+	prefix : 'CekbiSkpd', formName:'adminForm'
+});
+
+
+var Cekbi = new DaftarObj2({
+	prefix : 'Cekbi',
+	url : 'pages.php?Pg=Cekbi', 
+	formName : 'adminForm',// 'ruang_form',
+	cekElement : 'cont_cekbi',
+	
+	
+	cekInitial : function( prefix,cekElement, bidangEl, skpdEl, unitEl, subunitEl ){
+		this.cekElement = cekElement;
+		this.bidangEl = bidangEl;
+		this.skpdEl = skpdEl;
+		this.unitEl = unitEl;
+		this.subunitEl = subunitEl;
+		this.cekBiPrefix = prefix;
+		//document.getElementById(this.cekElement).style.float='left';
+		document.getElementById(this.cekElement).innerHTML =
+		//'<div style=\'float:left\'>'+
+			'<div id=\"'+this.cekBiPrefix+'_progressbox\" style=\"display:none;\">'+
+			'<div id=\"'+this.cekBiPrefix+'_progressbck\" style=\"display:block;width:300px;height:4px;background-color:silver; margin: 6 5 0 0;float:left;border-radius: 3px;\">'+
+			'<div id=\"'+this.cekBiPrefix+'_progressbar\" style=\"float:left;height:2px;margin:1;width:0%;border-radius: 3px;background-color: green;\">'+
+			'</div></div>'+
+			'<div id=\"'+this.cekBiPrefix+'_progressmsg\" name=\"progressmsg\" style=\"float:left;\"></div>'+
+			'</div>'+
+			
+		  '<input type=button id=\"'+this.cekBiPrefix+'_btcek\" value=\"Cek\" onclick=\"'+this.prefix+'.cekOnClick(\''+this.cekBiPrefix+'\')\">'+
+		  '<textarea id=\"'+this.cekBiPrefix+'_memo\" style=\"width:600;height:100\"></textarea>'+
+		  '<input type=\"hidden\" id=\"'+this.cekBiPrefix+'_jmldata\" name=\"'+this.cekBiPrefix+'_jmldata\" value=\"0\"> '+
+			'<input type=\"hidden\" id=\"'+this.cekBiPrefix+'_prog\" name=\"'+this.cekBiPrefix+'_prog\" value=\"0\"> '+
+		  '';//</div>';
+	},
+	cekOnClick:  function(prefix){
+		document.getElementById(prefix+'_progressbox').style.display='block';
+		document.getElementById(prefix+'_prog').value=0;
+		document.getElementById(prefix+'_jmldata').value=0;
+		document.getElementById(prefix+'_memo').innerHTML='';
+		document.getElementById(prefix+'_progressmsg').innerHTML='';
+		this.cekOnClick_(prefix);
+	},
+	cekOnClick_ : function(prefix){
+	var me = this;
+		//alert(prefix);
+		
+		if(document.getElementById(prefix+'_prog').value) {
+			awal=parseInt(document.getElementById(prefix+'_prog').value);
+		}else{
+			awal=0;
+		}
+		$.ajax({
+			type:'POST', 
+			data:$('#'+this.formName).serialize(),
+		  	url: this.url+'&tipe=cekbi&prefix='+prefix+'&awal='+awal,
+		  	success: function(data) {		
+				var resp = eval('(' + data + ')');
+				if (resp.err ==''){
+					//document.getElementById(cover).innerHTML = resp.content;			
+					//me.AfterFormBaru(resp);	
+					//alert(resp.content.hsl[1].id);
+					//alert(prefix)
+					var  jmldata = resp.content.jmldata;//parseInt(document.getElementById('jmldata').value);
+						var  prog = parseInt(document.getElementById(prefix+'_prog').value);
+						prog = prog + resp.content.step;
+						if(prog>jmldata) prog = jmldata;
+						document.getElementById(prefix+'_prog').value = prog;
+						var persen = ((prog/jmldata)*100);
+						document.getElementById(prefix+'_progressbar').style.width = persen +'%';			
+						//document.getElementById('progressmsg').innerHTML = prog+'/'+jmldata;			
+						document.getElementById(prefix+'_progressmsg').innerHTML = formatNumber(prog,0,',','.')+'/'+formatNumber(jmldata,0,',','.');
+						
+					
+					// document.getElementById(prefix+'_memo').innerHTML='';
+					var i=0;
+					while(i<resp.content.step){
+						//var str =
+						document.getElementById(prefix+'_memo').innerHTML += resp.content.hsl[i].id+ ': '+ resp.content.hsl[i].cek+'\n';
+						i++;
+					}
+					
+					if(persen<100) {
+							 //me.susut();
+							 setTimeout(function(){ me.cekOnClick_(prefix); }, 10);
+						}else{
+							if(resp.err=''){
+								alert(' Selesai');
+								//document.getElementById(this.cekBiPrefix+'_progressbox').style.display='none';
+								//me.Close();
+								//Penatausaha.refreshList(true);
+							}else{
+								//alert('Ada '+resp.content.jml_error+' ID Barang yang gagal disusutkan!');
+								//me.Close();
+								//me.formErrorPenyusutan();								
+							}
+						}
+					
+				}else{
+					alert(resp.err);
+					///delElem(cover);
+					//document.body.style.overflow='auto';
+				}			
+				
+		  	},
+			error: ajaxError
+		});
+	},
+	filterRenderAfter : function () {
+		this.cekInitial('cek1','cont_cekbi','CekbiSkpdfmSKPD','CekbiSkpdfmUNIT', 'CekbiSkpdfmSUBUNIT', 'CekbiSkpdfmSEKSI');
+	},
+	loading : function (){
+		//alert('loading');
+		this.topBarRender();
+		this.filterRender();
+		this.daftarRender();
+		//this.sumHalRender();
+		
+	},
+	
+	/**
+	BaruBI : function(){
+		var me = this; var errmsg ='';
+		errmsg = this.CekCheckboxBi();
+		if(errmsg ==''){ 
+			var box = this.GetCbxCheckedBi();
+			//if(confirm("Kapitalisasi?")){
+				var cover = this.prefix+'_formcover';
+				addCoverPage2(cover,1,true,false);	
+				document.body.style.overflow='hidden';
+				$.ajax({
+					type:'POST', 
+					data:$('#'+this.formName).serialize(),
+					url: this.url+'&tipe=formBaruBI',
+				  	success: function(data) {		
+						var resp = eval('(' + data + ')');	
+						if (resp.err ==''){		
+							document.getElementById(cover).innerHTML = resp.content;
+							//me.AfterFormBaru(resp);	
+						}else{
+							alert(resp.err);
+							delElem(cover);
+							document.body.style.overflow='auto';
+						}
+				  	}
+				});
+			//}
+		}else{
+			alert(errmsg);
+		}
+		
+	},
+	
+	AfterSimpan : function(){
+		//
+		if(document.getElementById('penatausaha_cont_list') ) {
+			Penatausaha.refreshList(false);
+		}else{
+			this.refreshList(false);
+		}
+			
+	},
+	**/
+	
+	
+});

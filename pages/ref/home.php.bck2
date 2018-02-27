@@ -1,0 +1,59 @@
+<?php
+$Main->Isi="
+<table border=0 cellspacing=4 width=50%>
+	<tr>
+	<td valign=top>
+		<table border=0 cellspacing=0 width=100% class=\"adminform\">
+			<tr><th colspan=4>INPUT DATA</th></tr>
+			<tr><td valign=top>
+				".
+				//PanelIcon($Link="?Pg=$Pg&SPg=01#ISIAN",$Image="sections.png",$Isi="Referensi Barang").
+				"
+				".PanelIcon($Link="?Pg=$Pg&SPg=02#ISIAN",$Image="sections.png",$Isi="Referensi Gudang").
+				PanelIcon($Link="pages.php?Pg=ruang",$Image="sections.png",$Isi="Referensi Ruang").
+				PanelIcon($Link="pages.php?Pg=refKotaKec",$Image="sections.png",$Isi="Referensi Kota/Kecamatan").
+				//PanelIcon($Link="?Pg=$Pg&SPg=09#ISIAN",$Image="sections.png",$Isi="Referensi Ruang")
+				"</td><td valign=top>".
+				PanelIcon($Link="?Pg=$Pg&SPg=03#ISIAN",$Image="sections.png",$Isi="Referensi Rekening")."
+				".PanelIcon($Link="?Pg=$Pg&SPg=04#ISIAN",$Image="sections.png",$Isi="Referensi SKPD").
+				PanelIcon($Link="pages.php?Pg=pegawai",$Image="sections.png",$Isi="Referensi Pegawai").
+				
+				//"".
+				//PanelIcon($Link="?Pg=$Pg&SPg=10#ISIAN",$Image="sections.png",$Isi="Referensi Pejabat").
+				"</td>
+			</tr>
+		</table>
+	</td>
+	<td>&nbsp</td>
+	<td>&nbsp</td>
+	<td>&nbsp</td>
+	<td valign=top>
+		<table border=0 cellspacing=0 width=100% class=\"adminform\">
+		<tr><th colspan=4>D A F T A R</th>
+		</tr>
+		<td valign=top>
+		".
+		//PanelIcon($Link="?Pg=$Pg&SPg=05#ISIAN",$Image="module.png",$Isi="Referensi Barang").
+		PanelIcon($Link="pages.php?Pg=refbarang",$Image="module.png",$Isi="Referensi Barang").
+		"
+		".PanelIcon($Link="?Pg=$Pg&SPg=06#ISIAN",$Image="module.png",$Isi="Referensi Gudang").
+         PanelIcon($Link="pages.php?Pg=ref_urusan",$Image="module.png",$Isi="Referensi Urusan").
+		PanelIcon($Link="pages.php?Pg=refskpd_urusan",$Image="module.png",$Isi="Referensi SKPD Urusan").
+		PanelIcon($Link="pages.php?Pg=ref_std_butuh",$Image="module.png",$Isi="Standar Kebutuhan Barang").
+		"</td>
+		<td valign=top>
+		".PanelIcon($Link="?Pg=$Pg&SPg=07#ISIAN",$Image="module.png",$Isi="Referensi Rekening")."
+		".PanelIcon($Link="?Pg=$Pg&SPg=08#ISIAN",$Image="module.png",$Isi="Referensi SKPD").
+		PanelIcon($Link="pages.php?Pg=refjurnal",$Image="module.png",$Isi="Referensi Jurnal").
+		PanelIcon($Link="pages.php?Pg=refprogram",$Image="module.png",$Isi="Referensi Program").
+		PanelIcon($Link="pages.php?Pg=reftambahmanfaat",$Image="module.png",$Isi="Referensi Tambah Manfaat").
+		"
+		</td>
+		</tr>
+		</table>
+	</td>
+	</tr>
+</table>
+
+		";
+?>

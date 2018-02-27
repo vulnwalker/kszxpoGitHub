@@ -1,0 +1,859 @@
+<?php
+
+class ref_tandatanganObj  extends DaftarObj2{	
+	var $Prefix = 'ref_tandatangan';
+	var $elCurrPage="HalDefault";
+	var $SHOW_CEK = TRUE;
+//	var $TblName = 'ref_tandatangan'; //daftar
+	var $TblName = 'v_ref_tandatangan'; //daftar
+	var $TblName_Hapus = 'ref_tandatangan';
+	var $MaxFlush = 10;
+	var $TblStyle = array( 'koptable', 'cetak','cetak'); //berdasar mode
+	var $ColStyle = array( 'GarisDaftar', 'GarisCetak','GarisCetak');
+	var $KeyFields = array('Id');
+	var $FieldSum = array();//array('jml_harga');
+	var $SumValue = array();
+	var $FieldSum_Cp1 = array( 14, 13, 13);//berdasar mode
+	var $FieldSum_Cp2 = array( 1, 1, 1);	
+	var $checkbox_rowspan = 1;
+	var $PageTitle = 'Tanda Tangan';
+	var $PageIcon = 'images/masterData_01.gif';
+	var $pagePerHal ='';
+	var $cetak_xls=TRUE ;
+	var $fileNameExcel='ref_tandatangan.xls';
+	var $Cetak_Judul = 'TANDA TANGAN';	
+	var $Cetak_Mode=2;
+	var $Cetak_WIDTH = '30cm';
+	var $Cetak_OtherHTMLHead;
+	var $FormName = 'ref_tandatanganForm'; 
+	var $kdbrg = '';	
+	
+	var $arrEselon = array( 
+		array('1','ESELON I'),
+		array('2','ESELON II'),
+		array('3','ESELON III'),
+		array('4','ESELON IV'),
+		array('5','ESELON V')
+		);
+	
+			
+	function setTitle(){
+		return 'TANDA TANGAN';
+	}
+	function setMenuEdit(){		
+		return
+			"<td>".genPanelIcon("javascript:".$this->Prefix.".Baru()","new_f2.png","Baru",'Baru')."</td>".
+			"<td>".genPanelIcon("javascript:".$this->Prefix.".Edit()","edit_f2.png","Edit", 'Edit')."</td>".
+			"<td>".genPanelIcon("javascript:".$this->Prefix.".Hapus()","delete_f2.png","Hapus", 'Hapus').
+			"</td>";
+	}
+	
+	function setCetak_Header($Mode=''){
+		global $Main, $HTTP_COOKIE_VARS;
+		
+		//$fmSKPD = cekPOST($this->Prefix.'SkpdfmSKPD'); //echo 'fmskpd='.$fmSKPD;
+		//$fmUNIT = cekPOST($this->Prefix.'SkpdfmUNIT');
+		//$fmSUBUNIT = cekPOST($this->Prefix.'SkpdfmSUBUNIT');
+		return
+			"<table style='width:100%' border=\"0\">
+			<tr>
+				<td class=\"judulcetak\">".$this->setCetakTitle()."</td>
+			</tr>
+			</table>";	
+			/*"<table width=\"100%\" border=\"0\">
+				<tr>
+					<td class=\"subjudulcetak\">".PrintSKPD2($fmSKPD, $fmUNIT, $fmSUBUNIT)."</td>
+				</tr>
+			</table><br>";*/
+	}	
+	
+	
+	function simpan(){
+	 global $HTTP_COOKIE_VARS;
+	 global $Main;
+	 
+	 $uid = $HTTP_COOKIE_VARS['coID'];
+	 $cek = ''; $err=''; $content=''; $json=TRUE;
+	//get data -----------------
+	 $fmST = $_REQUEST[$this->Prefix.'_fmST'];
+	 $idplh = $_REQUEST[$this->Prefix.'_idplh'];
+     $kode1= $_REQUEST['c1'];
+	 $kode2= $_REQUEST['c'];
+	 $kode3= $_REQUEST['d'];
+	 $kode4= $_REQUEST['e'];
+	 $kode5= $_REQUEST['e1'];
+	 $namapegawai= $_REQUEST['namapegawai'];
+	 $nippegawai= $_REQUEST['nippegawai'];
+	
+	 $p1= $_REQUEST['pangkatakhir'];
+	
+	 $golang_akhir= $_REQUEST['golang_akhir'];
+	 $golongan = explode("/", $golang_akhir);
+	 $jabatan= $_REQUEST['jabatan'];
+	 $eselon= $_REQUEST['eselon_akhir'];
+	 $kategori= $_REQUEST['kategori'];
+	
+	
+	$oldy=mysql_fetch_array(
+	 	mysql_query(
+	 		"select count(*) as cnt from ref_tandatangan where nip='$nippegawai'"
+		));
+	 if( $err=='' && $namapegawai =='' ) $err= 'NAMA PEGAWAI Belum Di Isi !!';
+	 if( $err=='' && $nippegawai =='' ) $err= 'NIP Belum Di Isi !!';
+	 if( $err=='' && $p1 =='' ) $err= 'PANGKAT/ GOL/ RUANG Belum Di Pilih !!';
+	 if( $err=='' && $jabatan =='' ) $err= 'JABATAN Belum Di Isi !!';
+	 if( $err=='' && $kategori =='' ) $err= 'Kategori Belum Di Pilih !!';
+	// if( $err=='' && $eselon =='' ) $err= 'ESELON Belum Di Pilih !!';
+	
+			if($fmST == 0){
+			
+			/*$ck1=mysql_fetch_array(mysql_query("Select * from ref_tandatangan where c1='$kode1' and c='$kode2' and d ='$kode3' and e ='$kode4' and e1='$kode5'"));
+			if ($ck1>=1)$err= 'Gagal Simpan'.mysql_error();*/
+			if($err=='' && $oldy['cnt']>0) $err="NIP '$nippegawai' Sudah Ada";
+				if($err==''){
+			
+					$aqry = "INSERT into ref_tandatangan (c1,c,d,e,e1,nama,nip,jabatan,pangkat,gol,ruang,eselon,kategori_tandatangan) values('$kode1','$kode2','$kode3','$kode4','$kode5','$namapegawai','$nippegawai','$jabatan','$p1','$golongan[0]','$golongan[1]','$eselon','$kategori')";	$cek .= $aqry;	
+					$qry = mysql_query($aqry);
+				}
+			}else{						
+				if($err==''){
+				$aqry = "UPDATE ref_tandatangan SET nama='$namapegawai', nip='$nippegawai', jabatan='$jabatan' ,pangkat='$p1', gol='$golongan[0]' ,ruang='$golongan[1]',eselon='$eselon' ,kategori_tandatangan='$kategori' WHERE Id='".$idplh."'";	$cek .= $aqry;
+						$qry = mysql_query($aqry) or die(mysql_error());
+					}
+			} //end else
+					
+			return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);	
+    }	
+	
+	
+	
+	function set_selector_other2($tipe){
+	 global $Main;
+	 $cek = ''; $err=''; $content=''; $json=TRUE;
+		
+	 return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	function set_selector_other($tipe){
+	 global $Main;
+	 $cek = ''; $err=''; $content=''; $json=TRUE;
+	  
+	  switch($tipe){	
+		
+		case 'pilihPangkat':{				
+			global $Main;
+			$cek = ''; $err=''; $content=''; $json=TRUE;
+			
+			$idpangkat = $_REQUEST['pangkatakhir'];
+			
+			$query = "select concat(gol,'/',ruang)as nama FROM ref_pangkat WHERE nama='$idpangkat'" ;
+			$get=mysql_fetch_array(mysql_query($query));$cek.=$query;
+			$content=$get['nama'];											
+			break;
+		}
+			
+		case 'formBaru':{				
+			$fm = $this->setFormBaru();				
+			$cek = $fm['cek'];
+			$err = $fm['err'];
+			$content = $fm['content'];												
+		break;
+		}
+		
+		case 'formEdit':{				
+			$fm = $this->setFormEdit();				
+			$cek = $fm['cek'];
+			$err = $fm['err'];
+			$content = $fm['content'];												
+		break;
+		}
+		
+			
+		case 'simpan':{
+			$get= $this->simpan();
+			$cek = $get['cek'];
+			$err = $get['err'];
+			$content = $get['content'];
+		break;
+	    }
+	   
+		 default:{
+				$other = $this->set_selector_other2($tipe);
+				$cek = $other['cek'];
+				$err = $other['err'];
+				$content=$other['content'];
+				$json=$other['json'];
+		 break;
+		 }
+		 
+	 }//end switch
+		
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+   }
+	
+	function setPage_OtherScript(){
+		$scriptload = 
+
+					"<script>
+						$(document).ready(function(){ 
+							".$this->Prefix.".loading();
+						});
+						
+					</script>";
+					
+		return 
+			 "<script src='js/skpd.js' type='text/javascript'></script>
+			 <script type='text/javascript' src='js/master/ref_tandatangan/".strtolower($this->Prefix).".js' language='JavaScript' ></script>
+			 ".
+			// "<script type='text/javascript' src='js/master/ref_aset/refjurnal.js' language='JavaScript' ></script>".
+			
+			$scriptload;
+	}
+	
+	//form ==================================
+	
+	function setFormBaru(){
+		global $Main;
+		$cbid = $_REQUEST[$this->Prefix.'_cb'];
+		$cek =$cbid[0];				
+		$this->form_idplh = $cbid[0];
+		$kode = explode(' ',$this->form_idplh);
+		$this->form_fmST = 0;
+		
+		$dt=array();
+		//$this->form_idplh ='';
+		$this->form_fmST = 0;
+	//	$dat_urusan= $_REQUEST['dat_urusan'];
+		$urusan = $Main->URUSAN;
+		if ($urusan=='0'){
+			$dt['c'] = $_REQUEST[$this->Prefix.'SkpdfmSKPD'];
+			$dt['d'] = $_REQUEST[$this->Prefix.'SkpdfmUNIT'];
+			$dt['e'] = $_REQUEST[$this->Prefix.'SkpdfmSUBUNIT'];
+			$dt['e1'] = $_REQUEST[$this->Prefix.'SkpdfmSEKSI'];
+			$fm = $this->setForm4($dt);
+		}else{
+			$dt['c1'] = $_REQUEST['ref_tandatanganSkpdfmURUSAN'];
+			$dt['c'] = $_REQUEST['ref_tandatanganSkpdfmSKPD'];
+			$dt['d'] = $_REQUEST['ref_tandatanganSkpdfmUNIT'];
+			$dt['e'] = $_REQUEST['ref_tandatanganSkpdfmSUBUNIT'];
+			$dt['e1'] = $_REQUEST['ref_tandatanganSkpdfmSEKSI'];
+			$fm = $this->setForm($dt);
+		}
+			return	array ('cek'=>$fm['cek'], 'err'=>$fm['err'], 'content'=>$fm['content']);
+	}
+	
+	function setFormEdit(){
+	global $Main;	
+	$cek ='';
+		$cbid = $_REQUEST[$this->Prefix.'_cb'];
+		$this->form_idplh = $cbid[0];
+		$kode = $cbid[0];
+		$this->form_fmST = 1;				
+		//get data 
+		$aqry = "SELECT * FROM  ref_tandatangan WHERE Id='".$this->form_idplh."' "; $cek.=$aqry;
+		$dt = mysql_fetch_array(mysql_query($aqry));
+		$urusan = $Main->URUSAN;
+		if ($urusan=='0'){
+			$fm = $this->setForm4($dt);
+		}else{
+			$fm = $this->setForm($dt);
+		}
+		
+		
+		return	array ('cek'=>$cek.$fm['cek'], 'err'=>$fm['err'], 'content'=>$fm['content']);
+	}	
+		
+	function setForm($dt){	
+	 global $SensusTmp;
+	 $cek = ''; $err=''; $content=''; 		
+	 $json = TRUE;	//$ErrMsg = 'tes';	 	
+	 $form_name = $this->Prefix.'_form';				
+	 $this->form_width = 700;
+	 $this->form_height = 280;
+	  if ($this->form_fmST==0) {
+		$this->form_caption = 'BARU TANDA TANGAN';
+		$nip	 = '';
+	  }else{
+		$this->form_caption = 'EDIT TANDA TANGAN';			
+		$readonly='readonly';
+					
+	  }
+	   $arrOrder = array(
+	  	           array('1','Kepala Dinas'),
+			       array('2','Pengurus Barang'),
+					);
+	$arr = array(
+			//array('selectAll','Semua'),	
+			array('selectKepala Dinas','Kepala Dinas'),	
+			array('selectPengurus Barang','Pengurus Barang'),		
+			);
+	    //ambil data trefditeruskan
+	  	$query = "" ;$cek .=$query;
+	  	$res = mysql_query($query);
+		$kode1=genNumber($dt['c'],2);
+		$kode2=genNumber($dt['d'],2);
+		$kode3=genNumber($dt['e'],2);
+		$kode4=genNumber($dt['e1'],3);
+		$nama=$dt['nama'];
+		$nip=$dt['nip'];
+		$jabatan=$dt['jabatan'];
+		
+		$Arrjbt = array(
+				array('1.',"Kepala Dinas"),
+				array('2.','Pengurus Barang'),
+				);
+						
+		$c1 = $dt['c1'];
+		$c = $dt['c'];
+		$d = $dt['d'];
+		$e = $dt['e'];
+		$e1 = $dt['e1'];
+		$ket = $dt['kategori_tandatangan'];
+		
+		$qry4 = "SELECT * FROM ref_skpd WHERE c1='$c1' and c='00' AND d='00' AND e='00' AND e1='000'";//$cek.=$qry;
+		$aqry4 = mysql_query($qry4);
+		$queryc1 = mysql_fetch_array($aqry4);
+		
+		$qry = "SELECT * FROM ref_skpd WHERE c1='$c1' and c='$c' AND d='00' AND e='00' AND e1='000'";//$cek.=$qry;
+		$aqry = mysql_query($qry);
+		$queryc = mysql_fetch_array($aqry);
+	//	$cek.=$data;
+		
+		$qry1 = "SELECT * FROM ref_skpd WHERE c1='$c1' and c='$c' AND d='$d' AND e='00' AND e1='000'";//$cek.=$qry1;
+		$aqry1 = mysql_query($qry1);
+		$queryd = mysql_fetch_array($aqry1);
+		
+		$qry2 = "SELECT * FROM ref_skpd WHERE c1='$c1' and c='$c' AND d='$d' AND e='$e' AND e1='000'";//$cek.=$qry2;
+		$aqry2 = mysql_query($qry2);
+		$querye = mysql_fetch_array($aqry2);
+		
+		$qry3 = "SELECT * FROM ref_skpd WHERE c1='$c1' and c='$c' AND d='$d' AND e='$e' AND e1='$e1'";$cek.=$qry3;
+		$aqry3 = mysql_query($qry3);
+		$querye1 = mysql_fetch_array($aqry3);
+		
+		
+		$queryKategori = "SELECT id,kategori_tandatangan FROM ref_kategori_tandatangan";
+	
+		
+		$queryPangkat="select nama,concat(nama,' (',gol,'/',ruang,')')as nama from ref_pangkat order by gol,ruang";
+		$queryPangkat2="select pangkat,concat(pangkat,' (',gol,'/',ruang,')')as nama from ref_tandatangan where pangkat='".$dt['pangkat']."' and gol='".$dt['gol']."' and ruang='".$dt['ruang']."'";
+		$queryPangkat2=mysql_fetch_array(mysql_query("select gol,ruang from ref_tandatangan where c1='$c1' and c='$c' and d='$d' and e='$e' and e1='$e1' and Id='".$this->form_idplh."'"));
+		$cek.="select gol,ruang from ref_tandatangan where c1='$c1' and c='$c' and d='$d' and e='$e' and e1='$e1' and Id='".$this->form_idplh."'";
+       //items ----------------------
+		$datketegori="select kategori_tandatangan from ref_kategori_tandatangan where kategori_tandatangan='".$dt['kategori_tandatangan']."'";
+		$cek.="select kategori_tandatangan from ref_kategori_tandatangan where kategori_tandatangan='".$dt['kategori_tandatangan']."'";
+		//$qry_jabatan = "SELECT Id, nama FROM ref_jabatan WHERE c1='$c1' AND c='$c' AND d='$d' ";
+		$querygedung="";
+		$datapangkat=$queryPangkat2['gol']."/".$queryPangkat2['ruang'];
+		$datc1=$queryc1['c1'].".".$queryc1['nm_skpd'];
+		$datc=$queryc['c'].".".$queryc['nm_skpd'];
+		$datd=$queryd['d'].".".$queryd['nm_skpd'];
+		$date=$querye['e'].".".$querye['nm_skpd'];
+		$date1=$querye1['e1'].".".$querye1['nm_skpd'];
+		
+		 $this->form_fields = array(
+			'URUSAN' => array( 
+						'label'=>'URUSAN',
+						'labelWidth'=>150, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='dc1' id='dc1' value='".$datc1."' style='width:500px;' readonly>
+						<input type ='hidden' name='c1' id='c1' value='".$queryc1['c1']."'>
+						</div>", 
+						 ),
+			
+			'bidang' => array( 
+						'label'=>'BIDANG',
+						'labelWidth'=>150, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='dc' id='dc' value='".$datc."' style='width:500px;' readonly>
+						<input type ='hidden' name='c' id='c' value='".$queryc['c']."'>
+						</div>", 
+						 ),
+			
+			'skpd' => array( 
+						'label'=>'SKPD',
+						'labelWidth'=>150, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='dd' id='dd' value='".$datd."' style='width:500px;' readonly>
+						<input type ='hidden' name='d' id='d' value='".$queryd['d']."'>
+						</div>", 
+						 ),			
+								
+			'unit' => array( 
+						'label'=>'UNIT',
+						'labelWidth'=>150, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='de' id='de' value='".$date."' style='width:500px;' readonly>
+						<input type ='hidden' name='e' id='e' value='".$querye['e']."'>
+						</div>", 
+						 ),					
+			
+			'subunit' => array( 
+						'label'=>'SUB UNIT',
+						'labelWidth'=>150, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='de1' id='de1' value='".$date1."' style='width:500px;' readonly>
+						<input type ='hidden' name='e1' id='e1' value='".$querye1['e1']."'>
+						</div>", 
+						 ),	
+			
+			'kategori' => array( 
+						'label'=>'KATEGORI',
+						'labelWidth'=>150, 
+						'value'=>cmbQuery('kategori',$dt['kategori_tandatangan'],$queryKategori,'style=width:250px;','--PILIH--')
+					
+						
+						 ),
+		//	cmbQuery('fmJabatan',$dt['jabatan'],$queryJabatan,'','-------- Pilih --------')
+			'namapegawai' => array( 
+						'label'=>'NAMA PEGAWAI',
+						'labelWidth'=>150, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='namapegawai' id='namapegawai' value='".$dt['nama']."' style='width:500px;'>
+						
+						</div>", 
+						 ),	
+			'nippegawai' => array( 
+						'label'=>'NIP',
+						'labelWidth'=>170, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='nippegawai' id='nippegawai' value='".$dt['nip']."' style='width:250px;'>
+						
+						</div>", 
+						 ),	
+						 
+			
+		
+			'pangkat' => array( 
+						'label'=>'PANGKAT/ GOL/ RUANG.',
+						'labelWidth'=>150, 
+						'value'=>
+						"<div id='cont_gd'>".cmbQuery('pangkatakhir',$dt['pangkat'],$queryPangkat,'style="width:250px;"onchange="'.$this->Prefix.'.pilihPangkat()"','--PILIH--')."&nbsp&nbsp"."<input type='text' name='golang_akhir' style='width:40px;' id='golang_akhir' size=1 value='".$datapangkat."' readonly>
+					
+						</div>",
+						 ),					
+						
+			
+			'jabatan' => array( 
+						'label'=>'JABATAN',
+						'labelWidth'=>150, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='jabatan' id='jabatan' value='".$dt['jabatan']."' style='width:300px;'>
+						
+						</div>", 
+						 ),				
+						
+						
+			'eselon' => array( 
+						'label'=>'ESELON',
+						'labelWidth'=>150, 
+						'value'=>cmbArray('eselon_akhir',$dt['eselon'],$this->arrEselon,'--PILIH--','style=width:100px;'),
+					//	'value'=>cmbArray('status',$dt['status'],$this->stStatus,'--PILIH Status--',''), 
+						),
+														 
+			);
+		//tombol
+		$this->form_menubawah =	
+			"<input type='hidden' name='Id_skpd' id='Id_skpd'  value='".$Id."'>".
+			"<input type='button' value='Simpan' onclick ='".$this->Prefix.".Simpan()' title='Simpan' >".
+			"<input type='button' value='Batal' onclick ='".$this->Prefix.".Close()' >";
+							
+		$form = $this->genForm();		
+		$content = $form;//$content = 'content';
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);
+	}
+	
+	function setForm4($dt){	
+	 global $SensusTmp,$Main;
+	 $cek = ''; $err=''; $content=''; 		
+	 $json = TRUE;	//$ErrMsg = 'tes';	 	
+	 $form_name = $this->Prefix.'_form';				
+	 $this->form_width = 700;
+	 $this->form_height = 260;
+	  if ($this->form_fmST==0) {
+		$this->form_caption = 'BARU TANDA TANGAN';
+		$nip	 = '';
+	  }else{
+		$this->form_caption = 'EDIT TANDA TANGAN';			
+		$readonly='readonly';
+					
+	  }
+	   $arrOrder = array(
+	  	           array('1','Kepala Dinas'),
+			       array('2','Pengurus Barang'),
+					);
+	$arr = array(
+			//array('selectAll','Semua'),	
+			array('selectKepala Dinas','Kepala Dinas'),	
+			array('selectPengurus Barang','Pengurus Barang'),		
+			);
+	    //ambil data trefditeruskan
+	  	$query = "" ;$cek .=$query;
+	  	$res = mysql_query($query);
+		$kode1=genNumber($dt['c'],2);
+		$kode2=genNumber($dt['d'],2);
+		$kode3=genNumber($dt['e'],2);
+		$kode4=genNumber($dt['e1'],3);
+		$nama=$dt['nama'];
+		$nip=$dt['nip'];
+		$jabatan=$dt['jabatan'];
+		
+		$Arrjbt = array(
+				array('1.',"Kepala Dinas"),
+				array('2.','Pengurus Barang'),
+				);
+		$c1 = $Main->URUSAN;				
+		$c = $dt['c'];
+		$d = $dt['d'];
+		$e = $dt['e'];
+		$e1 = $dt['e1'];
+		
+		/*$qry4 = "SELECT * FROM ref_skpd WHERE c1!='0' and c='00' AND d='00' AND e='00' AND e1='000'";//$cek.=$qry;
+		$aqry4 = mysql_query($qry4);
+		$queryc1 = mysql_fetch_array($aqry4);*/
+		
+		$qry = "SELECT * FROM ref_skpd WHERE c1='$c1' and c='$c' AND d='00' AND e='00' AND e1='000'";$cek.=$qry;
+		$aqry = mysql_query($qry);
+		$queryc = mysql_fetch_array($aqry);
+	//	$cek.=$data;
+		
+		$qry1 = "SELECT * FROM ref_skpd WHERE c1='$c1' and c='$c' AND d='$d' AND e='00' AND e1='000'";//$cek.=$qry1;
+		$aqry1 = mysql_query($qry1);
+		$queryd = mysql_fetch_array($aqry1);
+		
+		$qry2 = "SELECT * FROM ref_skpd WHERE c1='$c1' and c='$c' AND d='$d' AND e='$e' AND e1='000'";//$cek.=$qry2;
+		$aqry2 = mysql_query($qry2);
+		$querye = mysql_fetch_array($aqry2);
+		
+		$qry3 = "SELECT * FROM ref_skpd WHERE c1='$c1' and c='$c' AND d='$d' AND e='$e' AND e1='$e1'";$cek.=$qry3;
+		$aqry3 = mysql_query($qry3);
+		$querye1 = mysql_fetch_array($aqry3);
+		
+		
+		
+	
+		$queryPangkat="select nama,concat(nama,' (',gol,'/',ruang,')')as nama from ref_pangkat order by gol,ruang";
+		$queryPangkat2="select pangkat,concat(pangkat,' (',gol,'/',ruang,')')as nama from ref_tandatangan where pangkat='".$dt['pangkat']."' and gol='".$dt['gol']."' and ruang='".$dt['ruang']."'";
+	//	$queryPangkat2=mysql_fetch_array(mysql_query("select pangkat,concat(pangkat,' (',gol,'/',ruang,')')as nama from ref_tandatangan where pangkat='".$dt['pangkat']."' and gol='".$dt['gol']."' and ruang='".$dt['ruang']."'"));
+		$queryPangkat2=mysql_fetch_array(mysql_query("select gol,ruang from ref_tandatangan where c1='$c1' and c='$c' and d='$d' and e='$e' and e1='$e1' and Id='".$this->form_idplh."'"));
+		$cek.="select gol,ruang from ref_tandatangan where c1='$c1' and c='$c' and d='$d' and e='$e' and e1='$e1' and Id='".$this->form_idplh."'";
+       //items ----------------------
+		 
+		//$qry_jabatan = "SELECT Id, nama FROM ref_jabatan WHERE c1='$c1' AND c='$c' AND d='$d' ";
+		$querygedung="";
+		$datapangkat=$queryPangkat2['gol']."/".$queryPangkat2['ruang'];
+		$datc1=$queryc1['c1'].".".$queryc1['nm_skpd'];
+		$datc=$queryc['c'].".".$queryc['nm_skpd'];
+		$datd=$queryd['d'].".".$queryd['nm_skpd'];
+		$date=$querye['e'].".".$querye['nm_skpd'];
+		$date1=$querye1['e1'].".".$querye1['nm_skpd'];
+		
+		 $this->form_fields = array(
+			/*'URUSAN' => array( 
+						'label'=>'URUSAN',
+						'labelWidth'=>150, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='dc1' id='dc1' value='".$datc1."' style='width:500px;' readonly>
+						<input type ='hidden' name='c1' id='c1' value='".$queryc1['c1']."'>
+						</div>", 
+						 ),*/
+			
+			'bidang' => array( 
+						'label'=>'BIDANG',
+						'labelWidth'=>150, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='dc' id='dc' value='".$datc."' style='width:500px;' readonly>
+						<input type ='hidden' name='c' id='c' value='".$queryc['c']."'>
+						</div>", 
+						 ),
+			
+			'skpd' => array( 
+						'label'=>'SKPD',
+						'labelWidth'=>150, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='dd' id='dd' value='".$datd."' style='width:500px;' readonly>
+						<input type ='hidden' name='d' id='d' value='".$queryd['d']."'>
+						</div>", 
+						 ),			
+								
+			'unit' => array( 
+						'label'=>'UNIT',
+						'labelWidth'=>150, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='de' id='de' value='".$date."' style='width:500px;' readonly>
+						<input type ='hidden' name='e' id='e' value='".$querye['e']."'>
+						</div>", 
+						 ),					
+			
+			'subunit' => array( 
+						'label'=>'SUB UNIT',
+						'labelWidth'=>150, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='de1' id='de1' value='".$date1."' style='width:500px;' readonly>
+						<input type ='hidden' name='e1' id='e1' value='".$querye1['e1']."'>
+						</div>", 
+						 ),	
+			
+			'namapegawai' => array( 
+						'label'=>'NAMA PEGAWAI',
+						'labelWidth'=>150, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='namapegawai' id='namapegawai' value='".$dt['nama']."' style='width:300px;'>
+						
+						</div>", 
+						 ),	
+			'nippegawai' => array( 
+						'label'=>'NIP',
+						'labelWidth'=>170, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='nippegawai' id='nippegawai' value='".$dt['nip']."' style='width:250px;'>
+						
+						</div>", 
+						 ),	
+						 
+			'pangkat' => array( 
+						'label'=>'PANGKAT/ GOL/ RUANG.',
+						'labelWidth'=>150, 
+						'value'=>
+						"<div id='cont_gd'>".cmbQuery('pangkatakhir',$dt['pangkat'],$queryPangkat,'style="width:250px;"onchange="'.$this->Prefix.'.pilihPangkat()"','--PILIH--')."&nbsp&nbsp"."<input type='text' name='golang_akhir' style='width:40px;' id='golang_akhir' size=1 value='".$datapangkat."' readonly>
+						</div>",
+						 ),					
+						
+			
+			'jabatan' => array( 
+						'label'=>'JABATAN',
+						'labelWidth'=>150, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='jabatan' id='jabatan' value='".$dt['jabatan']."' style='width:300px;'>
+						</div>", 
+						 ),				
+						
+			'eselon' => array( 
+						'label'=>'ESELON',
+						'labelWidth'=>150, 
+						'value'=>cmbArray('eselon_akhir',$dt['eselon'],$this->arrEselon,'--PILIH--','style=width:100px;'),
+					//	'value'=>cmbArray('status',$dt['status'],$this->stStatus,'--PILIH Status--',''), 
+						),
+														 
+			);
+		//tombol
+		$this->form_menubawah =	
+			"<input type='hidden' name='Id_skpd' id='Id_skpd'  value='".$Id."'>".
+			"<input type ='hidden' name='c1' id='c1' value='".$c1."'>".
+			"<input type='button' value='Simpan' onclick ='".$this->Prefix.".Simpan()' title='Simpan' >".
+			"<input type='button' value='Batal' onclick ='".$this->Prefix.".Close()' >";
+							
+		$form = $this->genForm();		
+		$content = $form;//$content = 'content';
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);
+	}
+		
+	
+	function setKolomHeader($Mode=1, $Checkbox=''){
+	$NomorColSpan = $Mode==1? 2: 1;
+	 $headerTable =
+	  "<thead>
+	   <tr>
+  	   <th class='th01' width='5' >No.</th>
+  	   $Checkbox
+	   <th class='th01' width='450' align='center'>KATEGORI</th>		
+	   		
+	
+	   <th class='th01' width='350' align='center'>NAMA PEGAWAI</th>
+	   <th class='th01' width='350' align='center'>NIP</th>
+	   <th class='th01' width='350' align='center'>PANGKAT/GOL/RUANG</th>
+	   <th class='th01' width='350' align='center'>JABATAN</th>
+	   <th class='th01' width='350' align='center'>ESELON</th>
+	   <th class='th01' width='450' align='center'>NAMA SKPD</th>
+	   </tr>
+	   </thead>";
+	 
+		return $headerTable;
+	}	
+	
+	function setKolomData($no, $isi, $Mode, $TampilCheckBox){
+	 global $Ref;
+		
+	$c1=$isi['c1'];
+	$c=$isi['c'];
+	$d=$isi['d'];
+	$e=$isi['e'];
+	$e1=$isi['e1'];
+	
+	if($isi['eselon']==1){
+		$eselon='ESELON I';
+	}elseif($isi['eselon']==2){
+		$eselon='ESELON II';
+	}elseif($isi['eselon']==3){
+		$eselon='ESELON III';
+	}elseif($isi['eselon']==4){
+		$eselon='ESELON IV';
+	}else{
+		$eselon='ESELON V';
+	}
+	
+	//$kategori=mysql_fetch_array(mysql_query("select kategori_tandatangan as kategori from ref_kategori_tandatangan where id='".$isi['ref_kategori']."'"));
+	
+	 $skpd=mysql_fetch_array(mysql_query(" select nm_skpd from ref_skpd where c1='$c1' and c='$c' and d='$d' and e='$e' and e1='$e1' "));
+	 $Koloms = array();
+	 $Koloms[] = array('align="center"', $no.'.' );
+	  if ($Mode == 1) $Koloms[] = array(" align='center' ", $TampilCheckBox);
+	 $Koloms[] = array('align="left"',$isi['kategori_ttd']);	
+	 $Koloms[] = array('align="left"',$isi['nama']);
+	 $Koloms[] = array('align="left"',$isi['nip']);
+	 $Koloms[] = array('align="left"',$isi['pangkat'].' / '.$isi['gol'].' / '.$isi['ruang']);
+	 $Koloms[] = array('align="left"',$isi['jabatan']);
+	// $Koloms[] = array('align="left"',$isi['eselon']);
+	 $Koloms[] = array('align="left"',$eselon);
+	 $Koloms[] = array('align="left"',$skpd['nm_skpd']);
+	
+	 
+	 return $Koloms;
+	}
+	
+	
+	function genDaftarOpsi(){
+	 global $Ref, $Main;
+	
+	$fmKategori = $_REQUEST['fmKategori'];
+	
+	
+	$fmPILCARI = $_REQUEST['fmPILCARI'];	
+	$fmPILCARIvalue = $_REQUEST['fmPILCARIvalue'];		
+	//tgl bulan dan tahun
+	$fmFiltTglBtw = $_REQUEST['fmFiltTglBtw'];
+	$fmFiltTglBtw_tgl1 = $_REQUEST['fmFiltTglBtw_tgl1'];
+	$fmFiltTglBtw_tgl2 = $_REQUEST['fmFiltTglBtw_tgl2'];
+
+	$fmORDER1 = cekPOST('fmORDER1');
+	$fmDESC1 = cekPOST('fmDESC1');
+	 $arrOrder = array(
+	  	          array('1','NIP'),
+			     	array('2','Nama'),
+					);
+	$arr = array(
+			//array('selectAll','Semua'),	
+			array('selectNIP','NIP'),	
+			array('selectNama','Nama'),		
+			);
+	$queryKategori = "SELECT kategori_tandatangan,kategori_tandatangan FROM ref_kategori_tandatangan";		
+	$TampilOpt =
+			//<table width=\"100%\" class=\"adminform\">
+			"<table width=\"100%\" class=\"adminform\">	<tr>		
+			<td width=\"100%\" valign=\"top\">" . 
+				WilSKPD_ajx3($this->Prefix.'Skpd') . 
+			"</td>
+			<td >" . 		
+			"</td></tr>
+			<!--<tr><td>
+				<input type='button' id='btTampil' value='Tampilkan' onclick='".$this->Prefix.".refreshList(true)'>
+			</td></tr>			-->
+			</table>".
+			"<tr><td>".
+			"<div id='skpd_pegawai' ></div>".
+			$vOrder=			
+			genFilterBar(
+				array(
+				"Cari Kategori : ".cmbQuery('fmKategori',$fmKategori,$queryKategori,'style=width:250px;','--PILIH--')."&nbsp
+&nbsp"							
+					.cmbArray('fmPILCARI',$fmPILCARI,$arr,'-- Cari Data --',''). //generate checkbox					
+					"&nbsp&nbsp<input type='text' value='".$fmPILCARIvalue."' name='fmPILCARIvalue' id='fmPILCARIvalue'>&nbsp&nbsp."
+					//<input type='button' id='btTampil' value='Cari' onclick='".$this->Prefix.".refreshList(true)'>"
+					
+					.cmbArray('fmORDER1',$fmORDER1,$arrOrder,'--Urutkan--','').
+					"<input $fmDESC1 type='checkbox' id='fmDESC1' name='fmDESC1' value='checked'>&nbspmenurun."
+					),			
+				$this->Prefix.".refreshList(true)");
+			"<input type='button' id='btTampil' value='Tampilkan' onclick='".$this->Prefix.".refreshList(true)'>";
+			
+		return array('TampilOpt'=>$TampilOpt);
+	}			
+	
+	function getDaftarOpsi($Mode=1){
+		global $Main, $HTTP_COOKIE_VARS;
+		$UID = $_COOKIE['coID']; 
+		//kondisi -----------------------------------
+		$arrKondisi = array();	
+		$fmPILCARI = $_REQUEST['fmPILCARI'];	
+		$fmPILCARIvalue = $_REQUEST['fmPILCARIvalue'];
+		$urusan = $Main->URUSAN;
+		$fmKategori = $_REQUEST['fmKategori'];
+		
+		
+		if ($urusan==0){
+			$ref_tandatanganSkpdfmURUSAN = $_REQUEST['ref_tandatanganSkpdfmURUSAN']==''?$HTTP_COOKIE_VARS['cofmURUSAN']:$_REQUEST['ref_tandatanganSkpdfmURUSAN'];
+			$ref_tandatanganSkpdfmSKPD = $_REQUEST['ref_tandatanganSkpdfmSKPD'];//ref_skpdSkpdfmSKPD
+			$ref_tandatanganSkpdfmUNIT = $_REQUEST['ref_tandatanganSkpdfmUNIT'];
+			$ref_tandatanganSkpdfmSUBUNIT = $_REQUEST['ref_tandatanganSkpdfmSUBUNIT'];
+			$ref_tandatanganSkpdfmSEKSI = $_REQUEST['ref_tandatanganSkpdfmSEKSI'];
+			
+		$isivalue=explode('.',$fmPILCARIvalue);
+		switch($fmPILCARI){			
+			case 'selectNIP': $arrKondisi[] = " nip like '$fmPILCARIvalue%'"; break;
+			case 'selectNama': $arrKondisi[] = " nama like '%$fmPILCARIvalue%'"; break;	
+		}		
+			$arrKondisi[]= "c1='$urusan'";
+			if($ref_tandatanganSkpdfmSKPD!='00' and $ref_tandatanganSkpdfmSKPD !='')$arrKondisi[]= "c='$ref_tandatanganSkpdfmSKPD'";
+			if($ref_tandatanganSkpdfmUNIT!='00' and $ref_tandatanganSkpdfmUNIT !='')$arrKondisi[]= "d='$ref_tandatanganSkpdfmUNIT'";
+			if($ref_tandatanganSkpdfmSUBUNIT!='00' and $ref_tandatanganSkpdfmSUBUNIT !='')$arrKondisi[]= "e='$ref_tandatanganSkpdfmSUBUNIT'";
+			if($ref_tandatanganSkpdfmSEKSI!='00' and $ref_tandatanganSkpdfmSEKSI !='')$arrKondisi[]= "e1='$ref_tandatanganSkpdfmSEKSI'";	
+		}else{
+			$ref_tandatanganSkpdfmURUSAN = $_REQUEST['ref_tandatanganSkpdfmURUSAN'];//ref_skpdSkpdfmSKPD
+			$ref_tandatanganSkpdfmSKPD = $_REQUEST['ref_tandatanganSkpdfmSKPD'];//ref_skpdSkpdfmSKPD
+			$ref_tandatanganSkpdfmUNIT = $_REQUEST['ref_tandatanganSkpdfmUNIT'];
+			$ref_tandatanganSkpdfmSUBUNIT = $_REQUEST['ref_tandatanganSkpdfmSUBUNIT'];
+			$ref_tandatanganSkpdfmSEKSI = $_REQUEST['ref_tandatanganSkpdfmSEKSI'];
+			
+		$isivalue=explode('.',$fmPILCARIvalue);
+		switch($fmPILCARI){			
+			case 'selectNIP': $arrKondisi[] = " nip like '$fmPILCARIvalue%'"; break;
+			case 'selectNama': $arrKondisi[] = " nama like '%$fmPILCARIvalue%'"; break;	
+		}		
+		if(empty($_POST['fmKategori'])) {
+			
+		}		
+		if($ref_tandatanganSkpdfmURUSAN!='00' and $ref_tandatanganSkpdfmURUSAN !='')$arrKondisi[]= "c1='$ref_tandatanganSkpdfmURUSAN'";
+			if($ref_tandatanganSkpdfmSKPD!='00' and $ref_tandatanganSkpdfmSKPD !='')$arrKondisi[]= "c='$ref_tandatanganSkpdfmSKPD'";
+			if($ref_tandatanganSkpdfmUNIT!='00' and $ref_tandatanganSkpdfmUNIT !='')$arrKondisi[]= "d='$ref_tandatanganSkpdfmUNIT'";
+			if($ref_tandatanganSkpdfmSUBUNIT!='00' and $ref_tandatanganSkpdfmSUBUNIT !='')$arrKondisi[]= "e='$ref_tandatanganSkpdfmSUBUNIT'";
+			if($ref_tandatanganSkpdfmSEKSI!='00' and $ref_tandatanganSkpdfmSEKSI !='')$arrKondisi[]= "e1='$ref_tandatanganSkpdfmSEKSI'";	
+		//	if(!empty($_POST['fmKategori']) ) $arrKondisi[] = "kategori_tandatangan like '%".$_POST['fmKategori']."%'";
+		
+			if(!empty($_POST['fmKategori']) ) $arrKondisi[] = " kategori_ttd like '%".$_POST['fmKategori']."%'";
+		//	if(!empty($_POST['fmKategori']) ) $arrKondisi[] = " kategori_tandatangan like '%".$_POST['fmKategori']."%'";
+		
+		}
+		
+		
+		$Kondisi= join(' and ',$arrKondisi);		
+		$Kondisi = $Kondisi =='' ? '':' Where '.$Kondisi;
+		
+		//Order -------------------------------------
+		$fmORDER1 = cekPOST('fmORDER1');
+		$fmDESC1 = cekPOST('fmDESC1');			
+		$Asc1 = $fmDESC1 ==''? '': 'desc';		
+		$arrOrders = array();
+		switch($fmORDER1){
+		
+			case '1': $arrOrders[] = " nip $Asc1 " ;break;
+			case '2': $arrOrders[] = " nama $Asc1 " ;break;
+			
+		}	
+		$Order= join(',',$arrOrders);	
+		$OrderDefault = '';// Order By no_terima desc ';
+		$Order =  $Order ==''? $OrderDefault : ' Order By '.$Order;
+		
+		$pagePerHal = $this->pagePerHal =='' ? $Main->PagePerHal: $this->pagePerHal; 
+		$HalDefault=cekPOST($this->Prefix.'_hal',1);					
+		$Limit = " limit ".(($HalDefault	*1) - 1) * $pagePerHal.",".$pagePerHal; //$LimitHal = '';
+		$Limit = $Mode == 3 ? '': $Limit;
+		//noawal ------------------------------------
+		$NoAwal= $pagePerHal * (($HalDefault*1) - 1);							
+		$NoAwal = $Mode == 3 ? 0: $NoAwal;	
+		
+		return array('Kondisi'=>$Kondisi, 'Order'=>$Order ,'Limit'=>$Limit, 'NoAwal'=>$NoAwal);
+		
+	}
+}
+$ref_tandatangan = new ref_tandatanganObj();
+?>

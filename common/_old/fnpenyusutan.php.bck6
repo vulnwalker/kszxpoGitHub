@@ -1,0 +1,2149 @@
+<?php
+
+class PenyusutanObj extends DaftarObj2{
+	var $Prefix = 'Penyusutan'; //jsname
+	var $SHOW_CEK = FALSE;
+	var $withform = TRUE;
+	//daftar -------------------
+	//var $elCurrPage="HalDefault";
+	var $TblName = 'penyusutan'; //daftar
+	var $TblName_Hapus = 'penyusutan';
+	var $MaxFlush = 10;
+	var $TblStyle = array( 'koptable', 'cetak','cetak'); //berdasar mode
+	var $ColStyle = array( 'GarisDaftar', 'GarisCetak','GarisCetak');
+	var $KeyFields = array('Id'); //daftar/hapus
+	var $FieldSum = array();
+	var $SumValue = array();
+	var $FieldSum_Cp1 = array( 10, 9,9);//berdasar mode
+	var $FieldSum_Cp2 = array( 0, 0,0);	
+	var $checkbox_rowspan = 1;
+	var $totalCol = 9; //total kolom daftar
+	var $fieldSum_lokasi = array( 10);  //lokasi sumary di kolom ke	
+	var $withSumAll = TRUE;
+	var $withSumHal = FALSE;
+	var $WITH_HAL = TRUE;
+	var $totalhalstr = '<b>Total per Halaman';
+	var $totalAllStr = '<b>Total';
+	//var $KeyFields_Hapus = array('Id');
+	//cetak --------------------
+	var $cetak_xls=FALSE ;
+	var $fileNameExcel='Penyusutan.xls';
+	var $Cetak_Judul = 'Penyusutan';
+	//var $Cetak_Header;
+	var $Cetak_Mode=2;
+	var $Cetak_WIDTH = '30cm';
+	var $Cetak_OtherHTMLHead;//="<link type='text/css' href='css/template_css.css' rel='stylesheet'>";
+	//page ----------------------
+	//var $Prefix='page'; //js object pake ini
+	var $ToolbarAtas_edit ='';
+	var $PageTitle = 'Penyusutan';
+	var $PageIcon = 'images/penatausahaan_ico.gif';
+	var $pagePerHal= '1000';
+	var $FormName = 'Penyusutan_form';	
+	var $ico_width = 20;
+	var $ico_height = 30;
+	
+	//hitung
+	var $akum_penyusutan=0;
+	var $akum_masamanfaat = 0;
+	var $akum_perolehan = 0;
+	var $akum_rehab =0;
+	
+	function Hapus($ids){ //batal susut 1 data
+		global $Main;
+		$err=''; $cek='';
+		//$cid= $POST['cid'];
+		//$err = ''.$ids;
+		
+		for($i = 0; $i<count($ids); $i++)	{
+			//cek data penyusutan terakhir
+			$old = mysql_fetch_array(mysql_query( "select year(tgl) tahun_buku, tgl, tahun, idbi, idbi_awal from penyusutan where id='".$ids[$i]."' " ));
+			$maxthn = mysql_fetch_array(mysql_query( "select max(tahun) as maxthn from penyusutan where idbi_awal='".$old['idbi_awal']."' " ));
+			$bi=mysql_fetch_array(mysql_query("select * from buku_induk where id='".$old['idbi']."' "));
+			if($err=='' && $old['tahun'] < $maxthn['maxthn']) $err = " Hanya data tahun penyusutan terakhir yang boleh dihapus!";			
+			//cek tahun closing
+			//if ($err=='' && $old['tahun_buku'] <= $Main->TAHUN_CLOSING ) 
+			if ($err=='' && sudahClosing( $old['tgl'], $bi['c'], $bi['d'] ) ) $err = "Data tidak bisa dihapus, sudah closing!";
+		}
+		
+		if($err==''){
+			for($i = 0; $i<count($ids); $i++)	{
+				$old2 = mysql_fetch_array(mysql_query( 
+					"select year(tgl) as tahun_buku, tgl, tahun, idbi, idbi_awal from penyusutan where id='".$ids[$i]."' " 
+				));
+			
+				//$err = $this->Hapus_Validasi($ids[$i]);			
+				if($err ==''){
+					$get = $this->Hapus_Data($ids[$i]);
+					$err .= $get['err'];
+					$cek .= $get['cek'];
+					if ($err=='') {
+						if($Main->SUSUT_MODE==2){//semester lainnya dalam tahun tersebut ikut dihapus
+							$del = mysql_fetch_array(mysql_query(
+								" delete from penyusutan where tahun ='".$old2['tahun']."' and idbi_awal = '".$old2['idbi_awal']."' "
+							)); 
+						}
+						$aqry = "select max(tahun) as maxthn, min(tahun) as minthn, sum(masa_manfaat)  as totmanfaat  ".
+							" from penyusutan where idbi='".$old2['idbi']."' " ;
+						$mthn = mysql_fetch_array(mysql_query( $aqry ));
+						$masa_manfaat = $mthn['totmanfaat'];
+												
+						$aqry = "select tahun, bulan from penyusutan where idbi='".$old2['idbi']."' order by tahun,bulan limit 0,1 ";
+						$mthn = mysql_fetch_array(mysql_query( $aqry ));
+						$minthn = $mthn['tahun']; $minbulan = $mthn['bulan'];
+						
+						$aqry = "select tahun, bulan from penyusutan where idbi='".$old2['idbi']."' order by tahun desc, bulan desc limit 0,1 ";
+						$mthn = mysql_fetch_array(mysql_query( $aqry ));
+						$maxthn = $mthn['tahun']; $maxbulan = $mthn['bulan'];
+						
+						$cek .= $aqry;
+						$aqry = "update buku_induk set thn_susut_aw='$minthn', bln_susut_aw='$minbulan', ".
+							" thn_susut_ak='$maxthn', bln_susut_ak='$maxbulan', ".
+							" masa_manfaat = '$masa_manfaat' ".
+							" where id = '".$old2['idbi']."' " ;
+						mysql_query($aqry); $cek .= $aqry;
+									
+						$after = $this->Hapus_Data_After($ids[$i]);
+						$err .=$after['err'];
+						$cek .=$after['cek'];
+					}
+					if ($err != '') break;
+					 				
+				}else{
+					break;
+				}			
+			}
+		}
+		
+		return array('err'=>$err,'cek'=>$cek);
+	} 
+		
+	function setTitle(){
+		global $Main;
+		//return 'Rekapitulasi Hasil Sensus Tahun '. getTahunSensus() ;
+		//if($Main->MODUL_AKUNTASI){
+			return 'Penyusutan';	
+		//}else{
+		//	return 'Pembukuan';	
+		//}
+		
+		
+	}
+	function setCetakTitle(){
+		//return	"<DIV ALIGN=CENTER>$this->Cetak_Judul Tahun ". getTahunSensus();
+		return " <DIV ALIGN=CENTER>Penyusutan ";
+	}
+	
+	/*function setMenuEdit(){		
+		return '';
+	}*/
+	
+	
+	
+	
+	function batalSusut(){ //batal penyusutan per barang
+		global $Main, $HTTP_COOKIE_VARS;
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		
+		$UID = $HTTP_COOKIE_VARS['coID'];		
+		$cidBI = $_REQUEST['cidBI'];
+		//$thn = $Main->TAHUN_CLOSING==''? 0: $Main->TAHUN_CLOSING;
+		
+		foreach ($cidBI as $idbi){
+			$aqry = "select * from buku_induk where id = '$idbi' ;"; $cek .= $aqry;
+			$bi = mysql_fetch_array(mysql_query($aqry));
+			
+			/*if($Main->TAHUN_CLOSING=='' || $Main->TAHUN_CLOSING==0 ){
+				$aqry = "delete from penyusutan where idbi='{$bi['id']}' "; $cek .= $aqry;				
+			}else{
+				$aqry = "delete from penyusutan where idbi='{$bi['id']}' and year(tgl) > $thn; "; $cek .= $aqry;	
+			}*/			
+			//if($Main->TGL_CLOSING=='' || $Main->TGL_CLOSING==0 ){
+			$tglclosing = getTglClosing($bi['c'],$bi['d']);
+			if($tglclosing=='' || $tglclosing==0 ){
+				$aqry = "delete from penyusutan where idbi='{$bi['id']}' "; $cek .= $aqry;				
+			}else{
+				$aqry = "delete from penyusutan where idbi='{$bi['id']}' and tgl > $tglclosing ; "; $cek .= $aqry;	
+			}
+			$qry = mysql_query($aqry);
+			
+			$aqry = "select max(ifnull(tahun,0) ) as maxtahun from penyusutan where idbi='{$bi['id']}' ; "; $cek .= $aqry;
+			$susut 	= mysql_fetch_array(mysql_query($aqry));
+			
+			if($susut['maxtahun']==0){
+				$blnsusutak = 0;
+			}else{
+				$blnsusutak = 12;
+			}
+			
+			if($qry){
+				$aqry = "update buku_induk set masa_manfaat=0, nilai_sisa=null, ".
+					"thn_susut_aw = 0, bln_susut_aw = 0, thn_susut_ak='{$susut['maxtahun']}' , bln_susut_ak='$blnsusutak' ".
+					"where id='{$bi['id']}' ; "; $cek .= $aqry;
+					
+				$qry = mysql_query(	$aqry );	
+			}	
+		}
+				
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	function susut1barang_serang($idbi, $thnsusutak, $semAkhir, $tglSusut){
+	/* susut insert per semester
+	** s/d $thnsusutak $blnsusutak
+	*/
+	
+		global $Main,$HTTP_COOKIE_VARS;
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		
+		$UID = $HTTP_COOKIE_VARS['coID'];
+		
+		//ambil data bi
+		$aqry = " select * from buku_induk where id ='$idbi' "; $cek .= $aqry;
+		$bi = mysql_fetch_array(mysql_query($aqry));
+		$arrtglbuku = explode('-', $bi['tgl_buku'] );
+		$thnbuku = $arrtglbuku[0];
+		$blnbuku = $arrtglbuku[1];
+		$tglSusut = $_REQUEST['tgl'];
+					
+		//if($bi['status_barang']==1 && ($bi['staset']==3 || $bi['staset']==8) &&  $bi['kondisi']<>3     ){
+		if( ($bi['staset']==3 || $bi['staset']==8) &&  $bi['kondisi']<>3     ){
+		
+			//ambil masa manfaat, residu -------------------------------------------------------
+			$masa_manfaat = 0;
+			if($bi['masa_manfaat']>0){
+				$masa_manfaat = $bi['masa_manfaat'];
+				$persen_residu = $bi['nilai_sisa'];
+			}else{
+				//ambil dari ref barang
+				$aqry = " select * from ref_barang where concat(f,g,h,i,j)='".$bi['f'].$bi['g'].$bi['h'].$bi['i'].$bi['j']."' ";
+				$brg = mysql_fetch_array(mysql_query($aqry)); $cek .= $aqry;
+				$masa_manfaat = $brg['masa_manfaat'];
+				$persen_residu = $brg['residu']; 
+			}
+			$cek .= ' masa_manfaat='.$masa_manfaat." persen_residu = $persen_residu";
+			
+			if($masa_manfaat>0){ 
+				//penyusutan sebelumnya --------------------------------------------------------------------
+				$aqry = "select * from penyusutan where idbi = '".$bi['id']."' ".
+					"and Id = (select max(Id) from penyusutan where idbi = '".$bi['id']."'); "; $cek .= $aqry;
+				$prev = mysql_fetch_array(mysql_query(
+					$aqry
+				));			
+				//cari tahun dan bulan mulai hitung susut ---------------------------------------------------
+				if( $prev['Id'] == '' ){//penyuustan baru
+					//if($bi['asal_usul']==5){
+					//	$thn_susut_aw = $Main->TAHUN_MULAI_SUSUT < $thnbuku ? $thnbuku:  $Main->TAHUN_MULAI_SUSUT;											
+					//}else{
+						$thn_susut_aw = $Main->TAHUN_MULAI_SUSUT < $bi['thn_perolehan'] ? $bi['thn_perolehan']:  $Main->TAHUN_MULAI_SUSUT;										
+						$thn_susut_aw ++;
+					//}
+					
+					/*$jmlsusut =0;
+					$bln_susut_aw = $blnbuku+1;//					
+					if($bln_susut_aw>12){
+						$thn_susut_aw ++;
+						$bln_susut_aw = 1;
+					}*/
+					$aqry = "update buku_induk set thn_susut_aw='".($thn_susut_aw)."' , bln_susut_aw ='".$bln_susut_aw."', ".
+						" nilai_sisa='$persen_residu' where id='".$bi['id']."'"; $cek .= $aqry;
+					mysql_query($aqry);
+					$bi_thnsusutaw = $thn_susut_aw;
+					//$bi_blnsusutaw = $bln_susut_aw;
+				}else{//melanjutkan
+					$aqry = "select count(*) as cnt from penyusutan where idbi = '".$bi['id']."' "; $cek .= $aqry;
+					$get = mysql_fetch_array(mysql_query($aqry));
+					$jmlsusut = $get['cnt'];
+					$thn_susut_aw = $prev['tahun']+1;
+					/*$bln_susut_aw = $prev['bulan']+1;
+					if($bln_susut_aw>12){
+						$thn_susut_aw ++;
+						$bln_susut_aw = 1;
+					}*/
+					$bi_thnsusutaw = $bi['thn_susut_aw'];
+					//$bi_blnsusutaw = $bi['bln_susut_aw'];
+				}			
+				
+				//ambil hrg rehab/masa manfaat sebelumnya
+				$aqry = " select sum(hrg_rehab) as shrg_rehab, sum(masa_manfaat) as smasa_manfaat from penyusutan where idbi = '".$bi['id']."' ";
+				$get = mysql_fetch_array(mysql_query($aqry));																
+				$hrg_rehab_prev = $get['shrg_rehab']; $masa_rehab_prev=$get['smasa_manfaat'];
+								
+				//hitung bulanan
+				$blnstop=0; $stop = FALSE;
+				//while( $thn_susut_aw*12+$bln_susut_aw <= $thnsusutak*12+$blnsusutak && 
+				//	$thn_susut_aw*12+$bln_susut_aw < ((( $bi_thnsusutaw +$masa_manfaat)*12)+$bi_blnsusutaw ) ){
+				$awal = $jmlsusut==0; $hrgSusutBln=0; $akhirsusut=FALSE;
+				while($stop==FALSE){
+					
+					//$cek .= " $thn_susut_aw*12+$bln_susut_aw <= $thnsusutak*12+$blnsusutak && $thn_susut_aw*12+$bln_susut_aw < ((( $bi_thnsusutaw +$masa_manfaat)*12)+$bi_blnsusutaw )  <br>";
+					//cek penyusutan ----------------------------------------------
+					//if($thn_susut_aw*12+$bln_susut_aw+1 > $thnsusutak*12+$blnsusutak ){						
+					if($thn_susut_aw > $thnsusutak){						
+						$stop = TRUE; $cek .= "stop karena > thn akan disusutkan";
+						//$blnstop=$bln_susut_aw;
+					//}else if($thn_susut_aw*12+$bln_susut_aw+1 >= ((( $bi_thnsusutaw +$masa_manfaat)*12)+$bi_blnsusutaw )){
+					}else if( $thn_susut_aw >=  $bi_thnsusutaw +$masa_manfaat ){
+						$stop = TRUE; $cek .= "stop karena masa mafaat telah habis";
+						//$blnstop=$bln_susut_aw;
+						//$akhirsusut=TRUE;
+					}else{
+						//cek stop krn penghapusan ------------------------------------
+						$blnstop=0;
+						$aqry = "select count(*) as cnt from penghapusan ".
+							" where id_bukuinduk='".$bi['id'].
+							"' and year(tgl_penghapusan)='$thn_susut_aw' ";
+							//" and month(tgl_penghapusan)='$bln_susut_aw' ";
+						$hps = mysql_fetch_array(mysql_query($aqry));
+						if($hps['cnt']>0) {
+							$cek .= ' stop penghapusan ';
+							//$blnstop=$bln_susut_aw; //break;
+							$stop=TRUE;
+						}else{
+							//cek pindah dari aset tetap/ atb
+							/*$aqry = "select count(*) as cnt from t_history_aset ".
+								" where idbi='".$bi['id']."' and (staset=3 or staset=8) ".
+								" and year(tgl)='$thn_susut_aw' ";//." and month(tgl)='$bln_susut_aw' ";*/
+							$aqry = "select count(*) as cnt from t_history_aset ".
+								" where idbi='".$bi['id']."' and (staset_baru=9 or staset_baru=10) ".
+								" and year(tgl)='$thn_susut_aw' ";
+							$all = mysql_fetch_array(mysql_query($aqry));
+							if($all['cnt']>0){
+								$cek .= ' stop pindah aset ';
+								//$blnstop=$bln_susut_aw; //break;
+								$stop=TRUE;
+							}						
+						}	
+					}
+					
+					if ($stop==FALSE){
+						
+					
+						$hrg_perolehan = $bi['jml_harga'];	
+						$cek .= "[ thn_susut_aw = $thn_susut_aw - bln_susut_aw= $bln_susut_aw - jmlsusut=$jmlsusut - hrg_rehab_prev=$hrg_rehab_prev - masa_rehab_prev=$masa_rehab_prev]"	;				
+						$cek .= ' masa_manfaat='.$masa_manfaat." persen_residu = $persen_residu harga periolehan=$hrg_perolehan ";
+												
+						if($Main->SUSUT_REHAB){					
+						
+						//pemeliharaan dihitung tiap tahun mulai pd tahun 1
+							$curthn = $thn_susut_aw;
+							//$operTahun = $curthn==($bi_thnsusutaw*12)+$bi_blnsusutaw? "<=" : "=" ;
+							$operTahun = '<';
+							$aqryplh = //pelihara
+								"select sum(biaya_pemeliharaan) as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from pemeliharaan ".
+								"where tambah_aset=1 and idbi_awal='".$bi['idawal']."' ".
+								"and YEAR(tgl_pemeliharaan) $operTahun $curthn ; "; //$cek .= $aqryplh;
+							$plh= mysql_fetch_array(mysql_query( $aqryplh ));
+							$aqryplh = //pengaman
+								"select sum(biaya_pengamanan)as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from pengamanan ".
+								"where tambah_aset=1 and idbi_awal='".$bi['idawal']."' ".
+								"and YEAR(tgl_pengamanan) $operTahun $curthn ; ";// $cek .= $aqryplh;
+							$aman= mysql_fetch_array(mysql_query( $aqryplh ));
+							$aqryplh = //hapus sebagian
+								"select sum(harga_hapus)as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from penghapusan_sebagian ".
+								" where  idbi_awal='".$bi['idawal']."' ".
+								"and YEAR(tgl_penghapusan) $operTahun $curthn ; ";// $cek .= $aqryplh;
+							$hps= mysql_fetch_array(mysql_query( $aqryplh ));
+							$aqryplh = //koreksi 
+								"select sum(hrg_akhir - hrg_awal)as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from koreksi ".
+								"where idbi_awal='".$bi['idawal']."' ".
+								"and YEAR(tgl) $operTahun $curthn ; "; // $cek .= $aqryplh;
+							$koreksi = mysql_fetch_array(mysql_query( $aqryplh ));								
+							$aqryplh = //penilaian 
+								"select sum(nilai_barang - nilai_barang_asal)as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from penilaian ".
+								"where idbi_awal='".$bi['idawal']."' ".
+								"and (YEAR(tgl)*12) + MONTH(tgl)  $operTahun $curthn ; ";  //$cek .= $aqryplh;
+							$penilaian = mysql_fetch_array(mysql_query( $aqryplh ));
+							
+							$hrg_rehab = $plh['tot'] + $aman['tot'] - $hps['tot'] + $koreksi['tot']+$penilaian['tot'];						
+							$masa_rehab = $plh['totmanfaat'] + $aman['totmanfaat'] - $hps['totmanfaat'] + $koreksi['totmanfaat']+ $penilaian['totmanfaat'];
+													
+							//update hrg perolehan dan masa manfaat 
+							$hrg_perolehan += $hrg_rehab ;//nilai buku = hrg perolehan + hrg rehab s/d thn bulan ini
+							$masa_manfaat += $masa_rehab ;
+						}
+						//$hrgSusut += (($hrg_perolehan-($persen_residu/100*$hrg_perolehan))/$masa_manfaat )/12;
+						$hrgSusut = ($hrg_perolehan-($persen_residu/100*$hrg_perolehan))/$masa_manfaat;
+						$cek .= "  akhirsusut=$akhirsusut hrg peroleh=$hrg_perolehan persen_residu=$persen_residu masa_manfaat=$masa_manfaat";
+						$cek .= " hrgSusut1=$hrgSusut ";
+						
+						/*if( $thn_susut_aw+1 >=  $bi_thnsusutaw +$masa_manfaat ){
+						//if($akhirsusut){
+							//kalo akhir sust --> harga susut dibulatkan
+							//ambil tot akumulasi
+							$get = mysql_fetch_array(mysql_query( "select sum(harga) as tot from penyusutan where idbi_awal = '".$bi['idawal']."' "));
+							$totsusutprev = $get['tot']; 
+							//if ($totsusutprev + $hrgSusut - ($hrg_perolehan*(1+$persen_residu/100)) > 0 || $persen_residu==0) $hrgSusut = $hrg_perolehan*(1+$persen_residu/100) - $totsusutprev;
+							$totsusut_ = ($hrg_perolehan*(1-$persen_residu/100));
+							if ($totsusutprev + $hrgSusut - $nilaisisa_ < 0 ) $hrgSusut = $totsusut_ - $totsusutprev;
+						}*/
+					
+						$cek .= " hrgSusut2=$hrgSusut ";
+					
+					
+						//if($bln_susut_aw==6 || $bln_susut_aw==12 || $stop ){						
+						//harga perolehan/nilai buku tanpa penyusutan -------------------------
+						$cek .= " hrg_rehab=$hrg_rehab - masa_rehab=$masa_rehab";
+						
+						//$sem = $bln_susut_aw <=6? 1:2;						
+						
+						//hit penambahan masa manfaat ---------------------------------------------------
+						if($awal){
+							$penambahan_manfaat = $masa_manfaat + ($masa_rehab-$masa_rehab_prev) ; 						
+							$penambahan_perolehan = $hrg_perolehan + ($hrg_rehab-$hrg_rehab_prev);	
+						}else{
+							$penambahan_manfaat = $masa_manfaat+$masa_rehab-$masa_rehab_prev ; 
+							$penambahan_perolehan = $hrg_rehab-$hrg_rehab_prev;					
+						}
+						//$bln_susut_aw_ = $sem==2? 12:6;
+						
+						
+						
+						$hrgSusutSem = $hrgSusut/2;
+						//simpan sem1 -----------------------------------------------------------------------------
+						$sem=1 ; $bln_susut_aw_ = 6;
+						if((int)$thn_susut_aw<='2014'){
+							$tglSusut = '2014-12-31';	
+						}else{
+							$tglSusut = $thn_susut_aw.'-06-30';	
+						}
+						
+						
+						//if($bi_blnsusutaw>6){ //tidak berakhir di semester 1
+						if($prev['Id'] == '' ){
+							$difRehab = (($hrg_rehab-$hrg_rehab_prev));
+							$difManfaat = ($penambahan_manfaat);
+							$difPerolehan = ($penambahan_perolehan);
+							$difRehab2 = 0;
+							$difManfaat2 = 0;
+							$difPerolehan2 = 0;
+						}else{
+							$difRehab = (($hrg_rehab-$hrg_rehab_prev)/2);
+							$difManfaat = ($penambahan_manfaat/2);
+							$difPerolehan = ($penambahan_perolehan/2);
+							$difRehab2 = (($hrg_rehab-$hrg_rehab_prev)/2);
+							$difManfaat2 = ($penambahan_manfaat/2);
+							$difPerolehan2 = ($penambahan_perolehan/2);
+						}
+						$aqry2 = "insert into penyusutan (tgl,tahun,sem,bulan,idbi,idbi_awal, harga,".
+							" uid,tgl_update, ".						
+							" hrg_rehab,masa_manfaat,residu,hrg_perolehan) values ".
+							"('$tglSusut','$thn_susut_aw' ,'$sem', '$bln_susut_aw_', '".$bi['id']."',  '".$bi['idawal']."',". 
+							"'$hrgSusutSem', '$UID', now(),".							
+							"'".$difRehab."','".$difManfaat."','$persen_residu','".$difPerolehan."') ;";						
+						$cek .= ' simpan susut: '.$aqry2;
+						$qry2 = mysql_query($aqry2);
+						//}
+						//simpan sem2 -----------------------------------------------------------------------------
+						if( $thn_susut_aw+1 >=  $bi_thnsusutaw +$masa_manfaat ){						
+							//kalo akhir sust --> harga susut dibulatkan
+							//ambil tot akumulasi
+							$get = mysql_fetch_array(mysql_query( "select sum(harga) as tot, sum(hrg_perolehan) as nilaibuku  from penyusutan where idbi_awal = '".$bi['idawal']."' "));
+							$totsusutprev = $get['tot']; 
+							//$totsusut_ = ($hrg_perolehan*(1-$persen_residu/100));
+							$nilaibuku_ =$get['nilaibuku'] ;
+							$nilaisisa_ = ($persen_residu/100)*$hrg_perolehan;
+							//if (round($nilaibuku_,2) - (round($totsusutprev,2) + round($hrgSusutSem,2)) <0  ) {
+								$hrgSusutSem = round($nilaibuku_,2) - round($nilaisisa_,2) - round($totsusutprev,2);
+								$cek .= "akhir: nilaibuku_=$nilaibuku_, nilaisisa_=$nilaisisa_, totsusutprev=$totsusutprev, hrgSusutSem=$hrgSusutSem ";
+							//}
+						}
+						$sem=2 ; $bln_susut_aw_ = 12; 
+						if( (int) $thn_susut_aw<=2014){
+							$tglSusut = '2014-12-31';	
+						}else{
+							$tglSusut = $thn_susut_aw.'-12-31';	
+						}
+						//$tglSusut = $thnsusutak.'-12-31';
+						$aqry2 = "insert into penyusutan (tgl,tahun,sem,bulan,idbi,idbi_awal, harga,".
+							" uid,tgl_update, ".
+							" hrg_rehab,masa_manfaat,residu,hrg_perolehan) values ".
+							"('$tglSusut','$thn_susut_aw' ,'$sem', '$bln_susut_aw_', '".$bi['id']."',  '".$bi['idawal']."',". 
+							"'$hrgSusutSem', '$UID', now(),".
+							"'".$difRehab2."','".$difManfaat2."','$persen_residu','".$difPerolehan2."') ;";
+						$cek .= ' simpan susut: '.$aqry2;
+						$qry2 = mysql_query($aqry2);						
+						if($qry2){
+							$aqry = "update buku_induk set thn_susut_ak='".($thn_susut_aw)."', bln_susut_ak='".($bln_susut_aw_).
+								"', masa_manfaat='".($masa_manfaat+$masa_rehab)."'  where id='".$bi['id']."'";
+							$qry3 = mysql_query($aqry);
+							if($qry3==FALSE) {
+								$stop=TRUE;
+								$err = 'Gagal simpan data!';
+							}//$cek .= $aqry ;
+						}else{
+							$stop = TRUE;
+							$err = 'Gagal simpan data!';
+						}												
+						$masa_rehab_prev = $masa_manfaat+$masa_rehab;
+						$hrg_rehab_prev = $hrg_rehab;
+						$hrgSusutBln=0;
+						$awal = FALSE;
+						
+						//simpan sem2 jika belum bln
+						
+							
+							//$cek .=" simpan susut";
+						//}
+					
+					
+						$jmlsusut ++;
+						//$bln_susut_aw++;
+						//if($bln_susut_aw>12) {
+							$thn_susut_aw++ ;
+						//	$bln_susut_aw= 1;
+						//}
+						$cek .= " stop=$stop ";
+					
+					}//end stop
+					
+				
+				}//end while
+				
+				
+				
+			}//end if
+			else{
+				$cek .= 'masa manfaat belum ada!';
+			}
+		
+		}//ifsesuai kondisi/status brang
+		else{
+			$cek .= ' staset=3/8 and kondisi<>3 ';
+		}
+	
+		return	array('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	
+	}
+	
+	
+	function susut1barang_jabar($idbi, $thnsusutak, $blnsusutak, $tglSusut){
+	/* susut insert per bulan, dihitung 1 bulan setelah perolehan, ditampilkan bulanan
+	** 
+	*/
+		global $Main,$HTTP_COOKIE_VARS;
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		
+		$UID = $HTTP_COOKIE_VARS['coID'];
+		
+		//ambil data bi
+		$aqry = " select * from buku_induk where id ='$idbi' "; $cek .= $aqry;
+		$bi = mysql_fetch_array(mysql_query($aqry));
+		$arrtglbuku = explode('-', $bi['tgl_buku'] );
+		$thnbuku = $arrtglbuku[0];
+		$blnbuku = $arrtglbuku[1];
+					
+		//if($bi['status_barang']==1 && ($bi['staset']==3 || $bi['staset']==8) &&  $bi['kondisi']<>3     ){
+		if( ($bi['staset']==3 || $bi['staset']==8) &&  $bi['kondisi']<>3     ){
+		
+			//ambil masa manfaat, residu
+			$masa_manfaat = 0;
+			if($bi['masa_manfaat']>0){
+				$masa_manfaat = $bi['masa_manfaat'];
+				$persen_residu = $bi['nilai_sisa'];
+			}else{
+				//ambil dari ref barang
+				$aqry = " select * from ref_barang where concat(f,g,h,i,j)='".$bi['f'].$bi['g'].$bi['h'].$bi['i'].$bi['j']."' ";
+				$brg = mysql_fetch_array(mysql_query($aqry)); $cek .= $aqry;
+				$masa_manfaat = $brg['masa_manfaat'];
+				$persen_residu = $brg['residu']; 
+			}
+			$cek .= ' masa_manfaat='.$masa_manfaat." persen_residu = $persen_residu";
+			if($masa_manfaat>0){ 
+				//penyusutan sebelumnya
+				$aqry = "select * from penyusutan where idbi = '".$bi['id']."' ".
+					"and Id = (select max(Id) from penyusutan where idbi = '".$bi['id']."'); "; $cek .= $aqry;
+				$prev = mysql_fetch_array(mysql_query(
+					$aqry
+				));			
+				//cari tahun dan bulan mulai hitung susut
+				if( $prev['Id'] == '' ){//penyuustan baru
+					//if($bi['asal_usul']==5){
+					//	$thn_susut_aw = $Main->TAHUN_MULAI_SUSUT < $thnbuku ? $thnbuku:  $Main->TAHUN_MULAI_SUSUT;											
+					//}else{
+						$thn_susut_aw = $Main->TAHUN_MULAI_SUSUT < $bi['thn_perolehan'] ? $bi['thn_perolehan']:  $Main->TAHUN_MULAI_SUSUT;										
+					//}
+					
+					$bln_susut_aw = $blnbuku+1;//
+					$jmlsusut =0;
+					if($bln_susut_aw>12){
+						$thn_susut_aw ++;
+						$bln_susut_aw = 1;
+					}
+					$aqry = "update buku_induk set thn_susut_aw='".($thn_susut_aw)."' , bln_susut_aw ='".$bln_susut_aw."', ".
+						" nilai_sisa='$persen_residu' where id='".$bi['id']."'"; $cek .= $aqry;
+					mysql_query($aqry);
+					$bi_thnsusutaw = $thn_susut_aw;
+					$bi_blnsusutaw = $bln_susut_aw;
+				}else{//melanjutkan
+					$aqry = "select count(*) as cnt from penyusutan where idbi = '".$bi['id']."' "; $cek .= $aqry;
+					$get = mysql_fetch_array(mysql_query($aqry));
+					$jmlsusut = $get['cnt'];
+					$thn_susut_aw = $prev['tahun'];
+					$bln_susut_aw = $prev['bulan']+1;
+					if($bln_susut_aw>12){
+						$thn_susut_aw ++;
+						$bln_susut_aw = 1;
+					}
+					$bi_thnsusutaw = $bi['thn_susut_aw'];
+					$bi_blnsusutaw = $bi['bln_susut_aw'];
+				}			
+						
+				$aqry = " select sum(hrg_rehab) as shrg_rehab, sum(masa_manfaat) as smasa_manfaat from penyusutan where idbi = '".$bi['id']."' ";
+				$get = mysql_fetch_array(mysql_query($aqry));
+																
+				$hrg_rehab_prev = $get['shrg_rehab']; $masa_rehab_prev=$get['smasa_manfaat'];
+				$cek .= " $thn_susut_aw*12+$bln_susut_aw <= $thnsusutak*12+$blnsusutak && 
+					$thn_susut_aw*12+$bln_susut_aw < ((( $bi_thnsusutaw +$masa_manfaat)*12)+$bi_blnsusutaw )  ";
+				
+				//hitung bulanan
+				while( $thn_susut_aw*12+$bln_susut_aw <= $thnsusutak*12+$blnsusutak && 
+					$thn_susut_aw*12+$bln_susut_aw < ((( $bi_thnsusutaw +$masa_manfaat)*12)+$bi_blnsusutaw ) ){
+					
+					//cek penghapusan ------------------------------------
+					$aqry = "select count(*) as cnt from penghapusan ".
+						" where id_bukuinduk='".$bi['id'].
+						"' and year(tgl_penghapusan)='$thn_susut_aw' ".
+						" and month(tgl_penghapusan)='$bln_susut_aw' ";
+					$hps = mysql_fetch_array(mysql_query($aqry));
+					if($hps['cnt']>0) {
+						$cek .= ' stop penghapusan ';
+						break;
+					}else{
+						//cek pindah aset
+						$aqry = "select count(*) as cnt from t_history_aset ".
+							" where idbi='".$bi['id']."' and (staset=3 or staset=8) ".
+							" and year(tgl)='$thn_susut_aw' "." and month(tgl)='$bln_susut_aw' ";
+						$all = mysql_fetch_array(mysql_query($aqry));
+						if($all['cnt']>0){
+							$cek .= ' stop pindah aset ';
+							break;
+						}						
+					}
+											
+					//harga perolehan -------------------------
+					$hrg_perolehan = $bi['jml_harga'];								
+					if($Main->SUSUT_REHAB){					
+						//$operTahun = $prev['Id']==''? "<=" : "=" ;						
+						$curthn = $thn_susut_aw*12 + $bln_susut_aw;
+						//$operTahun = $curthn==($bi_thnsusutaw*12)+$bi_blnsusutaw? "<=" : "=" ;
+						$operTahun = '<=';
+						$aqryplh = //pelihara
+							"select sum(biaya_pemeliharaan) as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from pemeliharaan ".
+							"where tambah_aset=1 and idbi_awal='".$bi['idawal']."' ".
+							"and (YEAR(tgl_pemeliharaan)*12) + MONTH(tgl_pemeliharaan) $operTahun $curthn ; "; //$cek .= $aqryplh;
+						$plh= mysql_fetch_array(mysql_query( $aqryplh ));
+						$aqryplh = //pengaman
+							"select sum(biaya_pengamanan)as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from pengamanan ".
+							"where tambah_aset=1 and idbi_awal='".$bi['idawal']."' ".
+							"and (YEAR(tgl_pengamanan)*12) + MONTH(tgl_pengamanan) $operTahun $curthn ; "; //$cek .= $aqryplh;
+						$aman= mysql_fetch_array(mysql_query( $aqryplh ));
+						$aqryplh = //hapus sebagian
+							"select sum(harga_hapus)as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from penghapusan_sebagian ".
+							" where  idbi_awal='".$bi['idawal']."' ".
+							"and (YEAR(tgl_penghapusan)*12) + MONTH(tgl_penghapusan) $operTahun $curthn ; "; //$cek .= $aqryplh;
+						$hps= mysql_fetch_array(mysql_query( $aqryplh ));
+						$aqryplh = //koreksi 
+							"select sum(hrg_akhir - hrg_awal)as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from koreksi ".
+							"where idbi_awal='".$bi['idawal']."' ".
+							"and (YEAR(tgl)*12) + MONTH(tgl)  $operTahun $curthn ; ";  //$cek .= $aqryplh;
+						$koreksi = mysql_fetch_array(mysql_query( $aqryplh ));
+						$aqryplh = //penilaian 
+							"select sum(nilai_barang - nilai_barang_asal)as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from penilaian ".
+							"where idbi_awal='".$bi['idawal']."' ".
+							"and (YEAR(tgl)*12) + MONTH(tgl)  $operTahun $curthn ; ";  //$cek .= $aqryplh;
+						$penilaian = mysql_fetch_array(mysql_query( $aqryplh ));
+						
+						$hrg_rehab = $plh['tot'] + $aman['tot'] - $hps['tot'] + $koreksi['tot']+$penilaian['tot'];						
+						$masa_rehab = $plh['totmanfaat'] + $aman['totmanfaat'] - $hps['totmanfaat'] + $koreksi['totmanfaat']+ $penilaian['totmanfaat'];
+						
+						//update hrg perolehan dan masa manfaat 
+						$hrg_perolehan += $hrg_rehab ;
+						$masa_manfaat += $masa_rehab ;
+					}
+					
+					//hitung susut
+					$hrgSusutBln = (($hrg_perolehan-($persen_residu/100*$hrg_perolehan))/$masa_manfaat )/12;
+					$cek .= " hrgSusutBln = (($hrg_perolehan-($persen_residu/100*$hrg_perolehan))/$masa_manfaat )/12 ";
+					
+					//if( $thn_susut_aw+1 >=  $bi_thnsusutaw +$masa_manfaat ){			
+					$cek .= " cek akhir:  ".($thn_susut_aw*12+$bln_susut_aw+1)." > ".((( $bi_thnsusutaw +$masa_manfaat)*12)+$bi_blnsusutaw);
+					if($thn_susut_aw*12+$bln_susut_aw+1 >= ((( $bi_thnsusutaw +$masa_manfaat)*12)+$bi_blnsusutaw)){
+					
+						//kalo akhir sust --> harga susut dibulatkan
+						//ambil tot akumulasi
+						$get = mysql_fetch_array(mysql_query( "select sum(harga) as tot, sum(hrg_perolehan) as nilaibuku  from penyusutan where idbi_awal = '".$bi['idawal']."' "));
+						$totsusutprev = $get['tot']; 
+						//$totsusut_ = ($hrg_perolehan*(1-$persen_residu/100));
+						$nilaibuku_ =$get['nilaibuku'] ;
+						$nilaisisa_ = ($persen_residu/100)*$hrg_perolehan;
+						//if (round($nilaibuku_,2) - (round($totsusutprev,2) + round($hrgSusutSem,2)) <0  ) {
+							$hrgSusutBln = round($nilaibuku_,2) - round($nilaisisa_,2) - round($totsusutprev,2);
+							$cek .= "akhir: nilaibuku_=$nilaibuku_, nilaisisa_=$nilaisisa_, totsusutprev=$totsusutprev, hrgSusutBln=$hrgSusutBln ";
+						//}
+					}
+					
+					
+					//hit penambahan masa manfaat ---------------------------------------------------
+					if($jmlsusut==0){
+						$penambahan_manfaat = $masa_manfaat + ($masa_rehab-$masa_rehab_prev) ; 						
+						$penambahan_perolehan = $hrg_perolehan + ($hrg_rehab-$hrg_rehab_prev);	
+					}else{
+						$penambahan_manfaat = $masa_rehab-$masa_rehab_prev ; 
+						$penambahan_perolehan = $hrg_rehab-$hrg_rehab_prev;					
+					}
+						
+					//simpan
+					$aqry2 = "insert into penyusutan (tgl,tahun,bulan,idbi,idbi_awal, harga,".
+						" uid,tgl_update, ".
+						" hrg_rehab,masa_manfaat,residu,hrg_perolehan) values ".
+						"('$tglSusut','$thn_susut_aw' ,'$bln_susut_aw', '".$bi['id']."',  '".$bi['idawal']."',". 
+						"'$hrgSusutBln', '$UID', now(),".
+						"'".($hrg_rehab-$hrg_rehab_prev)."','".$penambahan_manfaat."','$persen_residu','".$penambahan_perolehan."') ;";
+					$cek .= ' '.$aqry2;
+					$qry2 = mysql_query($aqry2);
+					if($qry2){
+						$aqry = "update buku_induk set thn_susut_ak='".($thn_susut_aw)."', bln_susut_ak='".($bln_susut_aw)."', masa_manfaat='".($masa_manfaat+$masa_rehab)."'  where id='".$bi['id']."'";
+						mysql_query($aqry);
+						$cek .= $aqry ;
+					}
+					$masa_rehab_prev = $masa_rehab;
+					$hrg_rehab_prev = $hrg_rehab;
+					$jmlsusut ++;
+					$bln_susut_aw++;
+					if($bln_susut_aw>12) {
+						$thn_susut_aw++ ;
+						$bln_susut_aw= 1;
+					}
+				}
+				
+				
+				
+					
+			}
+		}
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	function susut1barang($idbi, $thnsusutak, $blnsusutak, $tglSusut){
+	/* susut insert per semester, tampil di generate bulanan
+	** s/d $thnsusutak $blnsusutak
+	*/
+	
+		global $Main,$HTTP_COOKIE_VARS;
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		
+		$UID = $HTTP_COOKIE_VARS['coID'];
+		
+		//ambil data bi
+		$aqry = " select * from buku_induk where id ='$idbi' "; $cek .= $aqry;
+		$bi = mysql_fetch_array(mysql_query($aqry));
+		$arrtglbuku = explode('-', $bi['tgl_buku'] );
+		$thnbuku = $arrtglbuku[0];
+		$blnbuku = $arrtglbuku[1];
+					
+		//if($bi['status_barang']==1 && ($bi['staset']==3 || $bi['staset']==8) &&  $bi['kondisi']<>3     ){
+		if( ($bi['staset']==3 || $bi['staset']==8) &&  $bi['kondisi']<>3     ){
+		
+			//ambil masa manfaat, residu
+			$masa_manfaat = 0;
+			if($bi['masa_manfaat']>0){
+				$masa_manfaat = $bi['masa_manfaat'];
+				$persen_residu = $bi['nilai_sisa'];
+			}else{
+				//ambil dari ref barang
+				$aqry = " select * from ref_barang where concat(f,g,h,i,j)='".$bi['f'].$bi['g'].$bi['h'].$bi['i'].$bi['j']."' ";
+				$brg = mysql_fetch_array(mysql_query($aqry)); $cek .= $aqry;
+				$masa_manfaat = $brg['masa_manfaat'];
+				$persen_residu = $brg['residu']; 
+			}
+			$cek .= ' masa_manfaat='.$masa_manfaat." persen_residu = $persen_residu";
+			if($masa_manfaat>0){ 
+				//penyusutan sebelumnya
+				$aqry = "select * from penyusutan where idbi = '".$bi['id']."' ".
+					"and Id = (select max(Id) from penyusutan where idbi = '".$bi['id']."'); "; $cek .= $aqry;
+				$prev = mysql_fetch_array(mysql_query(
+					$aqry
+				));			
+				//cari tahun dan bulan mulai hitung susut
+				if( $prev['Id'] == '' ){//penyuustan baru
+					//if($bi['asal_usul']==5){
+					//	$thn_susut_aw = $Main->TAHUN_MULAI_SUSUT < $thnbuku ? $thnbuku:  $Main->TAHUN_MULAI_SUSUT;											
+					//}else{
+						$thn_susut_aw = $Main->TAHUN_MULAI_SUSUT < $bi['thn_perolehan'] ? $bi['thn_perolehan']:  $Main->TAHUN_MULAI_SUSUT;										
+					//}
+					
+					$bln_susut_aw = $blnbuku+1;//
+					$jmlsusut =0;
+					if($bln_susut_aw>12){
+						$thn_susut_aw ++;
+						$bln_susut_aw = 1;
+					}
+					$aqry = "update buku_induk set thn_susut_aw='".($thn_susut_aw)."' , bln_susut_aw ='".$bln_susut_aw."', ".
+						" nilai_sisa='$persen_residu' where id='".$bi['id']."'"; $cek .= $aqry;
+					mysql_query($aqry);
+					$bi_thnsusutaw = $thn_susut_aw;
+					$bi_blnsusutaw = $bln_susut_aw;
+				}else{//melanjutkan
+					$aqry = "select count(*) as cnt from penyusutan where idbi = '".$bi['id']."' "; $cek .= $aqry;
+					$get = mysql_fetch_array(mysql_query($aqry));
+					$jmlsusut = $get['cnt'];
+					$thn_susut_aw = $prev['tahun'];
+					$bln_susut_aw = $prev['bulan']+1;
+					if($bln_susut_aw>12){
+						$thn_susut_aw ++;
+						$bln_susut_aw = 1;
+					}
+					$bi_thnsusutaw = $bi['thn_susut_aw'];
+					$bi_blnsusutaw = $bi['bln_susut_aw'];
+				}			
+				
+				//ambil hrg rehab/masa manfaat sebelumnya
+				$aqry = " select sum(hrg_rehab) as shrg_rehab, sum(masa_manfaat) as smasa_manfaat from penyusutan where idbi = '".$bi['id']."' ";
+				$get = mysql_fetch_array(mysql_query($aqry));																
+				$hrg_rehab_prev = $get['shrg_rehab']; $masa_rehab_prev=$get['smasa_manfaat'];
+				
+				
+				//hitung bulanan
+				$blnstop=0; $stop = FALSE;
+				//while( $thn_susut_aw*12+$bln_susut_aw <= $thnsusutak*12+$blnsusutak && 
+				//	$thn_susut_aw*12+$bln_susut_aw < ((( $bi_thnsusutaw +$masa_manfaat)*12)+$bi_blnsusutaw ) ){
+				$awal = $jmlsusut==0; $hrgSusutBln=0; $akhirsusut=FALSE;
+				while($stop==FALSE){
+					$cek .= "[ thn_susut_aw = $thn_susut_aw - bln_susut_aw= $bln_susut_aw - jmlsusut=$jmlsusut - hrg_rehab_prev=$hrg_rehab_prev - masa_rehab_prev=$masa_rehab_prev]"	;				
+					$cek .= ' masa_manfaat='.$masa_manfaat." persen_residu = $persen_residu";
+					
+					//$cek .= " $thn_susut_aw*12+$bln_susut_aw <= $thnsusutak*12+$blnsusutak && $thn_susut_aw*12+$bln_susut_aw < ((( $bi_thnsusutaw +$masa_manfaat)*12)+$bi_blnsusutaw )  <br>";
+					//cek penyusutan ----------------------------------------------
+					if($thn_susut_aw*12+$bln_susut_aw+1 > $thnsusutak*12+$blnsusutak ){						
+						$stop = TRUE; $cek .= "stop karena > thn akan disusutkan";
+						$blnstop=$bln_susut_aw;
+					}else if($thn_susut_aw*12+$bln_susut_aw+1 >= ((( $bi_thnsusutaw +$masa_manfaat)*12)+$bi_blnsusutaw )){
+						$stop = TRUE; $cek .= "stop karena > thn akhir disusutkan";
+						$blnstop=$bln_susut_aw;
+						$akhirsusut=TRUE;
+					}else{
+						//cek stop krn penghapusan ------------------------------------
+						$blnstop=0;
+						$aqry = "select count(*) as cnt from penghapusan ".
+							" where id_bukuinduk='".$bi['id'].
+							"' and year(tgl_penghapusan)='$thn_susut_aw' ".
+							" and month(tgl_penghapusan)='$bln_susut_aw' ";
+						$hps = mysql_fetch_array(mysql_query($aqry));
+						if($hps['cnt']>0) {
+							$cek .= ' stop penghapusan ';
+							$blnstop=$bln_susut_aw; //break;
+							$stop=TRUE;
+						}else{
+							//cek pindah aset
+							/*$aqry = "select count(*) as cnt from t_history_aset ".
+								" where idbi='".$bi['id']."' and (staset=3 or staset=8) ".
+								" and year(tgl)='$thn_susut_aw' "." and month(tgl)='$bln_susut_aw' ";*/
+							$aqry = "select count(*) as cnt from t_history_aset ".
+								" where idbi='".$bi['id']."' and (staset_baru=9 or staset_baru=10) ".
+								" and year(tgl)='$thn_susut_aw' ";
+							$all = mysql_fetch_array(mysql_query($aqry));
+							if($all['cnt']>0){
+								$cek .= ' stop pindah aset ';
+								$blnstop=$bln_susut_aw; //break;
+								$stop=TRUE;
+							}						
+						}	
+					}
+					
+					$hrg_perolehan = $bi['jml_harga'];								
+					if($Main->SUSUT_REHAB){					
+						
+						if($Main->SUSUT_MODE==2){//if($Main->VERSI_NAME == 'SERANG' ){ //serang kab
+							if( $bln_susut_aw==12 ){ 
+								//pemeliharaan dihitung tiap tahun mulai pd tahun 1
+								$curthn = $thn_susut_aw;
+								//$operTahun = $curthn==($bi_thnsusutaw*12)+$bi_blnsusutaw? "<=" : "=" ;
+								$operTahun = '<';
+								$aqryplh = //pelihara
+									"select sum(biaya_pemeliharaan) as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from pemeliharaan ".
+									"where tambah_aset=1 and idbi_awal='".$bi['idawal']."' ".
+									"and YEAR(tgl_pemeliharaan) $operTahun $curthn ; "; //$cek .= $aqryplh;
+								$plh= mysql_fetch_array(mysql_query( $aqryplh ));
+								$aqryplh = //pengaman
+									"select sum(biaya_pengamanan)as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from pengamanan ".
+									"where tambah_aset=1 and idbi_awal='".$bi['idawal']."' ".
+									"and YEAR(tgl_pengamanan) $operTahun $curthn ; ";// $cek .= $aqryplh;
+								$aman= mysql_fetch_array(mysql_query( $aqryplh ));
+								$aqryplh = //hapus sebagian
+									"select sum(harga_hapus)as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from penghapusan_sebagian ".
+									" where  idbi_awal='".$bi['idawal']."' ".
+									"and YEAR(tgl_penghapusan) $operTahun $curthn ; ";// $cek .= $aqryplh;
+								$hps= mysql_fetch_array(mysql_query( $aqryplh ));
+								$aqryplh = //koreksi 
+									"select sum(hrg_akhir - hrg_awal)as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from koreksi ".
+									"where idbi_awal='".$bi['idawal']."' ".
+									"and YEAR(tgl) $operTahun $curthn ; "; // $cek .= $aqryplh;
+								$koreksi = mysql_fetch_array(mysql_query( $aqryplh ));
+							}
+							
+							
+						}else{							
+							//pemeliharaan dihitung tiap bulan, mulai bulan 1	
+							$curthn = $thn_susut_aw*12 + $bln_susut_aw;
+							//$operTahun = $curthn==($bi_thnsusutaw*12)+$bi_blnsusutaw? "<=" : "=" ;
+							$operTahun = '<';
+							$aqryplh = //pelihara
+								"select sum(biaya_pemeliharaan) as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from pemeliharaan ".
+								"where tambah_aset=1 and idbi_awal='".$bi['idawal']."' ".
+								"and (YEAR(tgl_pemeliharaan)*12) + MONTH(tgl_pemeliharaan) $operTahun $curthn ; "; //$cek .= $aqryplh;
+							$plh= mysql_fetch_array(mysql_query( $aqryplh ));
+							$aqryplh = //pengaman
+								"select sum(biaya_pengamanan)as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from pengamanan ".
+								"where tambah_aset=1 and idbi_awal='".$bi['idawal']."' ".
+								"and (YEAR(tgl_pengamanan)*12) + MONTH(tgl_pengamanan) $operTahun $curthn ; ";// $cek .= $aqryplh;
+							$aman= mysql_fetch_array(mysql_query( $aqryplh ));
+							$aqryplh = //hapus sebagian
+								"select sum(harga_hapus)as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from penghapusan_sebagian ".
+								" where  idbi_awal='".$bi['idawal']."' ".
+								"and (YEAR(tgl_penghapusan)*12) + MONTH(tgl_penghapusan) $operTahun $curthn ; ";// $cek .= $aqryplh;
+							$hps= mysql_fetch_array(mysql_query( $aqryplh ));
+							$aqryplh = //koreksi 
+								"select sum(hrg_akhir - hrg_awal)as tot, sum(ifnull(masa_manfaat,0)) as totmanfaat from koreksi ".
+								"where idbi_awal='".$bi['idawal']."' ".
+								"and (YEAR(tgl)*12) + MONTH(tgl)  $operTahun $curthn ; "; // $cek .= $aqryplh;
+							$koreksi = mysql_fetch_array(mysql_query( $aqryplh ));
+							
+						}
+						$hrg_rehab = $plh['tot'] + $aman['tot'] - $hps['tot'] + $koreksi['tot'];						
+						$masa_rehab = $plh['totmanfaat'] + $aman['totmanfaat'] - $hps['totmanfaat'] + $koreksi['totmanfaat'];
+						
+						//update hrg perolehan dan masa manfaat 
+						$hrg_perolehan += $hrg_rehab ;//nilai buku = hrg perolehan + hrg rehab s/d thn bulan ini
+						$masa_manfaat += $masa_rehab ;
+					}
+					
+					$hrgSusutBln += (($hrg_perolehan-($persen_residu/100*$hrg_perolehan))/$masa_manfaat )/12;
+					if($akhirsusut){
+						//kalo akhir sust --> harga susut dibulatkan
+						//ambil tot akumulasi
+						//$get = mysql_fetch_array(mysql_query( "select sum(harga) as tot from penyusutan where idbi_awal = '".$bi['idawal']."' "));
+						//$totsusutprev = $get['tot']; 
+						/*if ($totsusutprev + $hrgSusutBln - ($hrg_perolehan*(1+$persen_residu/100)) > 0 || $persen_residu==0) {
+							$hrgSusutBln = $hrg_perolehan*(1+$persen_residu/100) - $totsusutprev;
+						}*/
+						
+						$get = mysql_fetch_array(mysql_query( "select sum(harga) as tot, sum(hrg_perolehan) as nilaibuku  from penyusutan where idbi_awal = '".$bi['idawal']."' "));
+						$totsusutprev = $get['tot']; 						
+						$nilaibuku_ =$get['nilaibuku'] ;
+						$nilaisisa_ = ($persen_residu/100)*$hrg_perolehan;
+						$hrgSusutSem = round($nilaibuku_,2) - round($nilaisisa_,2) - round($totsusutprev,2);
+						$cek .= "akhir: nilaibuku_=$nilaibuku_, nilaisisa_=$nilaisisa_, totsusutprev=$totsusutprev, hrgSusutSem=$hrgSusutSem ";
+						
+					}
+					
+					$cek .= " hrgSusutBln=$hrgSusutBln ";
+					
+					if($bln_susut_aw==6 || $bln_susut_aw==12 || $stop ){						
+						//harga perolehan/nilai buku tanpa penyusutan -------------------------
+						$cek .= " hrg_rehab=$hrg_rehab - masa_rehab=$masa_rehab";
+						
+						$sem = $bln_susut_aw <=6? 1:2;						
+						
+						//hit penambahan masa manfaat ---------------------------------------------------
+						if($awal){
+							$penambahan_manfaat = $masa_manfaat + ($masa_rehab-$masa_rehab_prev) ; 						
+							$penambahan_perolehan = $hrg_perolehan + ($hrg_rehab-$hrg_rehab_prev);	
+						}else{
+							$penambahan_manfaat = $masa_manfaat+$masa_rehab-$masa_rehab_prev ; 
+							$penambahan_perolehan = $hrg_rehab-$hrg_rehab_prev;					
+						}
+						$bln_susut_aw_ = $sem==2? 12:6;
+						
+						
+						
+						//simpan -----------------------------------------------------------------------------
+						$aqry2 = "insert into penyusutan (tgl,tahun,sem,bulan,idbi,idbi_awal, harga,".
+							" uid,tgl_update, ".
+							" hrg_rehab,masa_manfaat,residu,hrg_perolehan) values ".
+							"('$tglSusut','$thn_susut_aw' ,'$sem', '$bln_susut_aw_', '".$bi['id']."',  '".$bi['idawal']."',". 
+							"'$hrgSusutBln', '$UID', now(),".
+							"'".($hrg_rehab-$hrg_rehab_prev)."','".$penambahan_manfaat."','$persen_residu','".$penambahan_perolehan."') ;";
+						$cek .= ' simpan susut: '.$aqry2;
+						$qry2 = mysql_query($aqry2);
+						
+						if($qry2){
+							$aqry = "update buku_induk set thn_susut_ak='".($thn_susut_aw)."', bln_susut_ak='".($bln_susut_aw_).
+								"', masa_manfaat='".($masa_manfaat+$masa_rehab)."'  where id='".$bi['id']."'";
+							$qry3 = mysql_query($aqry);
+							if($qry3==FALSE) {
+								$stop=TRUE;
+								$err = 'Gagal simpan data!';
+							}
+							//$cek .= $aqry ;
+						}else{
+							$stop = TRUE;
+							$err = 'Gagal simpan data!';
+						}
+						$masa_rehab_prev = $masa_manfaat+$masa_rehab;
+						$hrg_rehab_prev = $hrg_rehab;
+						$hrgSusutBln=0;
+						$awal = FALSE;
+						//$cek .=" simpan susut";
+					}
+					
+					
+					$jmlsusut ++;
+					$bln_susut_aw++;
+					if($bln_susut_aw>12) {
+						$thn_susut_aw++ ;
+						$bln_susut_aw= 1;
+					}
+				}
+				
+				
+				
+					
+			}
+		}
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	
+	function genQuery($mode = 1, $fmSKPD, $fmUNIT, $fmSUBUNIT, $fmSEKSI, $thnsusut, $blnsusut=6, $limit=50  ){
+		/* mode=1:susut, 2=count */
+		global $Main;
+		$cek = ''; $err=''; $content='';
+		$prog = $_REQUEST['prog'];
+		$limit = 2;
+		//kondisi ----------------------------
+		/*$aqry = 
+			"select * from buku_induk aa 
+			join ref_barang bb on aa.f=bb.f and aa.g=bb.g and aa.h=bb.h and aa.i=bb.i and aa.j=bb.j
+			where 
+			( (aa.asal_usul=1 and aa.id=aa.idawal and (aa.thn_perolehan*12+month(aa.tgl_buku))<=$thnblnsusut ) 
+			  or (aa.asal_usul=5 and (year(aa.tgl_buku)*12+MONTH(aa.tgl_buku))<=$thnblnsusut)
+			)
+			and ($thnblnsusut<=((aa.thn_susut_aw+aa.masa_manfaat)*12)+MONTH(aa.tgl_buku) or aa.thn_susut_aw=0) 
+			and aa.kondisi<>3 
+			and (aa.thn_susut_ak*12)+MONTH(aa.tgl_buku)<$thnblnsusut ";*/
+			
+		$arrKondisi = array();
+		$Kondisi = '';
+		$thnblnsusut = $thnsusut*12+$blnsusut;
+		
+		//skpd		
+		$kdseksikos = genNumber(0, $Main->SUBUNIT_DIGIT); //$cek .='Main->SUBUNIT_DIGIT='.$Main->SUBUNIT_DIGIT.'-'.$kdseksikos;
+		if($fmSKPD != '' && $fmSKPD != NULL && $fmSKPD !='00') $arrKondisi[] = " c='$fmSKPD' ";
+		if($fmUNIT !='' && $fmUNIT != NULL && $fmUNIT !='00') $arrKondisi[] = " d='$fmUNIT' ";
+		if($fmSUBUNIT !='' && $fmSUBUNIT != NULL && $fmSUBUNIT !='00') $arrKondisi[] = " e='$fmSUBUNIT' ";		
+		if($fmSEKSI !='' && $fmSEKSI != NULL && $fmSEKSI !=$kdseksikos) $arrKondisi[] = " e1='$fmSEKSI' ";	
+				
+		if( $Main->TAHUN_MULAI_SUSUT =='')  $Main->TAHUN_MULAI_SUSUT=0;
+		
+		//$arrKondisi[] = 
+			//"( (aa.asal_usul<>5 and aa.id=aa.idawal and (aa.thn_perolehan*12+month(aa.tgl_buku))<=$thnblnsusut ) ".			
+			//" or (aa.asal_usul=5 and (year(aa.tgl_buku)*12+MONTH(aa.tgl_buku))<$thnblnsusut) )";						
+		//$arrKondisi[] = 
+		//	"( ( aa.asal_usul<>5 and aa.id=aa.idawal ) or (aa.asal_usul=5 )) and (aa.thn_perolehan*12+month(aa.tgl_buku))<=$thnblnsusut  ";						
+		//$arrKondisi[] = " (aa.thn_perolehan*12+month(aa.tgl_buku))+1<=$thnblnsusut  ";	//sudah harus disusutkan					
+		$arrKondisi[] = " ( if(aa.thn_perolehan > $Main->TAHUN_MULAI_SUSUT , aa.thn_perolehan, $Main->TAHUN_MULAI_SUSUT )*12+month(aa.tgl_buku))+1<=$thnblnsusut  ";	//sudah harus disusutkan					
+		$arrKondisi[] = " aa.f in('02','03','04','05','07') ";		
+		//$arrKondisi[] = " ($thnblnsusut<=((aa.thn_susut_aw+aa.masa_manfaat)*12)+ifnull(aa.bln_susut_aw,0) ".  //masih ada yg disusutkan
+		//				" or aa.bln_susut_aw=0 ". //belum disusutkan
+		//				" or () ". //
+		//				") ";		
+		$arrKondisi[] = " bb.masa_manfaat >0  "; //sudah ada masa manfaat		
+		$arrKondisi[] = " (aa.status_barang = 1 or aa.status_barang=2) "; //utk awal saja /pemanfaatan
+		$arrKondisi[] = " aa.kondisi<>3  and (aa.staset=3 or aa.staset=8)"; //aset tetap dan atb
+		$arrKondisi[] = " (aa.thn_susut_ak*12)+ifnull(aa.bln_susut_ak,0)<$thnblnsusut "; //belum selesai disusutkan
+		$arrKondisi[] = " ( (aa.thn_susut_ak*12)+ifnull(aa.bln_susut_ak,0)+1<((aa.thn_susut_aw+aa.masa_manfaat)*12)+ifnull(aa.bln_susut_aw,0) or aa.thn_susut_aw=0 )"; //masih dalam masa manfaat
+		
+		
+		//$arrKondisi[] = " aa.thn_susut_ak < $thnsusut  "; //tahun sust terakhir < dari tahun susut
+		//$arrKondisi[] = " ( ( aa.thn_susut_aw + aa.masa_manfaat -1 > aa.thn_susut_ak) or (aa.thn_susut_aw=0) )  "; //belum sama sekali atau belum habis masa manfaat
+		//$arrKondisi[] = " aa.status_barang=1 and aa.staset=3 and aa.kondisi<>3 "; //brg yg disusutka brg inventaris intra
+		//$arrKondisi[] = " aa.thn_perolehan < $thnsusut "; //brg dgn thn perolehan < thn susut
+				
+		$Kondisi = join(' and ',$arrKondisi); //$cek .=$Kondisi;
+		if($Kondisi !='') $Kondisi = ' Where '.$Kondisi;
+		
+		//mode ------------------------------
+		switch($mode){
+			case 1:
+				$vselect = " select * ";
+				$vLimit = " limit 0,$limit;"; //" limit $prog,$limit;";
+			break;
+			case 2:
+				$vselect = " select count(*) as cnt ";
+			break;
+		}
+		
+		//ambil dari buku induk dimana belum disusutkan s/d tahun sekarang		
+		$aqry = $vselect. 
+			" from buku_induk aa join ref_barang bb on aa.f= bb.f and aa.g=bb.g and aa.h=bb.h and aa.i=bb.i and aa.j = bb.j ".
+			$Kondisi.
+			$vLimit;
+			$cek .= ' '.$aqry;
+				
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$aqry); 
+	}
+		
+	function susutSemester($thnsusut=2014,$semsusut=2,$tglsusut='2014-12-31'){
+		global $Main, $HTTP_COOKIE_VARS;
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		
+		
+		$fmSKPD = $_REQUEST['c'];
+		$fmUNIT = $_REQUEST['d'];
+		$fmSUBUNIT = $_REQUEST['e'];		
+		$fmSEKSI = $_REQUEST['e1'];
+		$thnsusut = $_REQUEST['thnsusut'];//date('Y');//2016
+		//$semsusut = $_REQUEST['semsusut'];
+		//$tglsusut = $_REQUEST['tglsusut'];
+		$fmSemester = $_REQUEST['fmSemester']; $cek .= "sem= $fmSemester ";
+		
+		if( $fmSemester ==1 ){ 
+			$blnsusut=12;
+			$tgls = 31;
+		} else {
+			$blnsusut=6;
+			$tgls = 30;
+		}
+		$cek .= "bln= $blnsusut ";
+		$thnblnsusut = $thnsusut*12+$blnsusut; $cek .= " thnbln=$thnblnsusut ";
+		
+		$tglsusut = $thnsusut.'-'.$blnsusut.'-'.$tgls;//?
+		
+		$get = $this->genQuery(1, $fmSKPD, $fmUNIT, $fmSUBUNIT, $fmSEKSI, $thnsusut, $blnsusut);
+		$cek .= $get['cek'];
+		$qry = mysql_query($get['content']);
+		$jml = mysql_num_rows($qry); //$cek->jml = 'tes';		
+		while($isi=mysql_fetch_array($qry)){
+			$cek .= ' id= '.$isi['id'];
+			if($Main->SUSUT_MODE==2){//'SERANG' -> dihitung tahun disimpan semester dibagi 2, tgl susut otomatis
+				$susut = $this->susut1barang_serang($isi['id'], $thnsusut, $blnsusut, $tglsusut);
+			}else if($Main->SUSUT_MODE==1){//JABAR -> dihitung bulan, disimpan bulan, tgl susut otomatis
+				$susut = $this->susut1barang_jabar($isi['id'], $thnsusut, $blnsusut, $tglsusut);	
+			}else{ //disimpan semester, tampil digenerate bulanan
+				$susut = $this->susut1barang($isi['id'], $thnsusut, $blnsusut, $tglsusut);	
+			}
+			
+			$cek .= $susut['cek'];
+		}
+		$content->jml = $jml;		
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	function susutSatu($thnsusut=2014,$semsusut=2,$tglsusut='2014-12-31'){
+		global $Main, $HTTP_COOKIE_VARS;
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		
+		
+		$fmSKPD = $_REQUEST['c'];
+		$fmUNIT = $_REQUEST['d'];
+		$fmSUBUNIT = $_REQUEST['e'];		
+		$fmSEKSI = $_REQUEST['e1'];
+		$thnsusut = $_REQUEST['thnsusut'];//date('Y');//2016
+		//$semsusut = $_REQUEST['semsusut'];
+		//$tglsusut = $_REQUEST['tglsusut'];
+		$fmSemester = $_REQUEST['fmSemester']; $cek .= "sem= $fmSemester ";
+		$idbi = $_REQUEST['idbi'];
+		
+		if( $fmSemester ==1 ){ 
+			$blnsusut=12;
+			$tgls = 31;
+		} else {
+			$blnsusut=6;
+			$tgls = 30;
+		}
+		$cek .= "bln= $blnsusut ";
+		$thnblnsusut = $thnsusut*12+$blnsusut; $cek .= " thnbln=$thnblnsusut ";
+		
+		
+		$tglsusut = $thnsusut.'-'.$blnsusut.'-'.$tgls;
+		
+		/*$get = $this->genQuery(1, $fmSKPD, $fmUNIT, $fmSUBUNIT, $fmSEKSI, $thnsusut, $blnsusut);
+		$cek .= $get['cek'];
+		$qry = mysql_query($get['content']);
+		$jml = mysql_num_rows($qry); //$cek->jml = 'tes';
+		while($isi=mysql_fetch_array($qry)){
+			$cek .= ' id= '.$isi['id'];
+			//if ($Main->VERSI_NAME =='SERANG' ){
+			//	$susut = $this->susut1barang_serang($isi['id'], $thnsusut, $blnsusut, $tglsusut);
+			//}else{*/
+		/*if($Main->SUSUT_MODE==2){//if($Main->VERSI_NAME == 'SERANG'){
+			$susut = $this->susut1barang_serang($idbi, $thnsusut, $blnsusut, $tglsusut);	
+		}else{
+			$susut = $this->susut1barang($idbi, $thnsusut, $blnsusut, $tglsusut);	
+		}*/
+		if($Main->SUSUT_MODE==2){//'SERANG' -> dihitung tahun disimpan semester dibagi 2, tgl susut otomatis
+			$susut = $this->susut1barang_serang($idbi, $thnsusut, $blnsusut, $tglsusut);
+		}else if($Main->SUSUT_MODE==1){//JABAR -> dihitung bulan, disimpan bulan, tgl susut otomatis
+			$susut = $this->susut1barang_jabar($idbi, $thnsusut, $blnsusut, $tglsusut);	
+		}else{ //disimpan semester, tampil digenerate bulanan
+			$susut = $this->susut1barang($idbi, $thnsusut, $blnsusut, $tglsusut);	
+		}		
+			//}
+			
+			$cek .= $susut['cek'];
+		//}
+		
+		$content->jml = $jml;		
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	
+	
+	
+	function genFormSusut(){
+		global $Main;
+		$cek = ''; $err=''; $content=''; $json = TRUE;	
+		
+		$form_name = $this->Prefix.'_form';				
+		$this->form_width = 500;
+		$this->form_height = 180;
+		if ($this->form_fmST==0) {
+			$this->form_caption = 'Penyusutan Baru';
+			$nip = '';
+		}else{
+			$this->form_caption = 'Edit';			
+			$nip = $dt['nip'];			
+		}
+					
+		$arrKondisi = array();
+		$Kondisi = '';
+		$thnskr=date('Y');//2016
+		//$fmSemester = '2014';
+		$arrthn = array(
+			array($thnskr-1, $thnskr-1),
+			array($thnskr, $thnskr),
+			//array($thnskr+1, $thnskr+1)
+		);
+		$arrthn = array( array(2014,2014));	
+		$thnsusut = $thnskr;	
+		$Semester = cmb2D_v2('fmSemester',$fmSemester,$Main->ArSemester,'','Semester I'," onchange='".$this->Prefix.".changeTahun()' " );
+		$vthnsusut = cmbArray('thnsusut', $thnsusut, $arrthn, 'PILIH'," onchange='".$this->Prefix.".changeTahun()' "  );
+				
+		$fmSKPD = $_REQUEST['fmSKPD'];
+		$fmUNIT = $_REQUEST['fmUNIT'];
+		$fmSUBUNIT = $_REQUEST['fmSUBUNIT'];
+		$fmSEKSI = $_REQUEST['fmSEKSI'];
+		
+		
+		
+		$aqry = $this->genQuery(2, $fmSKPD, $fmUNIT, $fmSUBUNIT, $fmSEKSI, $thnsusut);
+		$cek .= $aqry['cek'];
+		$get = mysql_fetch_array(mysql_query($aqry['content']));
+		$jmldata = $get['cnt'];
+		
+		//bidang		
+		if($fmSKPD != '' && $fmSKPD != NULL && $fmSKPD !='00') {
+			$get=mysql_fetch_array(mysql_query("select * from ref_skpd where c='".$fmSKPD."' and d='00' "));
+			$bidang = $get['nm_skpd'];	
+		}
+		if($fmUNIT !='' && $fmUNIT != NULL && $fmUNIT !='00') {
+			$get=mysql_fetch_array(mysql_query("select * from ref_skpd where c='".$fmSKPD."' and d='".$fmUNIT."' and e='00' "));
+			$unit = $get['nm_skpd'];
+		}
+		if($fmSUBUNIT !='' && $fmSUBUNIT != NULL && $fmSUBUNIT !='00') {
+			$get=mysql_fetch_array(mysql_query("select * from ref_skpd where c='".$fmSKPD."' and d='".$fmUNIT."' and e='".$fmSUBUNIT."' and e1='000' "));
+			$subunit = $get['nm_skpd'];
+		}
+		if($fmSEKSI !='' && $fmSEKSI != NULL && $fmSEKSI !='000') {
+			$get=mysql_fetch_array(mysql_query("select * from ref_skpd where c='".$fmSKPD."' and d='".$fmUNIT."' and e='".$fmSUBUNIT."' and e1='$fmSEKSI' "));
+			$seksi = $get['nm_skpd'];
+		}
+			
+		//progress
+		$progress = 
+			"<div id='progressbox' style='display:none;'>".
+			"<div id='progressbck' style='display:block;width:300px;height:4px;background-color:silver; margin: 6 5 0 0;float:left;border-radius: 3px;'>".
+			"<div id='progressbar' style='height:2px;margin:1;width:0%;border-radius: 3px;background-color: green;'></div>".
+			"</div>".
+			"<div id ='progressmsg' name='progressmsg' style='float:left;'></div>".
+			"</div>".
+			"<input type=hidden id='jmldata' name='jmldata' value='".$jmldata."'> ".
+			"<input type=hidden id='prog' name='prog' value='0'> ";
+		
+		if($Main->SUSUT_MODE==2){
+			$vtahun_ =  $vthnsusut;
+		}else{
+			$vtahun_ =  $Semester.' '.$vthnsusut;	
+		}
+		
+		$this->form_fields = array(				
+			'bidang' => array(  'label'=>'BIDANG', 'value'=> $bidang, 'labelWidth'=>120, 'type'=>'' ),
+			'unit' => array(  'label'=>'SKPD', 'value'=> $unit, 'labelWidth'=>120, 'type'=>'' ),
+			'subunit' => array(  'label'=>'UNIT', 'value'=> $subunit, 'labelWidth'=>120, 'type'=>'' ),
+			'seksi' => array(  'label'=>'SUBUNIT', 'value'=> $seksi, 'labelWidth'=>120, 'type'=>'' ),
+			//'tgl' => array(  'label'=>'Tanggal Penyusutan', 'value'=> Date('d-m-Y'), 'type'=>'' ),	
+			'tahun' => array(  'label'=>'Tahun Laporan s/d ', 'value'=> $vtahun_, 'type'=>'' ),			
+			'jml_data' => array( 'label'=>'Belum Penyusutan', 'value'=> "<span id='vjmldata' >". number_format( $jmldata ,0,',','.') ."</span> data", 'type'=>'' ),			
+			'progress' => array( 'label'=>'', 'value'=> $progress, 'type'=>'merge' ),			
+			//'nip' => array( 'label'=>'NIP', 'value'=> $nip, 'labelWidth'=>120, 'type'=>'text' ),
+			//'nama' => array( 'label'=>'Nama Pegawai', 'value'=>$dt['nama'], 'type'=>'text'  ),	
+			//'jabatan' => array( 'label'=>'Jabatan', 'value'=>$dt['jabatan'], 'type'=>'text')	
+		);
+			
+		//tombol
+		$this->form_menubawah =
+			"<input type=hidden id='c' name='c' value='".$fmSKPD."'> ".
+			"<input type=hidden id='d' name='d' value='".$fmUNIT."'> ".
+			"<input type=hidden id='e' name='e' value='".$fmSUBUNIT."'> ".
+			"<input type=hidden id='e' name='e1' value='".$fmSEKSI."'> ".
+			
+			
+			"<input type='button' id='btproses' value='Proses' onclick ='".$this->Prefix.".susut()' >&nbsp;".
+			"<input type='button' id='btbatal' value='Batal' onclick ='".$this->Prefix.".Close()' >";
+		
+		
+		$form = $this->genForm();		
+				
+		$content = $form;//$content = 'content';
+		
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	function genFormSusutSatu(){
+		global $Main;
+		$cek = ''; $err=''; $content=''; $json = TRUE;	
+		
+		$form_name = $this->Prefix.'_form';				
+		$this->form_width = 400;
+		$this->form_height = 100;
+		if ($this->form_fmST==0) {
+			$this->form_caption = 'Penyusutan Baru';
+			$nip = '';
+		}else{
+			$this->form_caption = 'Edit';			
+			$nip = $dt['nip'];			
+		}
+					
+		$arrKondisi = array();
+		$Kondisi = '';
+		$thnskr=date('Y');//2016
+		$cidbi = $_REQUEST['cidBI'];
+		
+		$arrthn = array(
+			array($thnskr-1, $thnskr-1),
+			array($thnskr, $thnskr),
+			//array($thnskr+1, $thnskr+1)
+		);	
+		$thnsusut = $thnskr;	
+		$Semester = cmb2D_v2('fmSemester',$fmSemester,$Main->ArSemester,'','Semester I',"  " );		
+		$vthnsusut = cmbArray('thnsusut', $thnsusut, $arrthn, 'PILIH',"  "  );
+		
+		if($Main->SUSUT_MODE==2){
+			$vthnsusut_ = $vthnsusut;
+		}else{
+			$vthnsusut_ = $Semester.'&nbsp;&nbsp;'.$vthnsusut;
+		}
+		
+		
+				
+		$fmSKPD = $_REQUEST['fmSKPD'];
+		$fmUNIT = $_REQUEST['fmUNIT'];
+		$fmSUBUNIT = $_REQUEST['fmSUBUNIT'];
+		$fmSEKSI = $_REQUEST['fmSEKSI'];
+		
+		
+		
+		//$aqry = $this->genQuery(2, $fmSKPD, $fmUNIT, $fmSUBUNIT, $fmSEKSI, $thnsusut);
+		//$cek .= $aqry['cek'];
+		//$get = mysql_fetch_array(mysql_query($aqry['content']));
+		$jmldata = 1;// $get['cnt'];
+		
+		//bidang		
+		if($fmSKPD != '' && $fmSKPD != NULL && $fmSKPD !='00') {
+			$get=mysql_fetch_array(mysql_query("select * from ref_skpd where c='".$fmSKPD."' and d='00' "));
+			$bidang = $get['nm_skpd'];	
+		}
+		if($fmUNIT !='' && $fmUNIT != NULL && $fmUNIT !='00') {
+			$get=mysql_fetch_array(mysql_query("select * from ref_skpd where c='".$fmSKPD."' and d='".$fmUNIT."' and e='00' "));
+			$unit = $get['nm_skpd'];
+		}
+		if($fmSUBUNIT !='' && $fmSUBUNIT != NULL && $fmSUBUNIT !='00') {
+			$get=mysql_fetch_array(mysql_query("select * from ref_skpd where c='".$fmSKPD."' and d='".$fmUNIT."' and e='".$fmSUBUNIT."' and e1='000' "));
+			$subunit = $get['nm_skpd'];
+		}
+		if($fmSEKSI !='' && $fmSEKSI != NULL && $fmSEKSI !='000') {
+			$get=mysql_fetch_array(mysql_query("select * from ref_skpd where c='".$fmSKPD."' and d='".$fmUNIT."' and e='".$fmSUBUNIT."' and e1='$fmSEKSI' "));
+			$seksi = $get['nm_skpd'];
+		}
+			
+		//progress
+		$progress = 
+			"<div id='progressbox' style='display:none;'>".
+			"<div id='progressbck' style='display:block;width:300px;height:4px;background-color:silver; margin: 6 5 0 0;float:left;border-radius: 3px;'>".
+			"<div id='progressbar' style='height:2px;margin:1;width:0%;border-radius: 3px;background-color: green;'></div>".
+			"</div>".
+			"<div id ='progressmsg' name='progressmsg' style='float:left;'></div>".
+			"</div>".
+			"<input type=hidden id='jmldata' name='jmldata' value='".$jmldata."'> ".
+			"<input type=hidden id='idbi' name='idbi' value='".$cidbi[0]."'> ".
+			"<input type=hidden id='prog' name='prog' value='0'> ";
+		
+		
+		$this->form_fields = array(				
+			//'bidang' => array(  'label'=>'BIDANG', 'value'=> $bidang, 'labelWidth'=>120, 'type'=>'' ),
+			//'unit' => array(  'label'=>'SKPD', 'value'=> $unit, 'labelWidth'=>120, 'type'=>'' ),
+			//'subunit' => array(  'label'=>'UNIT', 'value'=> $subunit, 'labelWidth'=>120, 'type'=>'' ),
+			//'seksi' => array(  'label'=>'SUBUNIT', 'value'=> $seksi, 'labelWidth'=>120, 'type'=>'' ),
+			//'tgl' => array(  'label'=>'Tanggal Penyusutan', 'value'=> Date('Y-m-d'), 'type'=>'date' ),	
+			'tahun' => array(  'label'=>'Tahun Laporan s/d ', 'value'=>$vthnsusut_, 'type'=>'' ),			
+			'jml_data' => array( 'label'=>'Belum Penyusutan', 'value'=> "<span id='vjmldata' >". number_format( $jmldata ,0,',','.') ."</span> data", 'type'=>'' ),			
+			'progress' => array( 'label'=>'', 'value'=> $progress, 'type'=>'merge' ),			
+			//'nip' => array( 'label'=>'NIP', 'value'=> $nip, 'labelWidth'=>120, 'type'=>'text' ),
+			//'nama' => array( 'label'=>'Nama Pegawai', 'value'=>$dt['nama'], 'type'=>'text'  ),	
+			//'jabatan' => array( 'label'=>'Jabatan', 'value'=>$dt['jabatan'], 'type'=>'text')	
+		);
+		
+				
+		//tombol
+		$this->form_menubawah =
+			"<input type=hidden id='c' name='c' value='".$fmSKPD."'> ".
+			"<input type=hidden id='d' name='d' value='".$fmUNIT."'> ".
+			"<input type=hidden id='e' name='e' value='".$fmSUBUNIT."'> ".
+			"<input type=hidden id='e' name='e1' value='".$fmSEKSI."'> ".
+			
+			
+			"<input type='button' id='btproses' value='Proses' onclick ='".$this->Prefix.".susutSatu()' >&nbsp;".
+			"<input type='button' id='btbatal' value='Batal' onclick ='".$this->Prefix.".Close()' >";
+		
+		
+		$form = $this->genForm();		
+				
+		$content = $form;//$content = 'content';
+		
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	
+	function formRincian(){
+		$cek = ''; $err=''; $content=''; $json = TRUE;	
+		
+		$cidBI= $_REQUEST['cidBI'];
+		$this->form_idplh = $cidBI[0];
+		
+		//$form_name = $this->Prefix.'_form';				
+		$this->form_width = 400;
+		$this->form_height = 150;
+		if ($this->form_fmST==0) {
+			$this->form_caption = 'Rincian Penyusutan Barang';
+			$nip	 = '';
+		}else{
+			$this->form_caption = '';			
+			$nip = $dt['nip'];			
+		}		
+		$bi = mysql_fetch_array(mysql_query("select * from buku_induk where id ='$this->form_idplh' "));		
+		$get=mysql_fetch_array(mysql_query("select * from ref_skpd where c='".$bi['c']."' and d='00' "));
+		$bidang = $get['nm_skpd'];	
+		$get=mysql_fetch_array(mysql_query("select * from ref_skpd where c='".$bi['c']."' and d='".$bi['d']."' and e='00' "));
+		$unit = $get['nm_skpd'];
+		$get=mysql_fetch_array(mysql_query("select * from ref_skpd where c='".$bi['c']."' and d='".$bi['d']."' and e='".$bi['e']."' and e1='000' "));
+		$subunit = $get['nm_skpd']; 
+		$get=mysql_fetch_array(mysql_query("select * from ref_skpd where c='".$bi['c']."' and d='".$bi['d']."' and e='".$bi['e']."' and e1='".$bi['e1']."' "));
+		$seksi = $get['nm_skpd']; 
+		$kdbrg = $bi['f'].'.'.$bi['g'].'.'.$bi['h'].'.'.$bi['i'].'.'.$bi['j'];		
+		$get= mysql_fetch_array(mysql_query("select * from ref_barang where concat(f,g,h,i,j)='".$bi['f'].$bi['g'].$bi['h'].$bi['i'].$bi['j']."'"));
+		$nmbrg = $get['nm_barang'];
+		
+		//hrg rehab
+		$hrgrehab = 0;
+		$get = mysql_fetch_array(mysql_query("select sum(biaya_pemeliharaan) as tot from pemeliharaan where tambah_aset=1 and idbi_awal='".$bi['idawal']."' "));
+		$hrgrehab += $get['tot'];
+		$get = mysql_fetch_array(mysql_query("select sum(biaya_pengamanan) as tot from pengamanan where tambah_aset=1 and idbi_awal='".$bi['idawal']."' "));
+		$hrgrehab += $get['tot'];
+		$get = mysql_fetch_array(mysql_query("select sum(harga_hapus) as tot from penghapusan_sebagian where  idbi_awal='".$bi['idawal']."' "));
+		$hrgrehab += $get['tot'];
+		$get = mysql_fetch_array(mysql_query("select sum(hrg_akhir-hrg_awal) as tot from koreksi where  idbi_awal='".$bi['idawal']."' "));
+		$hrgrehab += $get['tot'];
+		
+		$hrg_perolehan = $bi['harga'];// + $hrgrehab;
+		$this->form_fields = array(				
+			'bidang' 	=> array( 'label'=>'BIDANG', 'value'=> $bidang, 'labelWidth'=>150, 'type'=>'' ),
+			'unit' 		=> array( 'label'=>'SKPD', 'value'=> $unit,  'type'=>'' ),
+			'subunit' 	=> array( 'label'=>'UNIT', 'value'=> $subunit,  'type'=>'' ),
+			'seksi' 	=> array( 'label'=>'SUBUNIT', 'value'=> $seksi,  'type'=>'' ),			
+			'kdbarang' 	=> array( 'label'=>'Kode / Nama Barang', 'value'=> $kdbrg.' / '.$nmbrg, 'type'=>'' ),						
+			'noreg' 	=> array( 'label'=>'No. Reg/ Tahun/ Tanggal Buku', 'value'=> $bi['noreg'].' / '.$bi['thn_perolehan'].' / '.TglInd($bi['tgl_buku']), 'type'=>'' ),												
+			'hrg'		=> array( 'label'=>'Harga Perolehan Rp.', 'value'=> number_format( $bi['harga'], 2, ',', '.' ), 'type'=>'' ),		
+			'hrgrehab' 	=> array( 'label'=>'Harga Rehabilitasi Rp.', 'value'=> number_format( $hrgrehab, 2, ',', '.' ), 'type'=>'' ),
+			'det'		=> array( 
+				'label'	=>'Harga Rehabilitasi Rp.', 
+				'value'	=> 
+					"<input type='hidden' id='hrg_perolehan' name='hrg_perolehan' value='$hrg_perolehan' >".
+					"<div id='{$this->Prefix}_cont_opsi' style='position:relative'>".
+						"<input type='hidden' id='idbi' name='idbi' value='".$bi['id']."'></div>".
+					"<div id='{$this->Prefix}_cont_daftar' style='position:relative;' ></div>".
+					"<div id='{$this->Prefix}_cont_hal' style='position:relative'>".				
+						"<input type='hidden' id='".$this->Prefix."_hal' name='".$this->Prefix."_hal' value='1'>".
+					"</div>", 
+				'type'	=>'merge' 
+			),		
+		);
+		
+		$this->form_menubawah =
+			"<input type=hidden id='c' name='c' value='".$fmSKPD."'> ".
+			"<input type=hidden id='d' name='d' value='".$fmUNIT."'> ".
+			"<input type=hidden id='e' name='e' value='".$fmSUBUNIT."'> ".
+			"<input type=hidden id='e' name='e1' value='".$fmSEKSI."'> ".
+			//"<input type='button' id='btproses' value='Proses' onclick ='".$this->Prefix.".susut()' >".
+			"<input type='button' id='btbatal' value='Tutup' onclick ='".$this->Prefix.".Close()' >";
+		
+		
+		$form = $this->genForm(TRUE, '', FALSE, TRUE);		
+				
+		$content = $form;//$content = 'content';
+		
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	function changeTahun(){
+		$cek = ''; $err=''; $content=''; $json = TRUE;	
+		//$content = 10;
+		$arrKondisi = array();
+		$Kondisi = '';
+		
+		$thnsusut =  $_REQUEST['thnsusut'];	
+		
+		
+		$fmSKPD = $_REQUEST['c'];
+		$fmUNIT = $_REQUEST['d'];
+		$fmSUBUNIT = $_REQUEST['e'];
+		$fmSEKSI = $_REQUEST['e1'];
+		$fmSemester = $_REQUEST['fmSemester'];
+		
+		
+		if($fmSemester == 1){
+			$blnsusut = 12;
+		}else{
+			$blnsusut = 6;
+		}
+		if ($thnsusut>0){
+			$aqry = $this->genQuery(2,$fmSKPD, $fmUNIT, $fmSUBUNIT, $fmSEKSI,$thnsusut, $blnsusut);	 $cek .= $aqry['content'];	
+			$get = mysql_fetch_array(mysql_query( $aqry['content'] ));
+			$content->vjml = number_format( $get['cnt'] , 0 ,',','.');
+			$content->jml = $get['cnt'];	
+		}else{
+			$content->vjml = number_format( 0, 0 ,',','.');
+			$content->jml = 0;	
+		}
+		
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	function set_selector_other($tipe){
+		$cek = ''; $err=''; $content=''; $json=FALSE;
+		switch($tipe){			
+			case 'susut1barang':{
+				$idbi = $_REQUEST['idbi'];				
+				$thnsusutak = 2014;//$_REQUEST['thnsusutak'];				
+				$blnsusutak = 12;//$_REQUEST['blnsusutak'];	
+				$tglSusut = '2014-12-31';//$_REQUEST['tglSusut'];			
+				$get = $this->susut1barang($idbi, $thnsusutak, $blnsusutak, $tglSusut);
+				$err = $get['err'];
+				$cek = $get['cek'];
+				$content = $get['content'];				
+				$json=TRUE;
+				break;
+			}
+			case 'changeTahun':{
+				$get = $this->changeTahun();
+				$err = $get['err'];
+				$cek = $get['cek'];
+				$content = $get['content'];				
+				$json=TRUE;
+				break;
+			}	
+			case 'formRincian':{
+				$get = $this->formRincian();
+				$err = $get['err'];
+				$cek = $get['cek'];
+				$content = $get['content'];				
+				$json=TRUE;
+				break;
+			}	
+			case 'formSusut':{
+				$get = $this->genFormSusut();
+				$err = $get['err'];
+				$cek = $get['cek'];
+				$content = $get['content'];				
+				$json=TRUE;
+				break;
+			}	
+			case 'formSusutSatu':{
+				$get = $this->genFormSusutSatu();
+				$err = $get['err'];
+				$cek = $get['cek'];
+				$content = $get['content'];				
+				$json=TRUE;
+				break;
+			}
+			case 'susut':{
+				//$content='tes';				
+				$get = $this->susutSemester();
+				//$get = $this->susut();
+				$err = $get['err'];
+				$cek = $get['cek'];
+				$content = $get['content'];				
+				$json=TRUE;
+				break;
+			}
+			case 'susutSatu':{
+				//$content='tes';		
+				$idbi = $_REQUEST['idbi'];
+				/*if($Main->VERSI_NAME == 'SERANG'){
+					$get = $this->susut1barang_serang($idbi,$thnsusutak,$semAkhir,$tglSusut);
+				}else{
+					$get = $this->susut1barang($idbi,$thnsusutak,$semAkhir,$tglSusut);
+				}*/
+				
+				$get = $this->susutSatu();
+				$err = $get['err'];
+				$cek = $get['cek'];
+				$content = $get['content'];				
+				$json=TRUE;
+				break;
+			}
+			case 'susutAll':{
+				//$content='tes';
+				$get = $this->susutAll();
+				$err = $get['err'];
+				$cek = $get['cek'];
+				$content = $get['content'];				
+				$json=TRUE;
+				break;
+			}
+			case 'batalSusut':{
+				//$content='tes';
+				$get = $this->batalSusut();
+				$err = $get['err'];
+				$cek = $get['cek'];
+				$content = $get['content'];				
+				$json=TRUE;
+				break;
+			}
+			default:{
+				$err = 'tipe tidak ada!';
+				break;
+			}
+		}	
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	function setMenuView(){		
+		return 			
+			//"<td>".genPanelIcon("javascript:".$this->Prefix.".cetakHal(\"$Op\")","print_f2.png",'Halaman',"Cetak Daftar per Halaman")."</td>".			
+			"<td>".genPanelIcon("javascript:".$this->Prefix.".cetakAll(\"$Op\")","print_f2.png",'Cetak',"Cetak Daftar")."</td>".
+			"<td>".genPanelIcon("javascript:".$this->Prefix.".exportXls(\"$Op\")","export_xls.png",'Excel',"Export Excel")."</td>".						
+			"";
+		
+	}
+	/*
+	function genSumHal($Kondisi){
+		
+		global $Main;
+		//$Sum = 'sum'; $Hal = 'hal';
+		$cek = '';
+		$jmlData = 0;
+		$jmlTotal = 0;
+		$Sum = 0;
+		$SumArr=array();
+		$vSum = array();
+		
+		$fsum_ = array();
+		$fsum_[] = "count(*) as cnt";
+		//$i=0;
+		foreach($this->FieldSum as &$value){
+			$fsum_[] = "sum($value) as sum_$value";
+		}
+		$fsum = join(',',$fsum_);
+				
+		$aqry = $this->setSumHal_query($Kondisi, $fsum); $cek .= $aqry;
+		$qry = mysql_query($aqry); 
+		if ($isi= mysql_fetch_array($qry)){			
+			$jmlData = 1;//$isi['cnt'];			
+			
+			foreach($this->FieldSum as &$value){
+				$SumArr[] = $isi["sum_$value"];				
+				$vSum[] = $this->genSum_setTampilValue(0, $isi["sum_$value"]);//Fmt($isi["sum_$value"],1);
+			}
+			if(sizeof($this->FieldSum)>0 )$Sum = $this->genSum_setTampilValue(0, $SumArr[0]);//number_format($SumArr[0], 2, ',' ,'.');			
+			
+		}	
+		$Hal = $this->setDaftar_hal($jmlData);
+		if ($this->WITH_HAL==FALSE) $Hal = '';
+		//if( sizeof($vSum)==0) $vsum
+		return array('sum'=>$Sum, 'hal'=>$Hal, 'sums'=>$vSum, 'jmldata'=>$jmlData, 'cek'=>$cek );
+	}
+	*/
+	function setPage_HeaderOther(){	
+		global $Main;
+		
+		//style = terpilih
+		$Pg= $_REQUEST['Pg'];
+		//if($Pg == 'sensus'){
+		//	$styleMenu = " style='color:blue;' ";	
+		//}
+		$menu = $_REQUEST['menu'];
+		/*switch ($menu){
+			case 'belumcek' : $styleMenu2_1 = " style='color:blue;' "; break;
+			case 'diusulkan': $styleMenu2_3 = " style='color:blue;' "; break;
+			case 'laporan' 	: $styleMenu2_4 = " style='color:blue;' "; break;
+			case 'kertaskerja' 	: $styleMenu2_5 = " style='color:blue;' "; break;
+			case 'ada' :$styleMenu2_2 = " style='color:blue;' "; break;	
+			case 'tidakada' :$styleMenu2_5 = " style='color:blue;' "; break;
+			//default: $styleMenu2_2 = " style='color:blue;' "; break;	
+		}*/
+		//if($tipe='tipe')$styleMenu2_4 = " style='color:blue;' ";
+		$styleMenu = " style='color:blue;' ";	
+		$styleMenu2_4 = " style='color:blue;' ";
+		
+		if( $Main->MODUL_AKUNTANSI ){
+			$pembukuan = "<A href=\"pages.php?Pg=Pembukuan\" title='Pembukuan' $styleMenu>AKUNTANSI</a> |";
+			$menu_akuntansi =
+				"<table width=\"100%\" class=\"menubar\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">
+				<tr><td class=\"menudottedline\" width=\"40%\" height=\"20\" style='text-align:right'><B>						
+					<a href=\"index.php?Pg=05&jns=intra\" title=\"BI Intracomptable\" $styleMenuA0>BI INTRA</a> |
+					<a href=\"index.php?Pg=05&jns=extra\" title=\"BI Extracomptable\" $styleMenuA1>BI EXTRA</a>  |  
+					<a href=\"index.php?Pg=05&jns=penyusutan\" title=\"Penyusutan\" style='color:blue;'>PENYUSUTAN</a>  |  
+					<a href=\"pages.php?Pg=Pembukuan\" title=\"Rekap Neraca\"  >REKAP NERACA</a>  |  
+					<a href=\"index.php?Pg=05&jns=tetap\" title=\"Rincian Neraca\" $styleMenuA2>RINCIAN NERACA</a>  |  
+					<a href=\"index.php?Pg=05&SPg=04&jns=tetap\" title=\"Aset Tetap Tanah\" $styleMenuA3>KIB A</a>  |  
+					<a href=\"index.php?Pg=05&SPg=05&jns=tetap\" title=\"Aset Tetap Peralatan &amp; Mesin\" $styleMenuA4>KIB B</a>  |  
+					<a href=\"index.php?Pg=05&SPg=06&jns=tetap\" title=\"Aset Tetap Gedung &amp; Bangunan\" $styleMenuA5>KIB C</a>  |  
+					<a href=\"index.php?Pg=05&SPg=07&jns=tetap\" title=\"Aset Tetap Jalan, Irigasi &amp; Jaringan\" $styleMenuA6>KIB D</a>  |  
+					<a href=\"index.php?Pg=05&SPg=08&jns=tetap\" title=\"Aset Tetap Lainnya\" $styleMenuA7>KIB E</a>  |  
+					<a href=\"index.php?Pg=05&SPg=09&jns=tetap\" title=\"Aset Tetap Konstruksi Dalam Pengerjaan\" $styleMenuA8>KIB F</a>  |   							
+					<a href=\"index.php?Pg=05&SPg=03&jns=lain\" title=\"Aset Lainnya\" $styleMenuA9>ASET LAINNYA</a> |
+					<a href=\"pages.php?Pg=RekapAset\" title=\"Rekap Aset Tetap\" $styleMenuA10>REKAP ASET</a>							
+					&nbsp;&nbsp;&nbsp;
+				</td></tr></table>";
+			/*$menu_akuntansi = 
+				"<table width=\"100%\" class=\"menubar\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">
+				<tr><td class=\"menudottedline\" width=\"40%\" height=\"20\" style='text-align:right'><B>
+			
+					<a href=\"index.php?Pg=05&SPg=03&c=&d=&e=&skpdro=1&jns=intra&fmFiltSdThnBuku=2014\" title=\"BI Intracomptable\" style=\"\">BI INTRA</a> |
+					<a href=\"index.php?Pg=05&SPg=03&c=&d=&e=&skpdro=1&jns=extra&fmFiltSdThnBuku=2014\" title=\"BI Extracomptable\">BI EXTRA</a>  |  
+					<a href=\"pages.php?Pg=Penyusutan\" title=\"Peralatan &amp; Mesin\" style='color:blue;'>PENYUSUTAN</a>  |  
+					<a href=\"pages.php?Pg=Pembukuan\" title=\"Gedung &amp; Bangunan\"  >REKAP NERACA</a>  |  
+					<a href=\"
+					index.php?Pg=05&SPg=03&c=&d=&e=&skpdro=1&jns=tetap&fmFiltSdThnBuku=2014
+					\" title=\"Jalan, Irigasi &amp; Jaringan\">RINCIAN NERACA</a>  |  
+					<a href=\"
+					index.php?Pg=05&SPg=04&c=00&d=00&e=00&f=01&g=00&skpdro=1&jns=tetap&xd=541fd1046ad05&fmFiltSdThnBuku=2014-09-22
+					\" title=\"Tanah\">KIB A</a>  |  
+					<a href=\"
+					index.php?Pg=05&SPg=05&c=00&d=00&e=00&f=02&g=00&skpdro=1&jns=tetap&xd=541fd1046ad05&fmFiltSdThnBuku=2014-09-22
+					\" title=\"Peralatan &amp; Mesin\">KIB B</a>  |  
+					<a href=\"
+					index.php?Pg=05&SPg=06&c=00&d=00&e=00&f=03&g=00&skpdro=1&jns=tetap&xd=541fd1046ad05&fmFiltSdThnBuku=2014-09-22
+					\" title=\"Gedung &amp; Bangunan\">KIB C</a>  |  
+					<a href=\"
+					index.php?Pg=05&SPg=07&c=00&d=00&e=00&f=04&g=00&skpdro=1&jns=tetap&xd=541fd1046ad05&fmFiltSdThnBuku=2014-09-22
+					\" title=\"Jalan, Irigasi &amp; Jaringan\">KIB D</a>  |  
+					<a href=\"
+					index.php?Pg=05&SPg=08&c=00&d=00&e=00&f=05&g=00&skpdro=1&jns=tetap&xd=541fd1046ad05&fmFiltSdThnBuku=2014-09-22
+					\" title=\"Aset Tetap Lainnya\">KIB E</a>  |  
+					<a href=\"
+					index.php?Pg=05&SPg=09&c=00&d=00&e=00&f=06&g=00&skpdro=1&jns=tetap&xd=541fd1046ad05&fmFiltSdThnBuku=2014-09-22
+					\" title=\"Konstruksi Dalam Pengerjaan\">KIB F</a>  |   
+						
+					<a href=\"
+					index.php?Pg=05&SPg=03&c=&d=&e=&skpdro=1&jns=lain&fmFiltSdThnBuku=2014
+					\" title=\"Rekap BI\">ASET LAINNYA</a> |
+					<a target=\"blank\" href=\"
+					pages.php?Pg=RekapAset
+					\" title=\"Peta Sebaran\">REKAP BI</a> 
+						
+					&nbsp;&nbsp;&nbsp;
+				</td></tr></table>";*/
+		}else{
+			$pembukuan = "<A href=\"pages.php?Pg=Pembukuan\" title='Pembukuan' $styleMenu>PEMBUKUAN</a> |";
+		}
+		
+		return 
+			//"<tr height='22' valign='top'><td >".
+			"<!--menubar_page-->
+		
+			<table width=\"100%\" class=\"menubar\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">
+			<tr><td class=\"menudottedline\" width=\"40%\" height=\"20\" style='text-align:right'><B>
+		
+			<A href=\"index.php?Pg=05&SPg=03\" title='Buku Inventaris'>BI</a> |
+			<A href=\"index.php?Pg=05&SPg=04\" title='Tanah'>KIB A</a>  |  
+			<A href=\"index.php?Pg=05&SPg=05\" title='Peralatan & Mesin'>KIB B</a>  |  
+			<A href=\"index.php?Pg=05&SPg=06\" title='Gedung & Bangunan'>KIB C</a>  |  
+			<A href=\"index.php?Pg=05&SPg=07\" title='Jalan, Irigasi & Jaringan'>KIB D</a>  |  
+			<A href=\"index.php?Pg=05&SPg=08\" title='Aset Tetap Lainnya'>KIB E</a>  |  
+			<A href=\"index.php?Pg=05&SPg=09\" title='Konstruksi Dalam Pengerjaan'>KIB F</a>  |  
+						
+			<A href=\"index.php?Pg=05&SPg=11\" title='Rekap BI'>REKAP BI</a> |
+			<A target='blank' href=\"pages.php?Pg=map&SPg=03\" title='Peta Sebaran' >PETA</a> |
+			<A href=\"index.php?Pg=05&SPg=12\" title='Daftar Mutasi'>MUTASI</a>  |
+			<A href=\"index.php?Pg=05&SPg=13\" title='Rekap Mutasi'>REKAP MUTASI</a> |
+			<A href=\"index.php?Pg=05&SPg=belumsensus\" title='Sensus' >SENSUS</a> |
+			$pembukuan
+			<A href=\"pages.php?Pg=penatausahakol\" title='Gambar' >GAMBAR</a> 	
+			  &nbsp&nbsp&nbsp
+			</td></tr></table>".
+			
+			$menu_akuntansi.
+			""
+			;
+			
+	}
+	function genDaftarOpsi(){
+		global $Main;
+		
+		//data cari ----------------------------
+		$idbi = $_REQUEST['idbi']; //tgl buku
+				
+		//data order ------------------------------
+		
+		//tampil -------------------------------
+		$TampilOpt = genFilterBar(
+			array( "<input type='hidden' id='idbi' name='idbi' value='".$idbi."'>", 
+				'<input type="button" id="btHapus" value="Hapus" onclick="Penyusutan.Hapus()">'
+				//'<input type="button" id="btCetak" value="Cetak" onclick="Penyusutan.cetakAll()">'
+			 ),
+			$this->Prefix.".refreshList(true)",
+			TRUE
+		);
+		
+		//$TampilOpt;
+		
+		return array('TampilOpt'=>$TampilOpt);	
+	}
+	
+	function getDaftarOpsi($Mode=1){
+		global $Main, $HTTP_COOKIE_VARS;
+		
+		$Kondisi=''; $Order = ''; $Limit=''; $NoAwal = 0; $cek ='';
+		
+		
+		//$fmFiltThnBuku = $_REQUEST['fmFiltThnBuku'];
+		
+		//Kondisi				
+		$arrKondisi= array();
+		$idbi = $_REQUEST['idbi'];
+		$bi = mysql_fetch_array(mysql_query( "select * from buku_induk where id = '$idbi' "));		
+		//if(!empty($idbi) ) $arrKondisi[] = " idbi_awal = '".$bi['idawal']."' ";
+		
+		$arrKondisi[] = " idbi = '$idbi' ";
+		$Kondisi = join(' and ',$arrKondisi); $cek .=$Kondisi;
+		if($Kondisi !='') $Kondisi = ' Where '.$Kondisi;
+		
+		
+		//order -------------------------
+		$OrderArr = array();
+		$Order = join(', ',$OrderArr); 
+		if($Order !='') $Order = ' Order by '.$Order;
+		
+		//limit --------------------------------------
+		$pagePerHal = $this->pagePerHal =='' ? $Main->PagePerHal: $this->pagePerHal; 
+		$HalDefault=cekPOST($this->Prefix.'_hal',1);
+		$Limit = " limit ".(($HalDefault	*1) - 1) * $pagePerHal.",".$pagePerHal;
+		$Limit = $Mode == 3 ? '': $Limit;
+		//$Limit = '';
+		//$Limit = ' limit 0,1 '; //tes akuntansi
+		//noawal ------------------------------------
+		$NoAwal= $pagePerHal * (($HalDefault*1) - 1);							
+		$NoAwal = $Mode == 3 ? 0: $NoAwal;
+		
+		
+		
+		return array('Kondisi'=>$Kondisi, 'Order'=>$Order, 'Limit'=>$Limit,'NoAwal'=>$NoAwal,'cek'=>$cek);
+	
+	}
+	
+	function setPage_OtherScript(){
+		$scriptload = 
+					"<script>
+						
+						$(document).ready(function(){ 
+							".$this->Prefix.".loading();
+							
+						});
+						
+						
+					</script>";
+		return "<script src='js/skpd.js' type='text/javascript'></script>
+				<script src='js/barcode.js' type='text/javascript'></script>
+				<script src='js/ruang.js' type='text/javascript'></script>
+				<script src='js/pegawai.js' type='text/javascript'></script>
+				
+				<script src='js/usulanhapus.js' type='text/javascript'></script>
+				<script src='js/usulanhapusdetail.js' type='text/javascript'></script>
+				<script src='js/penatausaha.js' type='text/javascript'></script>
+				
+				
+				<script type='text/javascript' src='js/".strtolower($this->Prefix).".js' language='JavaScript' ></script>
+				<!--<script type='text/javascript' src='js/unload.js' language='JavaScript' ></script>-->
+						<!--<script type='text/javascript' src='pages/pendataan/modul_entry.js' language='JavaScript' ></script>
+						<script type='text/javascript' src='js/dialog1.js' language='JavaScript' ></script>
+						<script type='text/javascript' src='js/jquery.js' language='JavaScript' ></script>
+						-->".
+						$scriptload;
+	}
+	
+	
+	function setKolomHeader($Mode=1, $Checkbox=''){
+		//Id,tgl,tahun,idbi,harga,uid,tgl_update,thn_perolehan,hrg_perolehan,hrg_rehab,hrg_rehab_tambah_,masa_manfaat,residu,masa_manfaat_tambah_
+		$cetak = $Mode==2 || $Mode==3 ;
+		$headerTable =
+				"<tr>
+				<th class=\"th02\" colspan='". ($cetak? "1": "2") ."' width='100px'>Nomor</th>				
+				<th class=\"th01\" rowspan='3' width='100px'>Tgl. Penyusutan</th>
+				<th class=\"th01\" rowspan='2' width='60px'>Tahun</th>
+				<th class=\"th01\" rowspan='2' width='60px'>Semester</th>
+				<th class=\"th01\" rowspan='2' width='60px'>Bulan</th>
+				<th class=\"th01\" rowspan='2' width='100px'>Persen Residu (%)</th>
+				<th class=\"th01\" rowspan='2' width='100px'>Akumulasi<br>Masa Manfaat (tahun)</th>												
+				<th class=\"th01\" rowspan='2' width='200px'>Akumulasi<br>Harga Rehabilitasi (Rp)</th>
+				<th class=\"th01\" rowspan='2' width='250px'>Penyusutan (Rp)</th>	
+				<th class=\"th01\" rowspan='2' width='300px'>Akumulasi Penyusutan (Rp)</th>
+				<th class=\"th01\" rowspan='2' width='300px'>Nilai Buku (Rp)</th>
+				</tr>
+				<tr>
+				<th class=\"th01\" width='50px'>No.</th>			
+				$Checkbox
+				</tr>
+				$tambahgaris";
+		return $headerTable;
+	}
+	
+	
+	/*function genMenu(){
+		global $HTTP_COOKIE_VARS;
+		$MyModulKU = explode(".", $HTTP_COOKIE_VARS["coModul"]);
+		
+		
+		//$this->noModul = 1;
+		$menuedit = '';
+		if( $MyModulKU[$this->noModul-1 ] == 1 ) {
+			$menuedit = $this->setMenuEdit();
+		}
+		
+		
+		$menu = 
+			"<table width=\"125\"><tbody><tr><td> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" id=\"toolbar\">
+			<tbody><tr valign=\"middle\" align=\"center\"> 
+			<td class=\"border:none\"> 
+				<a class=\"toolbar\" id=\"\" href=\"javascript:barcode.cetak()\"> 
+				<img src=\"images/administrator/images/barcode.png\" alt=\"Save\" name=\"save\" width=\"32\" height=\"32\" border=\"0\" align=\"middle\" title=\"Barcode\"> Barcode</a> 
+			</td> 
+			</tr> 
+			</tbody></table> </td><td> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" id=\"toolbar\">
+			<tbody><tr valign=\"middle\" align=\"center\"> 
+			<td class=\"border:none\"> 
+				<a class=\"toolbar\" id=\"\" href=\"javascript:Reclass.reClass()\"> 
+				<img src=\"images/administrator/images/mutasi.png\" alt=\"Save\" name=\"save\" width=\"32\" height=\"32\" border=\"0\" align=\"middle\" title=\"Reclass Barang\"> Reclass</a> 
+			</td> 
+			</tr> 
+			</tbody></table> </td><td> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" id=\"toolbar\"> 
+			<tbody><tr valign=\"middle\" align=\"center\"> 
+			<td class=\"border:none\"> 
+				<a class=\"toolbar\" id=\"\" href=\"javascript:MutasiUsulan.usulanbi()\" title=\"Usulan Mutasi\" style=\"width:80\"> 					
+					<img src=\"images/administrator/images/mutasi.png\" alt=\"button\" name=\"save\" width=\"32\" height=\"32\" border=\"0\" align=\"middle\"> 
+					<br>Usulan Mutasi
+				</a> 
+			</td> 
+			</tr> 
+			</tbody></table> </td><td> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" id=\"toolbar\"> 
+			<tbody><tr valign=\"middle\" align=\"center\"> 
+			<td class=\"border:none\"> 
+				<a class=\"toolbar\" id=\"\" href=\"javascript:MutasiUsulan.beritaAcaraBi()\" title=\"Mutasi Balai\" style=\"width:80\"> 					
+					<img src=\"images/administrator/images/mutasi.png\" alt=\"button\" name=\"save\" width=\"32\" height=\"32\" border=\"0\" align=\"middle\"> 
+					<br>Mutasi Balai
+				</a> 
+			</td> 
+			</tr> 
+			</tbody></table> </td><td> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" id=\"toolbar\">
+			<tbody><tr valign=\"middle\" align=\"center\"> 
+			<td class=\"border:none\"> 
+				<a class=\"toolbar\" id=\"\" href=\"javascript:prosesBaru()\"> 
+				<img src=\"images/administrator/images/new_f2.png\" alt=\"Save\" name=\"save\" width=\"32\" height=\"32\" border=\"0\" align=\"middle\" title=\"Baru\"> Baru</a> 
+			</td> 
+			</tr> 
+			</tbody></table> </td><td> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" id=\"toolbar\">
+			<tbody><tr valign=\"middle\" align=\"center\"> 
+			<td class=\"border:none\"> 
+				<a class=\"toolbar\" id=\"\" href=\"javascript:prosesEdit()\"> 
+				<img src=\"images/administrator/images/edit_f2.png\" alt=\"Save\" name=\"save\" width=\"32\" height=\"32\" border=\"0\" align=\"middle\" title=\"Ubah\"> Ubah</a> 
+			</td> 
+			</tr> 
+			</tbody></table> </td><td> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" id=\"toolbar\">
+			<tbody><tr valign=\"middle\" align=\"center\"> 
+			<td class=\"border:none\"> 
+				<a class=\"toolbar\" id=\"\" href=\"javascript:prosesHapus()\"> 
+				<img src=\"images/administrator/images/delete_f2.png\" alt=\"Save\" name=\"save\" width=\"32\" height=\"32\" border=\"0\" align=\"middle\" title=\"Delete\"> Delete</a> 
+			</td> 
+			</tr> 
+			</tbody></table> </td><td> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" id=\"toolbar\">
+			<tbody><tr valign=\"middle\" align=\"center\"> 
+			<td class=\"border:none\"> 
+				<a class=\"toolbar\" id=\"\" href=\"javascript:cetakBrg()\"> 
+				<img src=\"images/administrator/images/print_f2.png\" alt=\"Save\" name=\"save\" width=\"32\" height=\"32\" border=\"0\" align=\"middle\" title=\"Barang\"> Barang</a> 
+			</td> 
+			</tr> 
+			</tbody></table> </td><td> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" id=\"toolbar\">
+			<tbody><tr valign=\"middle\" align=\"center\"> 
+			<td class=\"border:none\"> 
+				<a class=\"toolbar\" id=\"\" href=\"javascript:Penatausahaan_CetakHal()\"> 
+				<img src=\"images/administrator/images/print_f2.png\" alt=\"Save\" name=\"save\" width=\"32\" height=\"32\" border=\"0\" align=\"middle\" title=\"Halaman\"> Halaman</a> 
+			</td> 
+			</tr> 
+			</tbody></table> </td><td> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" id=\"toolbar\">
+			<tbody><tr valign=\"middle\" align=\"center\"> 
+			<td class=\"border:none\"> 
+				<a class=\"toolbar\" id=\"\" href=\"javascript:Penatausahaan_CetakAll()\"> 
+				<img src=\"images/administrator/images/print_f2.png\" alt=\"Save\" name=\"save\" width=\"32\" height=\"32\" border=\"0\" align=\"middle\" title=\"Semua\"> Semua</a> 
+			</td> 
+			</tr> 
+			</tbody></table> </td><td> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" id=\"toolbar\">
+			<tbody><tr valign=\"middle\" align=\"center\"> 
+			<td class=\"border:none\"> 
+				<a class=\"toolbar\" id=\"\" href=\"javascript:Penatausahaab_exportXls()\"> 
+				<img src=\"images/administrator/images/export_xls.png\" alt=\"Save\" name=\"save\" width=\"32\" height=\"32\" border=\"0\" align=\"middle\" title=\"Excel\"> Excel</a> 
+			</td> 
+			</tr> 
+			</tbody></table> </td></tr></tbody></table>";
+		
+		$SubTitle_menu = 
+			"<div style='float:right;'>					
+			<div><div></div><div>$scriptMenu</div></div>".
+			$menu.
+			//<table ><tr>".
+			//$menuedit.//$this->SetPage_ToolbarAtasEdit().
+			//$this->setMenuView().
+			//"</tr>
+			//</table>		
+			"</div>";
+		return $SubTitle_menu;
+	}*/
+	
+	function setDaftar_After($no=0, $ColStyle=''){
+		
+		
+				
+		/*$ListData = 
+			"<tr class='row1'>
+			<td class='$ColStyle' colspan=11 align=center><b>TOTAL</td> 
+			<td class='$ColStyle' align='right'><b>3.718.000,00</td>
+				
+			<td class='$ColStyle' align='right'><b>0,00</td>
+			<td class='$ColStyle' align='right'><b>0,00</td>
+			<td class='$ColStyle' align='right'><b>0,00</td>
+			<td class='$ColStyle' align='right'><b>3.718.000,00</td>
+			
+			
+			<td class='$ColStyle' align='right'></td>
+			";*/
+		
+		return $ListData;
+	}
+	
+	function setKolomData($no, $isi, $Mode, $TampilCheckBox){
+		global $Main,$HTTP_COOKIE_VARS;
+		//Id,tgl,tahun,idbi,harga,uid,tgl_update,thn_perolehan,hrg_perolehan,hrg_rehab,hrg_rehab_tambah_,masa_manfaat,residu,masa_manfaat_tambah_
+		$cek = '';
+		$Koloms = array();
+		$cetak = $Mode==2 || $Mode==3 ;
+		$this->akum_penyusutan += $isi['harga'];
+		$this->akum_masamanfaat += $isi['masa_manfaat'];
+		
+		$this->akum_rehab +=$isi['hrg_rehab'];
+		$this->akum_perolehan += $isi['hrg_perolehan'];
+		//$hrgperolehan = $_REQUEST['hrg_perolehan'];
+		//$nilaibuku = ($hrgperolehan + $isi['hrg_rehab']) - $this->akum_penyusutan;
+		$nilaibuku = $this->akum_perolehan - $this->akum_penyusutan;
+		//$tampilCheckbox = $cetak ? "":"<td class=\"$clGaris\" align=center><input type=\"checkbox\" $Checked  id=\"cb$cb\" name=\"cidBI[]\" value=\"{$isi['id']}\" onClick=\"isChecked(this.checked);\" /></td>"; //<td class=\"$clGaris\" align=center><input type=\"checkbox\" $Checked  id=\"cb$cb\" name=\"cidBI[]\" value=\"{$isi['id']}\" onClick=\"isChecked(this.checked);\" /></td>
+		
+		if($Main->SUSUT_MODE ==1 ){
+			$vbulan = $isi['bulan'];	
+		}else{
+			$vbulan ='';
+		}
+		
+		//tampil di kolom ---------------------------------------
+		switch($Main->SUSUT_MODE){
+			case '1' : case '2' : $b ='';break;
+			default: $b = '<b>'; break;			
+		}
+		
+		$cekAsetTetap='';
+		$cek_bawahkap = '';
+		$Koloms[] = array('align=right',$b. $no.'.' );	
+		if ($Mode == 1) $Koloms[] = array(" align='center'  ", $TampilCheckBox);		
+		$Koloms[] = array("align=center  ",$b.TglInd($isi['tgl']));
+		$Koloms[] = array("align=center ",$b.$isi['tahun']);
+		$Koloms[] = array("align=center ",$b.$isi['sem']);
+		$Koloms[] = array("align=center ",$b.$vbulan);
+		$Koloms[] = array("align=right ", $b.number_format( $isi['residu'],2,',','.' ) );
+		$Koloms[] = array("align=center ", $b.$this->akum_masamanfaat);		
+		//$Koloms[] = array("align=center ", $isi['masa_manfaat']);		
+		//$Koloms[] = array("align=right ", number_format( $isi['hrg_rehab'],2,',','.' )  );		
+		$Koloms[] = array("align=center ", $b.number_format( $this->akum_rehab,2,',','.' ) );		
+		$Koloms[] = array("align=right ", $b.number_format( $isi['harga'],2,',','.' ) );
+		
+		$Koloms[] = array("align=right ", $b.number_format( $this->akum_penyusutan,2,',','.' ) );
+		$Koloms[] = array("align=right ", $b.number_format( $nilaibuku,2,',','.' ) );
+		
+		return $Koloms;
+	}
+	
+	
+	function setDaftar_after_getrow($list_row, $isi, $no='', $Mode='', $TampilCheckBox='', $RowAtr='', $KolomClassStyle=''){
+		global $Main;
+		
+		if($Main->SUSUT_MODE==1){//jabar
+		
+		}else if($Main->SUSUT_MODE==2){//serang
+			
+		
+			
+		}else{//jabar
+			//$j = $isi['sem'] == 1 ? 2 : 8;
+			$j = $isi['sem'] == 1 ? 1 : 7;
+			
+			for ($i=0; $i<6; $i++){
+				$bln = $j+$i;
+				$aqry = "select sf_get_susut( ".$isi['idbi'].", ".$isi['tahun'].", ".$bln.") as hsl ; ";	
+				$get = mysql_fetch_array(mysql_query($aqry) )	;
+				$hsl= explode(';',$get['hsl']);
+				$hrgsusut = number_format( $hsl[0], 2,',','.');
+				$totrehab = number_format( $hsl[1], 2,',','.');
+				$masa_manfaat = number_format( $hsl[2], 0,',','.');
+				$list_row .= "<tr $RowAtr valign='top'>".
+					"<td class='GarisDaftar'></td>".
+					"<td class='GarisDaftar'></td>".
+					"<td class='GarisDaftar'></td>".
+					"<td class='GarisDaftar'></td>".
+					"<td class='GarisDaftar'></td>".
+					"<td class='GarisDaftar' align='center'>".$bln."</td>".
+					"<td class='GarisDaftar'></td>".
+					"<td class='GarisDaftar' align='center'>$masa_manfaat</td>".
+					"<td class='GarisDaftar' align='right'>$totrehab</td>".
+					"<td class='GarisDaftar' align='right'>$hrgsusut</td>".
+					"<td class='GarisDaftar'></td>".
+					"<td class='GarisDaftar'></td>".			
+					"</tr>";	
+			}
+
+		}
+				
+		
+		return $list_row;
+	}
+	
+	
+	/*function genSum_setTampilValue($i, $value){
+		if( $i = 8  || $i =10) {
+			return number_format($value, 2, ',' ,'.');
+		}else{
+			return number_format($value, 0, ',' ,'.');	
+		}
+		
+	}*/
+	
+}
+$Penyusutan = new PenyusutanObj();
+
+?>

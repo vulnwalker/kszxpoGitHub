@@ -1,0 +1,1093 @@
+<?php
+
+class KotaKecObj  extends DaftarObj2{	
+	var $Prefix = 'refKotaKec';
+	var $elCurrPage="HalDefault";
+	var $TblName = 'ref_kotakec'; //daftar
+	var $TblName_Hapus = 'ref_kotakec';
+	var $MaxFlush = 10;
+	var $TblStyle = array( 'koptable', 'cetak','cetak'); //berdasar mode
+	var $ColStyle = array( 'GarisDaftar', 'GarisCetak','GarisCetak');
+	var $KeyFields = array('kd_kota','kd_kec');//('p','q'); //daftar/hapus
+	var $FieldSum = array();//array('jml_harga');
+	var $SumValue = array();
+	var $FieldSum_Cp1 = array( 14, 13, 13);//berdasar mode
+	var $FieldSum_Cp2 = array( 1, 1, 1);	
+	var $checkbox_rowspan = 1;
+	var $PageTitle = 'Referensi Data';
+	var $PageIcon = 'images/masterdata_ico.gif';
+	//var $cetak_xls=TRUE ;
+	var $fileNameExcel='kotakecamatan.xls';
+	var $Cetak_Judul = 'DAFTAR KOTA/KECAMATAN';	
+	var $Cetak_Mode=2;
+	var $Cetak_WIDTH = '30cm';
+	var $Cetak_OtherHTMLHead;
+	
+	
+	//function setPage_TitleDaftar(){	return 'Daftar Pegawai'; }	
+	//function setPage_TitlePage(){		return 'Referensi Data';			}
+	function setTitle(){
+		return 'Daftar Kota/Kecamatan';
+	}
+	function setCetak_Header(){
+		global $Main, $HTTP_COOKIE_VARS;
+/*		
+		$fmSKPD = cekPOST($this->Prefix.'SkpdfmSKPD');// echo 'fmskpd='.$fmSKPD;
+		$fmUNIT = cekPOST($this->Prefix.'SkpdfmUNIT');
+		$fmSUBUNIT = cekPOST($this->Prefix.'SkpdfmSUBUNIT');
+		$fmSEKSI = cekPOST($this->Prefix.'SkpdfmSEKSI');
+*/		
+		return
+			"<table style='width:100%' border=\"0\">
+			<tr>
+				<td class=\"judulcetak\"><DIV ALIGN=CENTER>$this->Cetak_Judul</td>
+			</tr>
+			</table>	
+			<br>";
+	}
+	//function setPage_IconPage(){		return 'images/masterData_ico.gif';	}	
+	function simpan(){
+		global $Main;
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		//get data -----------------
+				$fmST = $_REQUEST[$this->Prefix.'_fmST'];
+				$kdkotaplh = $_REQUEST[$this->Prefix.'_kdkotaplh'];
+				$kdkecplh = $_REQUEST[$this->Prefix.'_kdkecplh'];
+				
+				$kd_kota=$_REQUEST['fmkota'];
+				$kd_kec=$_REQUEST['kec'];
+				$nm_wilayah= $_REQUEST['nama'];
+				$koord_gps= $_REQUEST['koordinat_gps'];
+				$koord_bidang= $_REQUEST['koord_bidang'];
+				$zoom= $_REQUEST['zoom'];
+				
+				
+				if( $err=='' && $kd_kota =='' ) $err= 'Kode Kota belum di Pilih!';
+				if( $err=='' && $nm_wilayah =='' ) $err= 'Nama Wilayah belum diisi!';
+			//	if( $err=='' && $nm_wilayah =='' ) $err= 'Nama Wilayah belum diisi!';
+				
+			//	$ck=mysql_fetch_array(mysql_query("Select count(*) as cnt from ref_kotakec where kd_kota='".$kd_kota."' and kd_kec='0'"));
+				
+			//	if($ck['cnt']==0 && $err=='' && $kd_kec!='0') {$err= " Kode Kota belum ada sebelumnya";}
+				
+				
+				
+				if($fmST == 0){
+					//cek 
+					if( $err=='' ){
+					//	$get = mysql_fetch_array(mysql_query(
+						//	"select count(*) as cnt from $this->TblName where kd_kota='$kd_kota' and kd_kec='$kd_kec' "
+					//	));
+					//	if($get['cnt']>0 ) $err="Kode Kota/Kecamatan Sudah Ada!  ";
+					}
+					if($err==''){
+						$aqry = "insert into $this->TblName (kd_kota,kd_kec,nm_wilayah,koordinat_gps,koord_bidang,zoom)"."values('$kd_kota','$kd_kec','$nm_wilayah','$koord_gps','$koord_bidang','$zoom')";	$cek .= $aqry;	
+						$qry = mysql_query($aqry);
+					}
+					
+				}else{
+				//	$old = mysql_fetch_array(mysql_query("select * from $this->TblName where kd_kota='$kdkotaplh' and kd_kec='$kdkecplh'"));
+					if( $err=='' ){
+						/*if($kd_kota!=$old['kd_kota'] && $kd_kec!=$old['kd_kec'] ){
+							$get = mysql_fetch_array(mysql_query(
+								"select count(*) as cnt from $this->TblName where kd_kota='$kd_kota' and kd_kec='$kd_kec' "
+							));
+							if($get['cnt']>0 ) $err='Kode Kota/Kecamatan Sudah Ada!';
+						}*/
+					}
+					if($err==''){
+						if ($kd_kota != '0' && $kd_kec !='0'){
+						
+						/*$aqry = "update ref_ruang set ".
+							"a1='$a1', a='$a', b='$b', c='$c',d='$d',e='$e',
+							p='$p',q='$q',nm_ruang='$nm_ruang'".
+							"where a1='$a1' and a='$a' and b='$b' and c='$c' and d='$d' and e='$e' 
+							and p='$oldp' and q='$oldq' ";	$cek .= $aqry;
+						*/
+						$aqry = "update $this->TblName set ".
+							" kd_kota='$kd_kota',  nm_wilayah='$nm_wilayah',".
+							"koordinat_gps='$koord_gps',koord_bidang='$koord_bidang',zoom='$zoom'".
+							"where kd_kota='$kd_kota' and kd_kec='$kd_kec' ";	$cek .= $aqry;
+						$qry = mysql_query($aqry);
+						}else{
+							$aqry = "update $this->TblName set ".
+							" kd_kota='$kd_kota', kd_kec='$kd_kec', nm_wilayah='$nm_wilayah',".
+							"koordinat_gps='$koord_gps',koord_bidang='$koord_bidang',zoom='$zoom'".
+							"where kd_kota='$kd_kota' and kd_kec='$kd_kec'";	$cek .= $aqry;
+						$qry = mysql_query($aqry);
+						}
+					}
+				}
+				
+				//
+				
+			return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);	
+				
+	}	
+	
+	function set_selector_other2($tipe){
+		global $Main;
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	function set_selector_other($tipe){
+		global $Main;
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		switch($tipe){	
+			case 'cbxgedung':{
+				break;
+			}		
+			case 'formBaru':{				
+				$fm = $this->setFormBaru();				
+				$cek = $fm['cek'];
+				$err = $fm['err'];
+				$content = $fm['content'];												
+				break;
+			}
+			case 'formEdit':{				
+				$fm = $this->setFormEdit();				
+				$cek = $fm['cek'];
+				$err = $fm['err'];
+				$content = $fm['content'];												
+				break;
+			}
+			case 'simpan':{
+				
+				$get= $this->simpan();
+				$cek = $get['cek'];
+				$err = $get['err'];
+				$content = $get['content'];
+				break;
+			}
+			
+			case 'simpanKota':{
+			$get= $this->simpanKota();
+			$cek = $get['cek'];
+			$err = $get['err'];
+			$content = $get['content'];
+			break;
+		    }
+			
+			case 'formBaruKota':{				
+			$fm = $this->setFormBaruKota();				
+			$cek = $fm['cek'];
+			$err = $fm['err'];
+			$content = $fm['content'];												
+			break;
+			}
+			
+			case 'refreshKota':{
+			$c1 = $_REQUEST['fmc1'];
+			$c = $_REQUEST['fmc'];
+			$d = $_REQUEST['fmd'];
+			$e = $_REQUEST['fme'];
+			$e1 = $_REQUEST['fme1'];
+		
+			$cek = ''; $err=''; $content=''; $json=TRUE;
+			$kotanew= $_REQUEST['id_KotaBaru'];
+		 
+			$queryKota="SELECT kd_kota, concat(kd_kota, '. ', nm_wilayah) as vnama FROM ref_kotakec WHERE kd_kec='0'" ;
+			
+			$cek.="SELECT kd_kota, concat(kd_kota, '. ', nm_wilayah) as vnama FROM ref_kotakec WHERE kd_kec='0'";
+			
+			$content->kota=cmbQuery('fmkota',$kotanew,$queryKota,'style="width:250px;"onchange="'.$this->Prefix.'.pilihkota()"','&nbsp&nbsp--- Pilih Kode Kota ---')."&nbsp&nbsp"."<input type='button' value='Baru' onclick ='".$this->Prefix.".Barukota()' title='Baru' >";
+		 	 
+		 	return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+			break;
+		    }
+			
+			case 'getKota':{
+			
+			$kota = $_REQUEST['fmkota'];
+			$c = $_REQUEST['fmc'];
+			$d = $_REQUEST['fmd'];
+			$e = $_REQUEST['fme'];
+			$e1 = $_REQUEST['fme1'];
+			$gedung = $_REQUEST['p'];;
+			$cek = ''; $err=''; $content=''; $json=TRUE;
+			$gedungnew= $_REQUEST['id_KotaBaru'];
+		 
+		 	$aqry5="SELECT MAX(kd_kec) AS maxno FROM ref_kotakec WHERE kd_kota='$kota'";
+		 	$cek.="SELECT MAX(kd_kec) AS maxno FROM ref_kotakec WHERE kd_kota='$kota'";
+			$get=mysql_fetch_array(mysql_query($aqry5));
+			$newkec=$get['maxno'] + 1;
+			
+			$content->kec=$newkec;	
+		
+		 	return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+			break;
+		    }
+			case 'getdata':{
+				$kd_kota = $_REQUEST['kd_kota'];
+				$kd_kec = $_REQUEST['kd_kec'];
+				$aqry = "select * from $TblName where kd_kota='$kd_kota' and kd_kec='$kd_kec'  "; $cek .= $aqry;
+				$get = mysql_fetch_array( mysql_query($aqry));
+				if($get==FALSE) $err= "Gagal ambil data!"; 
+				$content = array('kd_kota'=>$get['kd_kota'],'kd_kec'=>$get['kd_kec'],
+				'nm_wilayah'=>$get['nm_wilayah'],'koordinat_gps'=>$get['koordinat_gps'],
+				'koordinat_gps'=>$get['koordinat_gps'],'koord_bidang'=>$get['koord_bidang'],
+				'zoom'=>$get['zoom']);
+				break;
+			}
+			
+			case 'pilihkota':{				
+			global $Main;
+			
+			$kota = $_REQUEST['fmkota'];
+////			/*$c = $_REQUEST['fmc'];
+////			$d = $_REQUEST['fmd'];
+////			$e = $_REQUEST['fme'];*/
+			$cek = ''; $err=''; $content=''; $json=TRUE;
+			 
+		 	$queryKE="SELECT max(kd_kec) as kec, nm_wilayah FROM ref_kotakec WHERE kd_kota='$kota'" ;$cek.=$queryKE;
+			$get=mysql_fetch_array(mysql_query($queryKE));
+			$lastkode=$get['kec'] + 1;	
+			//$kode_e1 = sprintf("%03s", $lastkode);
+			$content->kec=$lastkode;
+		 
+		 	return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);								
+			break;
+			}
+			
+			case 'hapus':{	
+				$fm= $this->Hapus($pil);
+				$err= $fm['err']; 
+				$cek = $fm['cek'];
+				$content = $fm['content'];
+				break;
+			}
+			
+			default:{
+				$other = $this->set_selector_other2($tipe);
+				$cek = $other['cek'];
+				$err = $other['err'];
+				$content=$other['content'];
+				$json=$other['json'];
+				break;
+			}
+			/*default:{
+				$err = 'tipe tidak ada!';
+				break;
+			}*/
+		}
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	function Hapus($ids){ //validasi hapus tbl_sppd
+		 $err=''; $cek='';
+		 $cbid = $_REQUEST[$this->Prefix.'_cb'];
+		$this->form_idplh = $cbid[0];
+		
+		if ($err ==''){
+		for($i = 0; $i<count($ids); $i++){	
+		$idplh1 = explode(" ",$ids[$i]);
+		$t1= $idplh1[0];
+	 	$t2= $idplh1[1];
+		/*$t1 = substr($ids[$i], 0,2);
+		$t1 = substr($ids[$i], 0,2);*/
+		
+	
+		if ($t1 != '0'){
+			$sk1="select kd_kota,kd_kec from ref_kotakec where kd_kota='$t1' and kd_kec!='0'";
+		}
+		
+		if ($t2 != '0'){
+			$sk1="select kd_kota,kd_kec from ref_kotakec where kd_kota='$t1' and kd_kec='$t2'";
+		}
+		
+	//	$err='tes';
+		if ($t2=='0'){
+			$qrycek=mysql_query($sk1);$cek.=$sk1;
+			if(mysql_num_rows($qrycek)>0)$err='Kota data tidak bisa di hapus karena ada data Kecamatan';
+		}
+		
+		if($err=='' ){
+			$qy = "DELETE FROM ref_kotakec WHERE kd_kota='$t1' and kd_kec='$t2' and concat (kd_kota,' ',kd_kec) ='".$ids[$i]."' ";$cek.=$qy;
+			$qry = mysql_query($qy);		
+			}else{
+				break;
+			}			
+		}
+		}
+		return array('err'=>$err,'cek'=>$cek);
+	}
+	
+	function simpanKota(){
+	global $HTTP_COOKIE_VARS;
+	global $Main;
+	 
+		$uid = $HTTP_COOKIE_VARS['coID'];
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		//get data -----------------
+		$fmST = $_REQUEST[$this->Prefix.'_fmST'];
+	 	$idplh = $_REQUEST[$this->Prefix.'_idplh'];
+		
+		$kota= $_REQUEST['kota'];
+		$nama= $_REQUEST['nama'];
+		$gps= $_REQUEST['koordinat_gps'];
+		$bidang= $_REQUEST['koord_bidang'];
+		$zoom= $_REQUEST['zoom'];
+		
+	
+//	/*	$nama= $_REQUEST['nama'];
+	if( $err=='' && $nama =='' ) $err= 'Nama Kode Kota Belum Di Isi !!';
+//	if( $err=='' && $nm_gedung_pendek =='' ) $err= 'Nama Gedung Pendek Belum Di Isi !!';*/
+	/*if( $err=='' && $nm_penanggung =='' ) $err= 'Nama Nama Penanggung Jawab Belum Di Isi !!';
+	if( $err=='' && $nip_penanggung =='' ) $err= 'Nama NIP Penanggung Jawab Belum Di Isi !!';*/
+	
+		if($fmST == 0){
+			if($err==''){
+				$aqry = "INSERT into ref_kotakec (kd_kota,kd_kec,nm_wilayah,koordinat_gps,koord_bidang,zoom)"."values('$kota','0','$nama','$gps','$bidang','$zoom')";	$cek .= $aqry;		
+				$qry = mysql_query($aqry);
+				$content=$kota;	
+				}
+			}
+				
+			return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);	
+    }
+	
+	
+	function setFormBaruKota(){
+		$dt=array();
+		$this->form_fmST = 0;
+		$fm = $this->BaruKota($dt);
+		return	array ('cek'=>$fm['cek'], 'err'=>$fm['err'], 'content'=>$fm['content']);
+	}
+	
+	function BaruKota($dt){	
+	 global $SensusTmp, $Main;
+	 
+	 $cek = ''; $err=''; $content=''; 		
+	 $json = TRUE;	//$ErrMsg = 'tes';	 	
+	 $form_name = $this->Prefix.'_formKB';				
+	 $this->form_width = 400;
+	 $this->form_height = 130;
+	  if ($this->form_fmST==0) {
+		$this->form_caption = 'Baru Kode Kota';
+		$nip	 = '';
+		$c1 = $_REQUEST['fmc1'];
+		$c = $_REQUEST['fmc'];
+		$d = $_REQUEST['fmd'];
+		$e = $_REQUEST['fme'];
+		$e1 = $_REQUEST['fme1'];
+		
+		$combozoom="<select id='zoom' name='zoom' >";
+		$x=0;
+		while ($x<=14)
+		{
+		$x++;
+			$combozoom .= $dt['zoom']==$x ? "<option value='$x' selected>$x</option>" :"<option value='$x' >$x</option>"; 	
+		}
+		$combozoom.="</select>";
+			
+		$aqry2="SELECT MAX(kd_kota) AS maxno FROM ref_kotakec WHERE kd_kec='0'";
+	
+		$get=mysql_fetch_array(mysql_query($aqry2));
+		$new=$get['maxno'] + 1;
+		
+		
+		//---------query------------
+		$queryc1=mysql_fetch_array(mysql_query("SELECT c1, nm_skpd FROM ref_skpd where c1='$c1' and c=00 and d=00 and e=00 and e1=000"));  
+		$queryc=mysql_fetch_array(mysql_query("SELECT c, nm_skpd FROM ref_skpd where c1='$c1' and c='$c' and d=00 and e=00 and e1=000"));  
+		$queryd=mysql_fetch_array(mysql_query("SELECT d, nm_skpd FROM ref_skpd where c1='$c1' and c='$c' and d='$d' and e=00 and e1=000"));  
+		$querye=mysql_fetch_array(mysql_query("SELECT e, nm_skpd FROM ref_skpd where c1='$c1' and c='$c' and d='$d' and e='$e' and e1=000"));  
+		$querye1=mysql_fetch_array(mysql_query("SELECT e1, nm_skpd FROM ref_skpd where c1='$c1' and c='$c' and d='$d' and e='$e' and e1='$e1'"));  
+		
+		$cek.="SELECT e1, nm_skpd FROM ref_skpd where c1='$c1' and c='$c' and d='$d' and e='$e' and e1='$e1'";
+		$datac1=$queryc1['c1'].".".$queryc1['nm_skpd'];
+		$datac=$queryc['c'].".".$queryc['nm_skpd'];
+		$datad=$queryd['d'].".".$queryd['nm_skpd'];
+		$datae=$querye['e'].".".$querye['nm_skpd'];
+		$datae1=$querye1['e1'].".".$querye1['nm_skpd'];
+	  }
+	    //ambil data trefditeruskan
+	  	$query = "" ;$cek .=$query;
+	  	$res = mysql_query($query);
+		
+	 //items ----------------------
+	  $this->form_fields = array(
+			
+			'gedung' => array( 
+						'label'=>'Kode Kota',
+						'labelWidth'=>60, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='kota' id='kota' value='".$new."' style='width:30px;' readonly>
+						<input type='text' name='nama' id='nama' value='".$nama."' placeholder='Nama Kode Kota' style='width:220px;'>
+						</div>", 
+						 ),		
+			
+			'koordinat_gps' => array( 
+						'label'=>'Koordinat GPS',
+						'labelWidth'=>100, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='koordinat_gps' id='koordinat_gps' value='".$koordinat_gps."' placeholder='Koordinat GPS' style='width:250px;'>
+						</div>",
+						 ), 
+			'koord_bidang' => array( 
+						'label'=>'Koordinat Bidang',
+						'labelWidth'=>50, 
+						'value'=>"<textarea name='koord_bidang' rows='2' cols='38' >$koord_bidang</textarea>"
+						
+						 ),	
+						
+			'zoom' => array( 'label'=>'Zoom', 'value'=>$combozoom, 'type'=>''),	
+			
+			
+			'Add' => array( 
+						'label'=>'',
+						'value'=>"<div id='Add'></div>",
+						'type'=>'merge'
+					 )			
+			);
+		//tombol
+		$this->form_menubawah =
+			"<input type='button' value='Simpan' onclick ='".$this->Prefix.".SimpanKota()' title='Simpan' >"."&nbsp&nbsp".
+			"<input type='button' value='Batal' onclick ='".$this->Prefix.".Close2()' >";
+							
+		$form = $this->genFormKota();		
+		$content = $form;
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);
+	}
+	
+	function genFormKota($withForm=TRUE, $params=NULL, $center=TRUE){	
+		$form_name = $this->Prefix.'_KBform';	
+		
+		if($withForm){
+			$form= "<form name='$form_name' id='$form_name' method='post' action=''>".
+				createDialog(
+					$form_name.'_div', 
+					$this->setForm_content(),
+					$this->form_width,
+					$this->form_height,
+					$this->form_caption,
+					'',
+					$this->form_menubawah.
+					"<input type='hidden' id='".$this->Prefix."_idplh' name='".$this->Prefix."_idplh' value='$this->form_idplh' >
+					<input type='hidden' id='".$this->Prefix."_fmST' name='".$this->Prefix."_fmST' value='$this->form_fmST' >",
+					$this->form_menu_bawah_height,'',$params).
+				"</form>";
+				
+		}else{
+			$form= 
+				createDialog(
+					$form_name.'_div', 
+					$this->setForm_content(),
+					$this->form_width,
+					$this->form_height,
+					$this->form_caption,
+					'',
+					$this->form_menubawah.
+					"<input type='hidden' id='".$this->Prefix."_idplh' name='".$this->Prefix."_idplh' value='$this->form_idplh' >
+					<input type='hidden' id='".$this->Prefix."_fmST' name='".$this->Prefix."_fmST' value='$this->form_fmST' >",
+					$this->form_menu_bawah_height,'',$params
+				);
+		}
+		
+		if($center){
+			$form = centerPage( $form );	
+		}
+		return $form;
+	}
+	
+	//form ==================================
+	function setFormBaru(){
+		$dt=array();
+		$dt['kd_kota'] = '';
+		$dt['kd_kec'] = '';
+		$dt['nm_wilayah'] = '';
+		$dt['koordinat_gps'] = '';
+		$dt['koord_bidang'] = '';
+		$dt['zoom'] = '';
+		//$this->form_idplh ='';
+		$this->form_fmST = 0;
+		$fm = $this->setForm($dt);
+		return	array ('cek'=>$fm['cek'], 'err'=>$fm['err'], 'content'=>$fm['content']);
+	}
+	function setFormEdit(){
+		$cek ='';
+
+		$cbid = $_REQUEST[$this->Prefix.'_cb'];
+			
+		$this->form_idplh = $cbid[0];
+
+		$kode = explode(' ',$this->form_idplh);
+		$this->form_fmST = 1;
+		
+		$aqry = "select * from $this->TblName where kd_kota ='".$kode[0]."' and kd_kec ='".$kode[1]."'  "; $cek.=$aqry;
+		$dt = mysql_fetch_array(mysql_query($aqry));
+			if ($dt['kd_kota'] != '0' && $dt['kd_kec'] !='0'){
+				$fm = $this->setFormEditKec($dt);
+			}else{
+				
+				$fm = $this->setFormEditKota($dt);
+			}
+				//set form
+	//	$fm = $this->setForm($dt);
+		return	array ('cek'=>$cek.$fm['cek'], 'err'=>$fm['err'], 'content'=>$fm['content']);
+	}
+	
+	function setFormEditKota($dt){	
+	 global $SensusTmp, $Main;
+	 
+	 $cek = ''; $err=''; $content=''; 		
+	 $json = TRUE;	//$ErrMsg = 'tes';	 	
+	 $form_name = $this->Prefix.'_form';				
+	 $this->form_width = 400;
+	 $this->form_height = 140;
+	  if ($this->form_fmST==1) {
+		$this->form_caption = 'Edit Kode Kota';
+		$nip	 = '';
+		$kd_kota = $dt['kd_kota'];			
+		$kd_kec = $dt['kd_kec'];			
+		$nm_wilayah = $dt['nm_wilayah'];			
+		$koordinat_gps = $dt['koordinat_gps'];			
+		$koord_bidang = $dt['koord_bidang'];	
+			
+		$combozoom="<select id='zoom' name='zoom' >";
+		$x=0;
+		while ($x<=14)
+		{
+		$x++;
+			$combozoom .= $dt['zoom']==$x ? "<option value='$x' selected>$x</option>" :"<option value='$x' >$x</option>"; 	
+		}
+		$combozoom.="</select>";
+			
+	
+	  }
+	    //ambil data trefditeruskan
+	  	$query = "" ;$cek .=$query;
+	  	$res = mysql_query($query);
+		
+	 //items ----------------------
+	  $this->form_fields = array(
+			
+			'kota' => array( 
+						'label'=>'Kode Kota',
+						'labelWidth'=>60, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='fmkota' id='fmkota' value='".$dt['kd_kota']."' style='width:30px;' readonly>
+						<input type='text' name='nama' id='nama' value='".$dt['nm_wilayah']."' placeholder='Nama Kode Kota' style='width:220px;'>
+						</div>", 
+						 ),		
+			
+			'koordinat_gps' => array( 
+						'label'=>'Koordinat GPS',
+						'labelWidth'=>100, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='koordinat_gps' id='koordinat_gps' value='".$dt['koordinat_gps']."' placeholder='Koordinat GPS' style='width:250px;'>
+						</div>",
+						 ), 
+			'koord_bidang' => array( 
+						'label'=>'Koordinat Bidang',
+						'labelWidth'=>50, 
+						'value'=>"<textarea name='koord_bidang' rows='2' cols='38' >$koord_bidang</textarea>"
+						
+						 ),	
+						
+			'zoom' => array( 'label'=>'Zoom', 'value'=>$combozoom, 'type'=>''),	
+			
+			
+			'Add' => array( 
+						'label'=>'',
+						'value'=>"<div id='Add'></div>",
+						'type'=>'merge'
+					 )			
+			);
+		//tombol
+		$this->form_menubawah =
+			"<input type='hidden' name='kec' id='kec'  value='".$dt['kd_kec']."'>".
+			"<input type='button' value='Simpan' onclick ='".$this->Prefix.".Simpan()' title='Simpan' >"."&nbsp&nbsp".
+			"<input type='button' value='Batal' onclick ='".$this->Prefix.".Close()' >";
+							
+		$form = $this->genForm();		
+		$content = $form;
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);
+	}
+	
+	function setFormEditKec($dt){	
+	 global $SensusTmp, $Main;
+	 
+	 $cek = ''; $err=''; $content=''; 		
+	 $json = TRUE;	//$ErrMsg = 'tes';	 	
+	 $form_name = $this->Prefix.'_form';				
+	 $this->form_width = 400;
+	 $this->form_height = 150;
+	  if ($this->form_fmST==1) {
+		$this->form_caption = 'Edit Kode Kecamatan';
+		$nip	 = '';
+		$kd_kota = $dt['kd_kota'];			
+		$kd_kec = $dt['kd_kec'];			
+		$nm_wilayah = $dt['nm_wilayah'];			
+		$koordinat_gps = $dt['koordinat_gps'];			
+		$koord_bidang = $dt['koord_bidang'];	
+			
+		$combozoom="<select id='zoom' name='zoom' >";
+		$x=0;
+		while ($x<=14)
+		{
+		$x++;
+			$combozoom .= $dt['zoom']==$x ? "<option value='$x' selected>$x</option>" :"<option value='$x' >$x</option>"; 	
+		}
+		$combozoom.="</select>";
+			
+	
+	  }
+	    //ambil data trefditeruskan
+	  	$query = "" ;$cek .=$query;
+	  	$res = mysql_query($query);
+		
+		$querykota=mysql_fetch_array(mysql_query("SELECT kd_kota, nm_wilayah FROM ref_kotakec where kd_kota='".$dt['kd_kota']."' and kd_kec='0'")); 
+		$datakota=$querykota['kd_kota'].".".$querykota['nm_wilayah'];
+	 //items ----------------------
+	  $this->form_fields = array(
+			
+			'kota' => array( 
+						'label'=>'Kode Kota',
+						'labelWidth'=>100, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='id_kota' id='id_kota' value='".$datakota."' style='width:250px;' readonly>
+						<input type ='hidden' name='fmkota' id='fmkota' value='".$dt['kd_kota']."'>
+						</div>", 
+						 ),	
+			
+			'kec' => array( 
+						'label'=>'Kode Kecatan',
+						'labelWidth'=>60, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='kec' id='kec' value='".$dt['kd_kec']."' style='width:30px;' readonly>
+						<input type='text' name='nama' id='nama' value='".$dt['nm_wilayah']."' placeholder='Nama Kode Kota' style='width:220px;'>
+						</div>", 
+						 ),		
+			
+			'koordinat_gps' => array( 
+						'label'=>'Koordinat GPS',
+						'labelWidth'=>100, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='koordinat_gps' id='koordinat_gps' value='".$dt['koordinat_gps']."' placeholder='Koordinat GPS' style='width:250px;'>
+						</div>",
+						 ), 
+			'koord_bidang' => array( 
+						'label'=>'Koordinat Bidang',
+						'labelWidth'=>50, 
+						'value'=>"<textarea name='koord_bidang' rows='2' cols='38' >$koord_bidang</textarea>"
+						
+						 ),	
+						
+			'zoom' => array( 'label'=>'Zoom', 'value'=>$combozoom, 'type'=>''),	
+			
+			
+			'Add' => array( 
+						'label'=>'',
+						'value'=>"<div id='Add'></div>",
+						'type'=>'merge'
+					 )			
+			);
+		//tombol
+		$this->form_menubawah =
+			"<input type='button' value='Simpan' onclick ='".$this->Prefix.".Simpan()' title='Simpan' >"."&nbsp&nbsp".
+			"<input type='button' value='Batal' onclick ='".$this->Prefix.".Close()' >";
+							
+		$form = $this->genForm();		
+		$content = $form;
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);
+	}
+	
+		
+	function setForm($dt){	
+		global $SensusTmp,$Main;
+		$cek = ''; 
+		$err=''; $content=''; 
+		
+		$json = TRUE;	//$ErrMsg = 'tes';
+		
+		
+		
+		$form_name = $this->Prefix.'_form';				
+		$this->form_width = 460;
+		$this->form_height = 160;
+		if ($this->form_fmST==0) {
+			$this->form_caption = 'Baru';
+
+		}else{
+			$this->form_caption = 'Edit';			
+			$kd_kota = $dt['kd_kota'];			
+			$kd_kec = $dt['kd_kec'];			
+			$nm_wilayah = $dt['nm_wilayah'];			
+			$koordinat_gps = $dt['koordinat_gps'];			
+			$koord_bidang = $dt['koord_bidang'];			
+		}
+		
+		$combozoom="<select id='zoom' name='zoom' >";
+		$x=0;
+		while ($x<=14)
+		{
+		$x++;
+			$combozoom .= $dt['zoom']==$x ? "<option value='$x' selected>$x</option>" :"<option value='$x' >$x</option>"; 	
+		}
+		$combozoom.="</select>";
+		//items ----------------------
+	
+		$querykota="SELECT kd_kota,concat(kd_kota, '. ', nm_wilayah) as vnama FROM ref_kotakec where kd_kec='0'";
+		
+		$this->form_fields = array(				
+			
+			'kd_kota' => array( 
+						'label'=>'Kode Kota',
+						'labelWidth'=>100, 
+						'value'=>
+						"<div id='cont_kota'>".cmbQuery('fmkota',$kd_kota,$querykota,'style="width:250px;"onchange="'.$this->Prefix.'.pilihkota()"','--- Pilih Kode Kota ---')."&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp"."<input type='button' value='Baru' onclick ='".$this->Prefix.".Barukota()' title='Baru kota' ></div>",
+						 ),		
+				
+			'kd_kec' => array( 
+						'label'=>'Kode Kecamatan',
+						'labelWidth'=>100, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='kec' id='kec' value='".$newkec."' style='width:30px;' readonly>
+						<input type='text' name='nama' id='nama' value='".$nama."' placeholder='Nama Wilayah' style='width:220px;'>
+						</div>", 
+						 ),		
+		//	'kd_kota1' => array(  'label'=>'Kode Kota', 'value'=> $kd_kota, 'labelWidth'=>120, 'type'=>'number' ),
+		//	'kd_kec2' => array(  'label'=>'Kode Kecamatan', 'value'=> $kd_kec, 'labelWidth'=>120, 'type'=>'number' ),
+		//	'nm_wilayah' => array(  'label'=>'Nama Wilayah', 'value'=> $nm_wilayah, 'labelWidth'=>120, 'type'=>'text' ),
+		//	'koordinat_gps1' => array(  'label'=>'Koordinat GPS', 'value'=> $koordinat_gps, 'labelWidth'=>120, 'type'=>'text' ),
+			
+			'koordinat_gps' => array( 
+						'label'=>'Koordinat GPS',
+						'labelWidth'=>100, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='koordinat_gps' id='koordinat_gps' value='".$koordinat_gps."' placeholder='Koordinat GPS' style='width:250px;'>
+						</div>",
+						 ), 
+			'koord_bidang' => array( 
+						'label'=>'Koordinat Bidang',
+						'labelWidth'=>50, 
+						'value'=>"<textarea name='koord_bidang' rows='2' cols='38' >$koord_bidang</textarea>"
+						
+						 ),						 
+			
+			
+			/*'koord_bidang' => array( 
+						'label'=>'Koordinat Bidang',
+						'value'=> $koord_bidang, 'labelWidth'=>100, 'type'=>'memo' ),*/
+						
+			'zoom' => array( 'label'=>'Zoom', 'value'=>$combozoom, 'type'=>'')	
+		);
+		
+				
+		//tombol
+		$this->form_menubawah =
+			"<input type='hidden' name='kota' id='kota'  value='".$querykota['kd_kota']."'>".
+			"<input type=hidden id='".$this->Prefix."_kdkotaplh' name='".$this->Prefix."_kdkotaplh' value='".$dt['kd_kota']."'> ".
+			"<input type=hidden id='".$this->Prefix."_kdkecplh' name='".$this->Prefix."_kdkecplh' value='".$dt['kd_kec']."'> ".
+			"<input type='button' value='Simpan' onclick ='".$this->Prefix.".Simpan()' >".
+			"<input type='button' value='Batal' onclick ='".$this->Prefix.".Close()' >";
+		
+		
+		$form = $this->genForm();		
+				
+		$content = $form;//$content = 'content';
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);
+	}
+	
+	
+	//daftar =================================
+	function setKolomHeader($Mode=1, $Checkbox=''){
+		$NomorColSpan = $Mode==1? 2: 1;
+		$headerTable =
+			"<thead>
+				<tr>
+				
+				<th class='th01' width='40'>No.</th>
+				$Checkbox		
+				<th class='th01' width=40>Kode Kota</th>
+				<th class='th01' width=40>Kode Kecamatan</th>
+				<th class='th01' >Nama Kota/Kecamatan </th>
+				</tr>
+				
+			</thead>";
+		return $headerTable;
+	}
+	function setKolomData($no, $isi, $Mode, $TampilCheckBox){
+		global $Ref;
+		$Koloms = array();
+		$Koloms[] = array('align=right', $no.'.' );
+		if ($Mode == 1) $Koloms[] = array(" align='center'  ", $TampilCheckBox);
+		$Koloms[] = array(" align='center'  ", $isi['kd_kota']);		
+		$Koloms[] = array(" align='center'  ", $isi['kd_kec']);		
+		$Koloms[] = array('', $isi['nm_wilayah'] );
+		return $Koloms;
+	}
+	function genDaftarOpsi(){
+		global $Ref, $Main;
+		$fmPILKOTA = $_REQUEST['fmPILKOTA'];
+		$TampilOpt =
+			
+genFilterBar(
+				array( 
+					//"<div id='cbxRuangGedung' style='flaot:left'>	".
+					'Tampilkan : &nbsp; '.
+					//"</div>".
+					//"<div id='cbxRuangGedung' style='flaot:left'>	".
+					"<span id='cbxKota'>".
+					genComboBoxQry( 'fmPILKOTA', $fmPILKOTA, 
+						"select * from ref_kotakec where kd_kec='0'  ",
+						'kd_kota', 'nm_wilayah', '-- Semua Kota --',"style='width:140'" ).
+					"</span"
+				)				
+				,$this->Prefix.".refreshList(true)",TRUE, 'Tampilkan'
+			);
+		return array('TampilOpt'=>$TampilOpt);
+	}			
+	function getDaftarOpsi($Mode=1){
+		global $Main, $HTTP_COOKIE_VARS;
+		$UID = $_COOKIE['coID']; 
+		//kondisi -----------------------------------
+				
+		
+		$arrKondisi = array();		
+/*
+		$arrKondisi[] = 'a='.$Main->Provinsi[0];
+		$arrKondisi[] = 'b='.$Main->DEF_WILAYAH;
+		$fmSKPD = cekPOST($this->Prefix.'SkpdfmSKPD');
+		$fmUNIT = cekPOST($this->Prefix.'SkpdfmUNIT');
+		$fmSUBUNIT = cekPOST($this->Prefix.'SkpdfmSUBUNIT');
+		$fmSEKSI = cekPOST($this->Prefix.'SkpdfmSEKSI');
+		if(!($fmSKPD=='' || $fmSKPD=='00') ) $arrKondisi[] = 'c='.$fmSKPD;
+		if(!($fmUNIT=='' || $fmUNIT=='00') ) $arrKondisi[] = 'd='.$fmUNIT;
+		if(!($fmSUBUNIT=='' || $fmSUBUNIT=='00') ) $arrKondisi[] = 'e='.$fmSUBUNIT;
+		if(!($fmSEKSI=='' || $fmSEKSI=='00' || $fmSEKSI=='000') ) $arrKondisi[] = 'e1='.$fmSEKSI;
+		
+*/		
+		 	
+		$fmPILKOTA = $_REQUEST['fmPILKOTA'];
+		if (!empty($fmPILKOTA)) $arrKondisi[] = "kd_kota='$fmPILKOTA'";
+		$Kondisi= join(' and ',$arrKondisi);		
+		$Kondisi = $Kondisi =='' ? '':' Where '.$Kondisi;
+		
+		//Order -------------------------------------
+		$fmORDER1 = cekPOST('fmORDER1');
+		$fmDESC1 = cekPOST('fmDESC1');				
+		$Asc = $fmDESC1 ==''? '': 'desc';		
+		$arrOrders = array();
+		$arrOrders[] = " kd_kota,kd_kec ";
+		/*switch($fmORDER1){
+			case '1': $arrOrders[] = " no_terima $Asc " ;break;
+			case '2': $arrOrders[] = " i $Asc " ;break;
+		}*/		
+		$Order= join(',',$arrOrders);	
+		$OrderDefault = '';// Order By no_terima desc ';
+		$Order =  $Order ==''? $OrderDefault : ' Order By '.$Order;
+		//limit --------------------------------------
+		$HalDefault=cekPOST($this->Prefix.'_hal',1);					
+		$Limit = " limit ".(($HalDefault	*1) - 1) * $Main->PagePerHal.",".$Main->PagePerHal; //$LimitHal = '';
+		$Limit = $Mode == 3 ? '': $Limit;
+		//noawal ------------------------------------
+		$NoAwal= $Main->PagePerHal * (($HalDefault*1) - 1);							
+		$NoAwal = $Mode == 3 ? 0: $NoAwal;		
+		
+		return array('Kondisi'=>$Kondisi, 'Order'=>$Order ,'Limit'=>$Limit, 'NoAwal'=>$NoAwal);
+		
+	}
+	
+	
+
+}
+$refKotaKec = new KotaKecObj();
+
+
+class KotaKecPilihObj  extends KotaKecObj{
+	var $Prefix = 'refKotaKecPilih';
+	var $elCurrPage="HalDefault";
+	var $TblName = 'ref_kotakec'; //daftar
+	var $TblName_Hapus = 'ref_kotakec';
+	var $MaxFlush = 10;
+	var $TblStyle = array( 'koptable', 'cetak','cetak'); //berdasar mode
+	var $ColStyle = array( 'GarisDaftar', 'GarisCetak','GarisCetak');
+	var $KeyFields = array('Id');//('p','q'); //daftar/hapus
+	var $FieldSum = array();//array('jml_harga');
+	var $SumValue = array();
+	var $FieldSum_Cp1 = array( 14, 13, 13);//berdasar mode
+	var $FieldSum_Cp2 = array( 1, 1, 1);	
+	var $checkbox_rowspan = 1;
+	var $PageTitle = 'Referensi Data';
+	var $PageIcon = 'images/masterdata_ico.gif';
+	//var $cetak_xls=TRUE ;
+	var $fileNameExcel='ref_kotakec.xls';
+	var $Cetak_Judul = 'DAFTAR KOTA/KECAMATAN';	
+	var $Cetak_Mode=2;
+	var $Cetak_WIDTH = '30cm';
+	var $Cetak_OtherHTMLHead;
+	
+	/*function setPage_TitleDaftar(){
+		return 'Daftar Pegawai';
+	}*/	
+	//function setPage_TitlePage(){		return 'Referensi Data';			}
+	function setTitle(){
+		return 'Pilih Kota/Kecamatan';
+	}
+	
+	function setMenuView(){
+		return '';
+	}		
+	//*
+	function genDaftarOpsi(){
+		global $Ref, $Main;
+		
+		/*$fmSKPD = $_COOKIE['cofmSKPD'];			 
+		$fmUNIT = $_COOKIE['cofmUNIT'];
+		$fmSUBUNIT = $_COOKIE['cofmSUBUNIT'];*/
+/*
+		$fmPILGEDUNG = $_REQUEST['fmPILGEDUNG'];		
+		$fmSKPD = cekPOST($this->Prefix.'SkpdfmSKPD');
+		$fmUNIT = cekPOST($this->Prefix.'SkpdfmUNIT');
+		$fmSUBUNIT = cekPOST($this->Prefix.'SkpdfmSUBUNIT');
+		$fmSEKSI = cekPOST($this->Prefix.'SkpdfmSEKSI');
+		
+		$TampilOpt =			
+			"<input type='hidden' id='PegawaiPilihSkpdfmSKPD' name='PegawaiPilihSkpdfmSKPD' value='$fmSKPD'>".
+			"<input type='hidden' id='PegawaiPilihSkpdfmUNIT' name='PegawaiPilihSkpdfmUNIT'  value='$fmUNIT'>".
+			"<input type='hidden' id='PegawaiPilihSkpdfmSUBUNIT' name='PegawaiPilihSkpdfmSUBUNIT'  value='$fmSUBUNIT'>".
+			"<input type='hidden' id='PegawaiPilihSkpdfmSEKSI' name='PegawaiPilihSkpdfmSEKSI'  value='$fmSEKSI'>";
+*/			
+			$TampilOpt="";
+			/*genFilterBar(
+				array( 
+					'Gedung &nbsp; '.
+					"<span id='cbxRuangGedung' >".
+					genComboBoxQry( 'fmPILGEDUNG', $fmPILGEDUNG, 
+						"select * from ref_ruang where q='0000' and c='$fmSKPD' and d='$fmUNIT' and e='$fmSUBUNIT'  ",
+						'p', 'nm_ruang', '-- Semua Gedung --',"style='width:140'" ).
+					"</span>"
+				)				
+				,$this->Prefix.".refreshList(true)",TRUE, 'Tampilkan'
+			);	*/		
+		return array('TampilOpt'=>$TampilOpt);
+	}		
+	//*/	
+	//*
+	function getDaftarOpsi($Mode=1){
+		global $Main, $HTTP_COOKIE_VARS;
+		$cek='';
+		$UID = $_COOKIE['coID']; 
+		//kondisi -----------------------------------
+/*
+		$arrKondisi = array();
+		$arrKondisi[] = 'a='.$Main->Provinsi[0];
+		$arrKondisi[] = 'b='.$Main->DEF_WILAYAH;
+		$kdSubUnit0 = genNumber(0, $Main->SUBUNIT_DIGIT );
+*/		
+		/*$fmSKPD = $_COOKIE['cofmSKPD'];			 
+		$fmUNIT = $_COOKIE['cofmUNIT'];
+		$fmSUBUNIT = $_COOKIE['cofmSUBUNIT'];*/
+/*
+		$fmSKPD = cekPOST($this->Prefix.'SkpdfmSKPD');
+		$fmUNIT = cekPOST($this->Prefix.'SkpdfmUNIT');
+		$fmSUBUNIT = cekPOST($this->Prefix.'SkpdfmSUBUNIT');
+		$fmSEKSI = cekPOST($this->Prefix.'SkpdfmSEKSI');
+		
+		if(!($fmSKPD=='' || $fmSKPD=='00') ) $arrKondisi[] = "c='$fmSKPD'";
+		if(!($fmUNIT=='' || $fmUNIT=='00') ) $arrKondisi[] = "d='$fmUNIT'";
+		if(!($fmSUBUNIT=='' || $fmSUBUNIT=='00') ) $arrKondisi[] = "e='$fmSUBUNIT'";
+		if(!($fmSEKSI=='' || $fmSEKSI=='00' || $fmSEKSI=='000') ) $arrKondisi[] = "e1='$fmSEKSI'";
+		
+		//$fmPILGEDUNG = $_REQUEST['fmPILGEDUNG'];
+		//if (!empty($fmPILGEDUNG)) $arrKondisi[] = "p='$fmPILGEDUNG'";
+		$Kondisi= join(' and ',$arrKondisi);		
+		$Kondisi = $Kondisi =='' ? '':' Where '.$Kondisi;
+*/
+		$Kondisi="";
+		//Order -------------------------------------
+		$fmORDER1 = cekPOST('fmORDER1');
+		$fmDESC1 = cekPOST('fmDESC1');				
+		$Asc = $fmDESC1 ==''? '': 'desc';		
+		$arrOrders = array();
+		$arrOrders[] = " kd_kota,kd_kec ";		
+		$Order= join(',',$arrOrders);	
+		$OrderDefault = '';// Order By no_terima desc ';
+		$Order =  $Order ==''? $OrderDefault : ' Order By '.$Order;
+		//limit --------------------------------------
+		$HalDefault=cekPOST($this->Prefix.'_hal',1);					
+		$Limit = " limit ".(($HalDefault	*1) - 1) * $Main->PagePerHal.",".$Main->PagePerHal; //$LimitHal = '';
+		$Limit = $Mode == 3 ? '': $Limit;
+		//noawal ------------------------------------
+		$NoAwal= $Main->PagePerHal * (($HalDefault*1) - 1);							
+		$NoAwal = $Mode == 3 ? 0: $NoAwal;				
+		return array('Kondisi'=>$Kondisi, 'Order'=>$Order ,'Limit'=>$Limit, 'NoAwal'=>$NoAwal, 'cek'=>$cek);		
+	}
+	//*/
+	
+	function windowShow(){		
+		$cek = ''; $err=''; $content=''; 
+		$json = TRUE;	//$ErrMsg = 'tes';		
+		$form_name = $this->Prefix.'_Form';
+/*		
+		$fmSKPD = $_REQUEST['fmSKPD'];
+		$fmUNIT = $_REQUEST['fmUNIT'];
+		$fmSUBUNIT = $_REQUEST['fmSUBUNIT'];
+		$fmSEKSI = $_REQUEST['fmSEKSI'];
+*/				
+		$FormContent = $this->genDaftarInitial('', '', '','');
+		$form = centerPage(
+					"<form name='$form_name' id='$form_name' method='post' action=''>".
+					createDialog(
+						$form_name.'_div', 
+						$FormContent,
+						600,
+						400,
+						'Pilih Kota/Kecamatan',
+						'',
+						"<input type='button' value='Pilih' onclick ='".$this->Prefix.".windowSave()' >".
+						"<input type='button' value='Batal' onclick ='".$this->Prefix.".windowClose()' >".
+						"<input type='hidden' id='".$this->Prefix."_kdkotaplh' name='".$this->Prefix."_kdkotaplh' value='$this->form_kdkotaplh' >".
+						"<input type='hidden' id='".$this->Prefix."_kdkecplh' name='".$this->Prefix."_kdkecplh' value='$this->form_kdkecplh' >".
+						"<input type='hidden' id='".$this->Prefix."_fmST' name='".$this->Prefix."_fmST' value='$this->form_fmST' >".
+						"<input type='hidden' id='sesi' name='sesi' value='$sesi' >"
+						,//$this->setForm_menubawah_content(),
+						$this->form_menu_bawah_height
+					).
+					"</form>"
+		);
+		$content = $form;//$content = 'content';
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);
+	}
+	
+	function set_selector_other2($tipe){
+		global $Main;
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		switch($tipe){				
+			case 'windowshow':{
+				$fm = $this->windowShow();
+				$cek = $fm['cek'];
+				$err = $fm['err'];
+				$content = $fm['content'];	
+				break;
+			}
+			default:{
+				$err = 'tipe tidak ada!';
+				break;
+			}
+		}
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	function genDaftarInitial($fmSKPD='', $fmUNIT='', $fmSUBUNIT='', $fmSEKSI=''){
+		$vOpsi = $this->genDaftarOpsi();
+		return			
+			"<div id='{$this->Prefix}_cont_title' style='position:relative'></div>". 
+			"<div id='{$this->Prefix}_cont_opsi' style='position:relative'>". 		
+			"<div id=garis style='height:1;border-bottom:1px solid #E5E5E5;'></div>".
+			"<div id=contain style='overflow:auto;height:256;'>".
+			"<div id='{$this->Prefix}_cont_daftar' style='position:relative' >".					
+			"</div>
+			</div>".
+			"<div id='{$this->Prefix}_cont_hal' style='position:relative'>".				
+				"<input type='hidden' id='".$this->Prefix."_hal' name='".$this->Prefix."_hal' value='1'>".
+			"</div>";
+	}
+	
+}
+$refKotaKecPilih = new KotaKecPilihObj();
+
+
+?>

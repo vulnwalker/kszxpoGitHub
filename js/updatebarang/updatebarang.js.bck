@@ -1,0 +1,174 @@
+var updatebarang = new DaftarObj2({
+	prefix : 'updatebarang',
+	url : 'pages.php?Pg=updatebarang', 
+	formName : 'updatebarangForm',
+	
+	loading: function(){
+		this.topBarRender();
+		this.filterRender();
+		//this.daftarRender();
+		//this.sumHalRender();	
+	},
+	
+	formUpdate: function(){
+	var me = this; var errmsg ='';		
+		
+		/*var jmlcek = document.getElementById('boxchecked').value ;	
+		if((errmsg=='') && ( (document.getElementById('boxchecked').value == 0)||(document.getElementById('boxchecked').value == '')  )){
+			errmsg= 'Data belum dipilih!';
+		}*/		
+		errmsg = this.CekCheckboxBi();		
+		if(errmsg ==''){ 
+			var box = this.GetCbxCheckedBi();
+				if(errmsg ==''){ 							
+					//var aForm = document.getElementById(this.formName);		
+					var aForm = document.getElementById('adminForm');		
+					aForm.action= this.url;//'?Op='+op+'&Pg=2&idprs=cetak_hal';		
+					aForm.target='_blank';
+					aForm.submit();	
+					aForm.target='';
+				}
+		}else{
+			alert(errmsg);				
+		}
+	},
+	
+	PilihTrans : function(){
+		var trans = document.getElementById('trans').value;
+		//alert('trans='+trans);
+		if(trans==1){//KOREKSI HARGA
+			document.getElementById('areakoreksi').style="display:block;";
+			document.getElementById('areakondisi').style="display:none;";		
+			document.getElementById('areakapitalisasi').style="display:none;";				
+			document.getElementById('areaasetlain2').style="display:none;";
+			document.getElementById("btsave").setAttribute("href", "javascript:"+this.prefix+".SimpanKoreksi()");			
+		}else if(trans==2){//KONDISI
+			document.getElementById('areakoreksi').style="display:none;";
+			document.getElementById('areakondisi').style="display:block;";		
+			document.getElementById('areakapitalisasi').style="display:none;";				
+			document.getElementById('areaasetlain2').style="display:none;";
+			document.getElementById("btsave").setAttribute("href", "javascript:"+this.prefix+".SimpanKondisi()");	
+		}else if(trans==3){//KAPITALISASI
+			document.getElementById('areakoreksi').style="display:none;";
+			document.getElementById('areakondisi').style="display:none;";	
+			document.getElementById('areakapitalisasi').style="display:block;";				
+			document.getElementById('areaasetlain2').style="display:none;";
+			document.getElementById("btsave").setAttribute("href", "javascript:"+this.prefix+".SimpanKapitalisasi()");			
+		}else if(trans==4){//ASETLAIN2
+			document.getElementById('areakoreksi').style="display:none;";
+			document.getElementById('areakondisi').style="display:none;";		
+			document.getElementById('areakapitalisasi').style="display:none;";
+			document.getElementById('areaasetlain2').style="display:block;";
+			document.getElementById("btsave").setAttribute("href", "javascript:"+this.prefix+".SimpanAsetLainLain()");			
+		}else{
+			document.getElementById('areakoreksi').style="display:none;";
+			document.getElementById('areakondisi').style="display:none;";		
+			document.getElementById('areakapitalisasi').style="display:none;";				
+			document.getElementById('areaasetlain2').style="display:none;";
+			document.getElementById("btsave").setAttribute("href", "");
+			
+		}
+	},
+	
+	SimpanKoreksi: function(){
+		var me = this;			
+		$.ajax({
+				type:'POST', 
+				data:$('#'+this.formName).serialize(),
+				url: this.url+'&tipe=simpankoreksi',
+				success: function(data) {	
+					var resp = eval('(' + data + ')');
+					if(resp.err==''){
+						window.close();
+						window.opener.location.reload();	
+					}else{
+						alert(resp.err);
+					}
+				}
+			});	
+	},
+	
+	SimpanKondisi: function(){
+		var me = this;			
+		$.ajax({
+				type:'POST', 
+				data:$('#'+this.formName).serialize(),
+				url: this.url+'&tipe=simpankondisi',
+				success: function(data) {	
+					var resp = eval('(' + data + ')');
+					if(resp.err==''){
+						window.close();
+						window.opener.location.reload();	
+					}else{
+						alert(resp.err);
+					}
+				}
+			});	
+	},
+	
+	SimpanKapitalisasi: function(){
+		var me = this;			
+		$.ajax({
+				type:'POST', 
+				data:$('#'+this.formName).serialize(),
+				url: this.url+'&tipe=simpankapitalisasi',
+				success: function(data) {	
+					var resp = eval('(' + data + ')');
+					if(resp.err==''){
+						window.close();
+						window.opener.location.reload();	
+					}else{
+						alert(resp.err);
+					}
+				}
+			});	
+	},
+	
+	SimpanAsetLainLain: function(){
+		var me = this;			
+		$.ajax({
+				type:'POST', 
+				data:$('#'+this.formName).serialize(),
+				url: this.url+'&tipe=simpanasetlainlain',
+				success: function(data) {	
+					var resp = eval('(' + data + ')');
+					if(resp.err==''){
+						window.close();
+						window.opener.location.reload();	
+					}else{
+						alert(resp.err);
+					}
+				}
+			});	
+	},
+		
+	AftFilterRender: function(){ 			
+		$('.datepicker').datepicker({
+		    dateFormat: 'dd-mm-yy',
+			showAnim: 'slideDown',
+		    inline: true,
+			showOn: "button",
+			buttonImage: "datepicker/calender1.png",
+			buttonImageOnly: true,
+			changeMonth: true,
+			changeYear: true,
+			yearRange: "-100:+0",
+			buttonText : '',
+		});					
+	},
+	AftFilterRender2: function(){ 			
+		$('.datepicker2').datepicker({
+		    dateFormat: 'dd-mm',
+			showAnim: 'slideDown',
+		    inline: true,
+			showOn: "button",
+			buttonImage: "datepicker/calender1.png",
+			buttonImageOnly: true,
+			changeMonth: true,
+			changeYear: true,
+			yearRange: "-100:+0",
+			buttonText : '',
+		});					
+	},		
+	
+});

@@ -1,0 +1,377 @@
+<?php
+
+class KoreksiObj  extends DaftarObj2{	
+	var $Prefix = 'Koreksi';
+	var $elCurrPage="HalDefault";
+	var $TblName = 'v1_asetlainlain'; //daftar
+	var $TblName_Hapus = 't_asetlainlain';
+	var $MaxFlush = 10;
+	var $TblStyle = array( 'koptable', 'cetak','cetak'); //berdasar mode
+	var $ColStyle = array( 'GarisDaftar', 'GarisCetak','GarisCetak');
+	var $KeyFields = array('Id');//('p','q'); //daftar/hapus
+	var $FieldSum = array();//array('jml_harga');
+	var $SumValue = array();
+	var $FieldSum_Cp1 = array( 14, 13, 13);//berdasar mode
+	var $FieldSum_Cp2 = array( 1, 1, 1);	
+	var $checkbox_rowspan = 1;
+	var $PageTitle = 'Jurnal';
+	var $PageIcon = 'images/masterdata_ico.gif';
+	//var $cetak_xls=TRUE ;
+	var $fileNameExcel='koreksi.xls';
+	var $Cetak_Judul = 'Koreksi Pembukuan';	
+	var $Cetak_Mode=2;
+	var $Cetak_WIDTH = '30cm';
+	var $Cetak_OtherHTMLHead;
+	
+	
+	
+	
+	//function setPage_TitleDaftar(){	return 'Daftar Pegawai'; }	
+	//function setPage_TitlePage(){		return 'Referensi Data';			}
+	function setTitle(){
+		return 'Koreksi Pembukuan';
+	}
+	
+	
+	function Simpan(){
+		global $Main, $HTTP_COOKIE_VARS;
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		
+		
+		$fmST = $_REQUEST[$this->Prefix.'_fmST'];
+		$idbi = $_REQUEST['idbi'];
+		$tgl = $_REQUEST['tgl'];
+		$uid = $HTTP_COOKIE_VARS['coID'];		
+		$ket = $_REQUEST['ket'];
+		$hrg = $_REQUEST['hrg'];
+		$hrg_baru = $_REQUEST['hrg_baru'];
+		
+		$bi = mysql_fetch_array(mysql_query("select * from buku_induk where id='$idbi'"));
+		
+				
+		if($err=='' && $tgl=='') $err = 'Tanggal belum diisi!';
+		if($err=='' && ($tgl == '0000-00-00' || $tgl=='') ){ $err = 'Tanggal Koreksi belum diisi!';	}
+		if($err=='' && !cektanggal($tgl)){ 	$err = "Tanggal Koreksi $tgl Salah!";	}
+		if($err=='' && compareTanggal($tgl, date('Y-m-d'))==2  ) $err = 'Tanggal Koreksi tidak lebih besar dari Hari ini!';				
+		if($err=='' && compareTanggal($tgl, $bi['tgl_buku'])==0  ) $err = 'Tanggal Koreksi tidak lebih kecil dari Tanggal Buku!';			
+					
+		switch ($fmST){
+			case 0 : { //baru	
+				if($err=='' &&$fmst==1 && $bi['status_barang'] != 1 ) $err= "Hanya Barang Inventaris yang bisa Koreksi!";
+				$oldmaxtgl = mysql_fetch_array(mysql_query("select max(tgl) as maxtgl from t_koreksi where idbi_awal='".$bi['idawal']."'"));
+				if($err=='' && compareTanggal($tgl, $oldmaxtgl['maxtgl'])==0  ) $err = 'Tanggal Koreksi tidak lebih kecil dari tanggal koreksi sebelumnya!';			
+		
+				if($err==''){
+					//harga asal
+					$harga= 0;
+					$get = mysql_fetch_array(mysql_query("select harga as tot from buku_induk where id = '".$bi['idawal']."' "));
+					$harga += $get['tot'];
+					$get = mysql_fetch_array(mysql_query("select sum(harga_baru - harga) as tot from t_koreksi where idbi_awal = '".$bi['idawal']."' and tgl<='$tgl' "));
+					$harga += $get['tot'];			
+					
+					//simpan		
+					$aqry = 
+						"insert into t_koreksi ".
+						"(tgl,  idbi, idbi_awal, uid, tgl_update, staset, harga, harga_baru, ket )".					
+						" values ".
+						"('$tgl', '$idbi', '".$bi['idawal']."', '$uid', now(), '".$bi['staset']."' , '".$harga."', '$hrg_baru', '$ket' ) "; $cek .= $aqry;
+					$qry = mysql_query($aqry);							
+				}				
+				break;
+			}
+			case 1 : { //edit
+				break;
+			}
+		}
+		
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	function set_selector_other($tipe){
+		global $Main;
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		switch($tipe){
+			case 'formBaruBI':{				
+				$fm = $this->setFormBaruBI();				
+				$cek = $fm['cek'];
+				$err = $fm['err'];
+				$content = $fm['content'];	
+				//$content = 'tesssss';
+				break;
+			} 	
+			case 'formEdit':{				
+				$fm = $this->setFormEdit();				
+				$cek = $fm['cek'];
+				$err = $fm['err'];
+				$content = $fm['content'];												
+				break;
+			}
+			case 'simpan':{
+				$get = $this->Simpan();					
+				//$get = array('cek'=>'', 'err'=>'ggal','content'=>'', 'json'=>TRUE);
+				$cek = $get['cek'];
+				$err = $get['err'];
+				$content=$get['content'];
+				$json=$get['json'];
+				break;
+			}
+			/*case 'formBaru':{				
+				$fm = $this->setFormBaru();				
+				$cek = $fm['cek'];
+				$err = $fm['err'];
+				$content = $fm['content'];												
+				break;
+			}
+			*/
+			/*case 'formKondisiSimpan':{				
+				$get= $this->formKondisiSimpan();
+				$cek = $get['cek'];
+				$err = $get['err'];
+				$content = $get['content'];
+				break;
+			}*/
+			
+			default:{
+				$other = $this->set_selector_other2($tipe);
+				$cek = $other['cek'];
+				$err = $other['err'];
+				$content=$other['content'];
+				$json=$other['json'];
+				break;
+			}			
+		}
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	//form ==================================
+	function setFormBaruBI(){
+		global $Main;
+		$dt=array();
+		$dt['c'] = $_REQUEST[$this->Prefix.'SkpdfmSKPD'];
+		$dt['d'] = $_REQUEST[$this->Prefix.'SkpdfmUNIT'];
+		$dt['e'] = $_REQUEST[$this->Prefix.'SkpdfmSUBUNIT'];
+				
+		//$this->form_idplh ='';
+		$this->form_fmST = 0;
+		
+		$cidBI = $_REQUEST['cidBI'];
+		$idbi = $cidBI[0];// 735615;
+		$aqry = "select * from buku_induk where id ='$idbi'"; $cek .= $aqry;
+		$bi = mysql_fetch_array(mysql_query($aqry));
+		
+		$dt['idbi']= $idbi;
+		$dt['staset'] =  $bi['staset'];
+		$dt['tgl'] =  Date('Y-m-d');
+		$dt['kondisi'] = $bi['kondisi'];
+		$dt['kondisi_baru'] = $bi['kondisi'];
+			
+		if($err=='' && ($bi['staset']==5 || $bi['staset']==6 || $bi['staset']==7)) $err = 'Barang '.$Main->StatusAsetView[$bi['staset']-1][1].' ini tidak bisa di reclass ke Aset Lain-lain!';
+		if($err==''){
+			
+		
+			$fm = $this->setForm($dt);
+		}
+		return	array ('cek'=>$fm['cek'], 'err'=>$err.$fm['err'], 'content'=>$fm['content']);
+	}
+	function setFormEdit(){
+		$cek ='';
+		$cbid = $_REQUEST[$this->Prefix.'_cb'];
+		//$c = $_REQUEST[$this->Prefix.'SkpdfmSKPD'];
+		//$d = $_REQUEST[$this->Prefix.'SkpdfmUNIT'];
+		//$e = $_REQUEST[$this->Prefix.'SkpdSUBUNIT'];
+				
+		$this->form_idplh = $cbid[0];
+		$kode = explode(' ',$this->form_idplh);
+		$this->form_fmST = 1;
+		
+		//get data 
+		//$aqry = "select * from ref_ruang where c='$c' and d='$d' and e='$e' and p ='".$kode[0]."' and q='".$kode[1]."' "; $cek.=$aqry;
+		$aqry = "select * from t_asetlainlain where id ='".$this->form_idplh."'  "; $cek.=$aqry;
+		$dt = mysql_fetch_array(mysql_query($aqry));
+		
+		//set form
+		$fm = $this->setForm($dt);
+		return	array ('cek'=>$cek.$fm['cek'], 'err'=>$fm['err'], 'content'=>$fm['content']);
+	}	
+	
+	function setForm($dt){
+		global $Main;
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		
+		
+		
+		if($err==''){
+			$form_name = $this->Prefix.'_form';				
+			$this->form_width = 500;
+			$this->form_height = $Main->STASET_OTOMATIS? 180: 150;
+			
+			$idbi = $dt['idbi'];
+			$bi = mysql_fetch_array(mysql_query("select * from buku_induk where id = '$idbi' "));
+			
+			//$stasetAwal = $Main->StatusAsetView[$dt['staset']-1][1] ."<input type='hidden' id='staset' name='staset' value='".$dt['staset']."'>" ;
+			$tgl = $dt['tgl'];
+			$vtgl = createEntryTgl(	'tgl', $tgl, 	false, 	'', 	'','adminForm');
+			
+			$caption = 'Koreksi Pembukuan' ;
+			
+			$harga= 0;
+			$get = mysql_fetch_array(mysql_query("select harga as tot from buku_induk where id = '".$bi['idawal']."' "));
+			$harga += $get['tot'];
+			$get = mysql_fetch_array(mysql_query("select sum(harga_baru - harga) as tot from t_koreksi where idbi_awal = '".$bi['idawal']."' and tgl<='$tgl' "));
+			$harga += $get['tot'];
+			
+			$vhrg = number_format($harga, 2, ',', '.' )." <input type='hidden' id='hrg' name='hrg' value='".$harga."' >";
+			
+			$vhrg_baru = inputFormatRibuan3("hrg_baru", ($entryMutasi==FALSE? $htmlreadonly:' readonly="" '),0,'','','');
+			$this->form_fields = array(							
+				'tgl' => array(  'label'=>'Tanggal', 'value'=> $vtgl,  'type'=>'' ),
+				'hrg' => array(  'label'=>'Harga Perolehan Asal Rp. ', 'value'=> $vhrg, 'labelWidth'=>90, 'type'=>'' ),
+				'hrg_baru' => array(  'label'=>'Harga Perolehan Baru Rp.', 'value'=> $vhrg_baru, 'type'=>'' ),
+				'ket'=> array(  'label'=>'Keterangan', 'value'=> "<textarea id='ket' name='ket' style='width: 234px;height: 35px;'>".$dt['ket']."</textarea>", 'type'=>'' )
+			);
+			
+			if ($this->form_fmST==0) {		
+				$this->form_caption = $caption;
+			}else{
+				$this->form_caption = $caption.' - Edit';
+			}	
+			
+							
+			//tombol
+			$this->form_menubawah =			
+				"<input type='hidden' name='idbi' id='idbi' value='$idbi'>".
+				"<input type='button' value='Simpan' onclick ='".$this->Prefix.".Simpan()' >".
+				"<input type='button' value='Batal' onclick ='".$this->Prefix.".Close()' >";
+					
+			$form = $this->genForm();		
+					
+			$content = $form;//$content = 'content';
+		}
+		
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	
+	//daftar =================================
+	function setKolomHeader($Mode=1, $Checkbox=''){
+		$NomorColSpan = $Mode==1? 2: 1;
+		$headerTable =
+			"<thead>
+				<tr>
+				
+				<th class='th01' width='40'>No.</th>
+				$Checkbox		
+				<th class='th01' width='80'>Tanggal</th>
+				<th class='th01' width='100'>ID</th>
+				<th class='th01' >SKPD </th>
+				<th class='th01' >KD Barang </th>
+				<th class='th01' >Tahun </th>
+				<th class='th01' >No. Reg </th>
+				<th class='th01' >staset lama </th>
+				<th class='th01' >staset baru </th>								
+				<th class='th01' >ket </th>								
+				
+				</tr>
+				
+			</thead>";
+		return $headerTable;
+	}
+	function setKolomData($no, $isi, $Mode, $TampilCheckBox){
+		global $Ref, $Main;
+		$Koloms = array();
+		$Koloms[] = array('align=right', $no.'.' );
+		if ($Mode == 1) $Koloms[] = array(" align='center'  ", $TampilCheckBox);
+		$Koloms[] = array('', TglInd($isi['tgl']) );
+		$Koloms[] = array('', $isi['idbi']);		
+		$Koloms[] = array('', $isi['c'].'.'.$isi['d'].'.'.$isi['e'].'.'.$isi['e1']);
+		$Koloms[] = array('', $isi['f'].'.'.$isi['g'].'.'.$isi['h'].'.'.$isi['i'].'.'.$isi['j']);
+		$Koloms[] = array('', $isi['thn_perolehan'] );		
+		$Koloms[] = array('', $isi['noreg'] );
+		$Koloms[] = array('', $Main->StatusAsetView[$isi['staset']-1][1] );
+		$Koloms[] = array('', $Main->StatusAsetView[$isi['staset_baru']-1][1] );//$isi['staset_baru']);				
+		$Koloms[] = array('', $isi['ket']);				
+		return $Koloms;
+	}
+	function genDaftarOpsi(){
+		global $Ref, $Main;
+		$fmPILGEDUNG = $_REQUEST['fmPILGEDUNG'];		
+		$TampilOpt =
+			"<table width=\"100%\" class=\"adminform\">	<tr>		
+			<td width=\"100%\" valign=\"top\">" . 
+				//WilSKPD_ajx($this->Prefix) . 
+				WilSKPD_ajx3($this->Prefix.'Skpd') . 
+			"</td>
+			<td >" . 		
+			"</td></tr>
+			<tr><td>
+				<input type='button' id='btTampil' value='Tampilkan' onclick='".$this->Prefix.".refreshList(true)'>
+			</td></tr>			
+			</table>";
+			/*genFilterBar(
+				''
+				,$this->Prefix.".refreshList(true)",TRUE, 'Tampilkan'
+			);*/
+		return array('TampilOpt'=>$TampilOpt);
+	}			
+	function getDaftarOpsi($Mode=1){
+		global $Main, $HTTP_COOKIE_VARS;
+		$UID = $_COOKIE['coID']; 
+		//kondisi -----------------------------------
+				
+		$arrKondisi = array();				
+		$fmSKPD = isset($HTTP_COOKIE_VARS['cofmSKPD'])? $HTTP_COOKIE_VARS['cofmSKPD']: cekPOST($this->Prefix.'SkpdfmSKPD');
+		$fmUNIT = isset($HTTP_COOKIE_VARS['cofmUNIT'])? $HTTP_COOKIE_VARS['cofmUNIT']: cekPOST($this->Prefix.'SkpdfmUNIT');
+		$fmSUBUNIT = isset($HTTP_COOKIE_VARS['cofmSUBUNIT'])? $HTTP_COOKIE_VARS['cofmSUBUNIT']: cekPOST($this->Prefix.'SkpdfmSUBUNIT');		
+		$fmSEKSI = isset($HTTP_COOKIE_VARS['cofmSEKSI'])? $HTTP_COOKIE_VARS['cofmSEKSI']: cekPOST($this->Prefix.'SkpdfmSEKSI');		
+		/*$arrKondisi[] = getKondisiSKPD2(
+			12, 
+			$Main->Provinsi[0], 
+			'00', 
+			$fmSKPD, 
+			$fmUNIT, 
+			$fmSUBUNIT,
+			$fmSEKSI
+		);*/
+		if(!($fmSKPD=='' || $fmSKPD=='00') ) $arrKondisi[] = "c='$fmSKPD'";
+		if(!($fmUNIT=='' || $fmUNIT=='00') ) $arrKondisi[] = "d='$fmUNIT'";
+		if(!($fmSUBUNIT=='' || $fmSUBUNIT=='00') ) $arrKondisi[] = "e='$fmSUBUNIT'";
+		if(!($fmSEKSI=='' || $fmSEKSI=='00') ) $arrKondisi[] = "e1='$fmSEKSI'";
+		 	
+		//$fmPILGEDUNG = $_REQUEST['fmPILGEDUNG'];
+		//if (!empty($fmPILGEDUNG)) $arrKondisi[] = "p='$fmPILGEDUNG'";
+		$Kondisi= join(' and ',$arrKondisi);		
+		$Kondisi = $Kondisi =='' ? '':' Where '.$Kondisi;
+		//Order -------------------------------------
+		$fmORDER1 = cekPOST('fmORDER1');
+		$fmDESC1 = cekPOST('fmDESC1');				
+		$Asc = $fmDESC1 ==''? '': 'desc';		
+		$arrOrders = array();
+		//$arrOrders[] = " a,b,c,d,e,nip ";
+		/*switch($fmORDER1){
+			case '1': $arrOrders[] = " no_terima $Asc " ;break;
+			case '2': $arrOrders[] = " i $Asc " ;break;
+		}*/		
+		$arrOrders[] = " c,d,e,e1,f,g,h,i,j,thn_perolehan,noreg,tgl ";
+		$Order= join(',',$arrOrders);	
+		$OrderDefault = '';// Order By no_terima desc ';
+		$Order =  $Order ==''? $OrderDefault : ' Order By '.$Order;
+		//limit --------------------------------------
+		$HalDefault=cekPOST($this->Prefix.'_hal',1);					
+		$Limit = " limit ".(($HalDefault	*1) - 1) * $Main->PagePerHal.",".$Main->PagePerHal; //$LimitHal = '';
+		$Limit = $Mode == 3 ? '': $Limit;
+		//noawal ------------------------------------
+		$NoAwal= $Main->PagePerHal * (($HalDefault*1) - 1);							
+		$NoAwal = $Mode == 3 ? 0: $NoAwal;		
+		
+		return array('Kondisi'=>$Kondisi, 'Order'=>$Order ,'Limit'=>$Limit, 'NoAwal'=>$NoAwal);
+		
+	}
+	
+}
+$Koreksi = new KoreksiObj();
+
+
+
+
+
+?>

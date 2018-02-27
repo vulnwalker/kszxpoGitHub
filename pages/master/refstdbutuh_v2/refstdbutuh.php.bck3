@@ -1,0 +1,553 @@
+<?php
+
+class refstdbutuhObj  extends DaftarObj2{	
+	var $Prefix = 'refstdbutuh';
+	var $elCurrPage="HalDefault";
+	var $SHOW_CEK = TRUE;
+	var $TblName = 'ref_std_kebutuhan'; //daftar
+	var $TblName_Hapus = 'ref_std_kebutuhan';
+	var $MaxFlush = 10;
+	var $TblStyle = array( 'koptable', 'cetak','cetak'); //berdasar mode
+	var $ColStyle = array( 'GarisDaftar', 'GarisCetak','GarisCetak');
+	var $KeyFields = array('Id');
+	var $FieldSum = array();//array('jml_harga');
+	var $SumValue = array();
+	var $FieldSum_Cp1 = array( 14, 13, 13);//berdasar mode
+	var $FieldSum_Cp2 = array( 1, 1, 1);	
+	var $checkbox_rowspan = 1;
+	var $PageTitle = 'Referensi Data';
+	var $PageIcon = 'images/masterData_01.gif';
+	var $pagePerHal ='';
+	var $cetak_xls=TRUE ;
+	var $fileNameExcel='usulansk.xls';
+	var $Cetak_Judul = 'Daftar Standar Kebutuhan Barang';	
+	var $Cetak_Mode=2;
+	var $Cetak_WIDTH = '30cm';
+	var $Cetak_OtherHTMLHead;
+	var $FormName = 'refstdbutuhForm'; 	
+	var $kode_skpd = '';
+			
+	function setTitle(){
+		return 'Daftar Standar Kebutuhan Barang';
+	}
+	function setMenuEdit(){
+		return
+			"<td>".genPanelIcon("javascript:".$this->Prefix.".Baru()","new_f2.png","Baru",'Baru')."</td>".
+			"<td>".genPanelIcon("javascript:".$this->Prefix.".Edit()","edit_f2.png","Edit", 'Edit')."</td>".
+			"<td>".genPanelIcon("javascript:".$this->Prefix.".Hapus()","delete_f2.png","Hapus", 'Hapus').
+			"</td>";
+	}
+	function setMenuView(){
+		return "";
+	}
+	function setCetak_Header($Mode=''){
+		global $Main, $HTTP_COOKIE_VARS;
+		
+		//$fmSKPD = cekPOST($this->Prefix.'SkpdfmSKPD'); //echo 'fmskpd='.$fmSKPD;
+		//$fmUNIT = cekPOST($this->Prefix.'SkpdfmUNIT');
+		//$fmSUBUNIT = cekPOST($this->Prefix.'SkpdfmSUBUNIT');
+		return
+			"<table style='width:100%' border=\"0\">
+			<tr>
+				<td class=\"judulcetak\">".$this->setCetakTitle()."</td>
+			</tr>
+			</table>";	
+			/*"<table width=\"100%\" border=\"0\">
+				<tr>
+					<td class=\"subjudulcetak\">".PrintSKPD2($fmSKPD, $fmUNIT, $fmSUBUNIT)."</td>
+				</tr>
+			</table><br>";*/
+	}		
+	
+	//function setPage_IconPage(){		return 'images/masterData_ico.gif';	}	
+	function simpan(){
+	 global $HTTP_COOKIE_VARS;
+	 global $Main;
+	 $uid = $HTTP_COOKIE_VARS['coID'];
+	 $cek = ''; $err=''; $content=''; $json=TRUE;
+	 //get data -----------------
+	 $fmST = $_REQUEST[$this->Prefix.'_fmST'];
+	 $idplh = $_REQUEST[$this->Prefix.'_idplh'];
+	 $a1 = $Main->DEF_KEPEMILIKAN;
+	 $a = $Main->Provinsi[0];
+	 $b = '00';
+	 $c = $_REQUEST['c'];
+	 $d = $_REQUEST['d'];
+	 $e = $_REQUEST['e'];
+	 $e1 = $_REQUEST['e1'];	 
+	 $kode_barang = explode('.',$_REQUEST['kode_barang']);
+	 $f=$kode_barang[0];	
+	 $g=$kode_barang[1];
+	 $h=$kode_barang[2];	
+	 $i=$kode_barang[3];
+	 $j=$kode_barang[4];	 	  	 
+	 $nama_barang = $_REQUEST['nama_barang'];
+	 $standar_kebutuhan = $_REQUEST['standar_kebutuhan'];
+ 	 if($err=='' && $kode_barang =='' ) $err= 'Barang belum diisi';
+ 	 if($err=='' && $nama_barang =='' ) $err= 'Nama Barang belum diisi';	 	 	 	 	 
+ 	 if($err=='' && $standar_kebutuhan =='' ) $err= 'Standar Kebutuhan belum diisi';		 
+	
+	 
+			if($fmST == 0){ //input ref_jurnal
+				if($err==''){ 
+					$cb=mysql_fetch_array(mysql_query("select * from ref_std_kebutuhan WHERE c='$c' AND d='$d' AND e='$e' AND e1='$e1' AND f='$f' AND g='$g' AND h='$h' AND i='$i' AND j='$j'"));	 
+			 	 	if($err=='' && $cb == TRUE ) {
+						$err= 'Barang Sudah Ada Untuk Standar kebutuhan';				
+					}else{
+						$aqry1 = "INSERT into ref_std_kebutuhan (c,d,e,e1,f,g,h,i,j,nm_barang,jml_barang)
+								 "."values('$c','$d','$e','$e1','$f','$g','$h','$i','$j','$nama_barang','$standar_kebutuhan')";	$cek .= $aqry1;	
+						$qry = mysql_query($aqry1);
+						if($qry==FALSE) $err="Gagal menyimpan Standar Kebutuhan";
+					}							
+				}/*else{
+					$err="Gagal menyimpan jurnal";
+				}*/
+			}elseif($fmST == 1){						
+				if($err==''){
+						$aqry2 = "UPDATE ref_std_kebutuhan
+			        		 set "." f = '$f',
+							 g = '$g',
+							 h = '$h',
+							 i = '$i',
+							 j = '$j',
+							 nm_barang = '$nama_barang',
+							 jml_barang = '$standar_kebutuhan'".
+					 		 "WHERE Id='".$idplh."'";	$cek .= $aqry2;
+					$qry = mysql_query($aqry2);
+					if($qry==FALSE) $err="Gagal Edit jurnal";							
+				}/*else{
+					$err="Gagal menyimpan jurnal";
+				}*/
+			}else{
+			if($err==''){ 
+						$kode_barang = explode(' ',$idplh);
+						 $f=$kode_barang[0];	
+						 $g=$kode_barang[1];
+						 $h=$kode_barang[2];	
+						 $i=$kode_barang[3];
+						 $j=$kode_barang[4];
+ 						
+						$aqry1 = "INSERT into ref_hargabarang_persediaan (f,g,h,i,j,tahun_anggaran,harga)
+						"."values('$f','$g','$h','$i','$j','$tahun_anggaran','$harga')";	$cek .= $aqry1;	
+						$qry = mysql_query($aqry1);
+						 
+				}
+			} //end else
+					
+			return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);	
+    }	
+		
+	function set_selector_other2($tipe){
+	 global $Main;
+	 $cek = ''; $err=''; $content=''; $json=TRUE;
+		
+	 return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+	
+	function set_selector_other($tipe){
+	 global $Main;
+	 $cek = ''; $err=''; $content=''; $json=TRUE;
+	  
+	  switch($tipe){
+	  
+	case 'formBaru':{				
+			$fm = $this->setFormBaru();				
+			$cek = $fm['cek'];
+			$err = $fm['err'];
+			$content = $fm['content'];												
+		break;
+		}
+				
+		case 'formEdit':{				
+			$fm = $this->setFormEdit();				
+			$cek = $fm['cek'];
+			$err = $fm['err'];
+			$content = $fm['content'];												
+		break;
+		}
+					
+		case 'simpan':{
+			$get= $this->simpan();
+			$cek = $get['cek'];
+			$err = $get['err'];
+			$content = $get['content'];
+		break;
+	   }
+	   	   	   	   
+	   default:{
+			$other = $this->set_selector_other2($tipe);
+			$cek = $other['cek'];
+			$err = $other['err'];
+			$content=$other['content'];
+			$json=$other['json'];
+	 break;
+	 }
+	 }//end switch
+		
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+   }
+	
+	function setPage_OtherScript(){
+		$scriptload = 
+
+					"<script>
+						$(document).ready(function(){ 
+							".$this->Prefix.".loading();
+						});
+						
+					</script>";
+					
+		return 
+			"<script type='text/javascript' src='js/skpd.js' language='JavaScript' ></script>".		
+			 "<script type='text/javascript' src='js/master/refstdbutuh/".strtolower($this->Prefix).".js' language='JavaScript' ></script>".		
+			 "<script type='text/javascript' src='js/master/refstdbutuh/refbarangbutuh.js' language='JavaScript' ></script>".		
+			$scriptload;
+	}
+	
+	//form ==================================
+	function setFormBaru(){
+		$cbid = $_REQUEST[$this->Prefix.'_cb'];
+		$dt=array();
+		$dt['c'] = $_REQUEST[$this->Prefix.'SkpdfmSKPD'];
+		$dt['d'] = $_REQUEST[$this->Prefix.'SkpdfmUNIT'];
+		$dt['e'] = $_REQUEST[$this->Prefix.'SkpdfmSUBUNIT'];
+		$dt['e1'] = $_REQUEST[$this->Prefix.'SkpdfmSEKSI'];
+		$cek =$cbid[0];				
+		$this->form_idplh = $cbid[0];
+		$kode = explode(' ',$this->form_idplh);
+		$this->form_fmST = 0;
+		$fm = $this->setForm($dt);		
+		return	array ('cek'=>$cek.$fm['cek'], 'err'=>$fm['err'], 'content'=>$fm['content']);
+	}	
+   
+  	function setFormEdit(){
+		$cbid = $_REQUEST[$this->Prefix.'_cb'];
+		$cek =$cbid[0];				
+		$this->form_idplh = $cbid[0];
+		$kode = explode(' ',$this->form_idplh);
+		$this->form_fmST = 1;
+		//get data
+		$bulan=date('Y-m-')."1";
+		//query ambil data ref_jurnal
+		$aqry = "select * from ref_std_kebutuhan where Id='".$this->form_idplh."'"; $cek.=$aqry;
+		$dt = mysql_fetch_array(mysql_query($aqry));
+		$dt['kode_barang']=$dt['f'].'.'.$dt['g'].'.'.$dt['h'].'.'.$dt['i'].'.'.$dt['j']; 
+		$dt['readonly']='readonly';
+		$fm = $this->setForm($dt);
+		
+		return	array ('cek'=>$cek.$fm['cek'], 'err'=>$fm['err'], 'content'=>$fm['content']);
+	}
+	
+	function setForm($dt){	
+	 global $SensusTmp;
+	 $cek = ''; $err=''; $content=''; 
+		
+	 $json = TRUE;	//$ErrMsg = 'tes';
+	 	
+	 $form_name = $this->Prefix.'_form';				
+	 $this->form_width = 700;
+	 $this->form_height = 150;
+	  if ($this->form_fmST==0) {
+		$this->form_caption = 'BARU';
+	  }else{
+		$this->form_caption = 'EDIT';
+	  }
+	 $get = mysql_fetch_array(mysql_query("select c, nm_skpd from ref_skpd where c =".$dt['c']." and d=00 and e=00 and e1=000"));				
+	 $get1 = mysql_fetch_array(mysql_query("select d, nm_skpd from ref_skpd where c =".$dt['c']." and d=".$dt['d']." and e=00 and e1=000"));
+	 $get2 = mysql_fetch_array(mysql_query("select e, nm_skpd from ref_skpd where c =".$dt['c']." and d=".$dt['d']." and e=".$dt['e']." and e1=000"));
+	 $get3 = mysql_fetch_array(mysql_query("select e1, nm_skpd from ref_skpd where c =".$dt['c']." and d=".$dt['d']." and e=".$dt['e']." and e1=".$dt['e1'].""));
+	  				
+
+		//query ref_batal
+		$queryKB = "SELECT f,nama_barang FROM ref_barang_persediaan where f !=0 and g=0";
+       //items ----------------------
+		  $this->form_fields = array(
+			'skpd' => array( 
+							'label'=>'skpd',
+								'labelWidth'=>75, 
+								'value'=>"<table cellspacing=0 width=100%>
+										<td width=16%>BIDANG</td>
+										<td width=3%>:</td>
+										<td width=81%>".
+										$get['nm_skpd'].
+										"<input type='hidden' id='c' name='c' value='".$dt['c']."'> ".
+										//cmbQuery('fmSKPD',$fmSKPD,"select c, concat(c,'. ',nm_skpd) from ref_skpd where c !=00 and d=00 and e=00",'onChange=\''.$this->Prefix.'.PilihFilter()\'','--- Semua BIDANG ---','').
+										"</td>
+										</tr>
+										<tr>
+										<td>SKPD</td>
+										<td>:</td>
+										<td>".
+										$get1['nm_skpd'].
+										"<input type='hidden' id='d' name='d' value='".$dt['d']."'> ".
+					
+										//cmbQuery('fmUNIT',$fmUNIT,"select d, concat(d,'. ',nm_skpd) from ref_skpd where c =$fmSKPD and d!=00 and e=00",'onChange=\''.$this->Prefix.'.PilihFilter()\'','--- Semua ASISTEN / OPD ---','').
+										"</td>
+										</tr>
+										<tr>
+										<td>UNIT</td>
+										<td>:</td>
+										<td>".
+										$get2['nm_skpd'].
+										"<input type='hidden' id='e' name='e' value='".$dt['e']."'> ".
+					
+										//cmbQuery('fmSUBUNIT',$fmSUBUNIT,"select e, concat(e,'. ',nm_skpd) from ref_skpd where c =$fmSKPD and d=$fmUNIT and e!=00",'onChange=\''.$this->Prefix.'.PilihFilter()\'','--- Semua BIRO / UPTD/B ---','').
+										"</td></tr>
+										<tr>
+										<td>SUB UNIT</td>
+										<td>:</td>
+										<td>".
+										$get3['nm_skpd'].
+										"<input type='hidden' id='e1' name='e1' value='".$dt['e1']."'> ".
+					
+										//cmbQuery('fmSUBUNIT',$fmSUBUNIT,"select e, concat(e,'. ',nm_skpd) from ref_skpd where c =$fmSKPD and d=$fmUNIT and e!=00",'onChange=\''.$this->Prefix.'.PilihFilter()\'','--- Semua BIRO / UPTD/B ---','').
+										"</td></tr></table>",	
+								'type'=>'merge',
+						),									 	
+									 
+			'kode_barang' => array( 
+								'label'=>'Kode barang',
+								'labelWidth'=>100, 
+								'value'=>"<input type='text' name='kode_barang' value='".$dt['f'].'.'.$dt['g'].".".$dt['h'].'.'.$dt['i'].'.'.$dt['j']."' size='10px' id='kode_barang' readonly>
+										<input type='text' name='nama_barang' value='".$dt['nm_barang']."' size='55px' id='nama_barang' readonly>&nbsp
+										<input type='button' value='Cari' onclick ='".$this->Prefix.".CariBarang()' title='Cari Barang' >"
+									),
+
+									 
+			'standar_kebutuhan' => array( 
+								'label'=>'Standar Kebutuhan',
+								'labelWidth'=>100, 
+								'value'=>$dt['jml_barang'], 
+								'type'=>'text',
+								'id'=>'standar_kebutuhan',
+								'param'=>"style='width:250ppx;text-transform: uppercase;' size=10px"
+									 ),									 	
+								 
+			);
+		//tombol
+		$this->form_menubawah =	
+			"<input type='button' value='Simpan' onclick ='".$this->Prefix.".Simpan()' title='Batal kunjungan' >".
+			"<input type='button' value='Batal' onclick ='".$this->Prefix.".Close()' >";
+							
+		$form = $this->genForm();		
+		$content = $form;//$content = 'content';
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);
+	}
+	
+	function genDaftarInitial($fmSKPD='', $fmUNIT='', $fmSUBUNIT='',$tahun_anggaran='', $height=''){
+		$vOpsi = $this->genDaftarOpsi();
+		return			
+			"<div id='{$this->Prefix}_cont_title' style='position:relative'></div>". 
+			"<div id='{$this->Prefix}_cont_opsi' style='position:relative'>". 		
+				"<input type='hidden' id='".$this->Prefix."SkpdfmSKPD' name='".$this->Prefix."SkpdfmSKPD' value='$fmSKPD'>".
+				"<input type='hidden' id='".$this->Prefix."SkpdfmUNIT' name='".$this->Prefix."SkpdfmUNIT' value='$fmUNIT'>".
+				"<input type='hidden' id='".$this->Prefix."SkpdfmSUBUNIT' name='".$this->Prefix."SkpdfmSUBUNIT' value='$fmSUBUNIT'>".
+				"<input type='hidden' id='".$this->Prefix."tahun_anggaran' name='".$this->Prefix."tahun_anggaran' value='$tahun_anggaran'>".
+			"</div>".					
+			"<div id=garis style='height:1;border-bottom:1px solid #E5E5E5;'></div>".
+			"<div id=contain style='overflow:auto;height:$height;'>".
+			//"<div id=contain style='overflow:auto;height:256;'>".
+			"<div id='{$this->Prefix}_cont_daftar' style='position:relative' >".					
+			"</div>
+			</div>".
+			"<div id='{$this->Prefix}_cont_hal' style='position:relative'>".				
+				"<input type='hidden' id='".$this->Prefix."_hal' name='".$this->Prefix."_hal' value='1'>".
+			"</div>";
+	}
+		
+	//daftar =================================	
+	function setKolomHeader($Mode=1, $Checkbox=''){
+	 $NomorColSpan = $Mode==1? 2: 1;
+	 $headerTable =
+	 "<thead>
+	 <tr>
+  	   <th class='th01' width='20' >No.</th>
+  	   $Checkbox		
+   	   <th class='th01' align='center' width='100'>Kode SKPD</th>
+	   <th class='th01' align='center' width='300'>Nama SKPD</th>	   	   	   
+   	   <th class='th01' align='center' width='100'>Kode Barang</th>
+	   <th class='th01' align='center' width='300'>Nama Barang</th>	 
+	   <th class='th01' align='center' width='50'>Standar Kebutuhan</th>	
+	   </tr>
+	   </thead>";
+	
+		return $headerTable;
+	}	
+	
+	function setKolomData($no, $isi, $Mode, $TampilCheckBox){
+	 global $Ref;
+	 global $Main;
+	
+	 $kode_skpd=$isi['c'].'.'.$isi['d'].'.'.$isi['e'].'.'.$isi['e1'];
+	 $ns=mysql_fetch_array(mysql_query("select * from ref_skpd where c='".$isi['c']."' and d='".$isi['d']."' and e='".$isi['e']."' and e1='".$isi['e1']."'"));
+	 $kode_barang=$isi['f'].'.'.$isi['g'].'.'.$isi['h'].'.'.$isi['i'].'.'.$isi['j'];
+	 if($this->kode_skpd==$kode_skpd){
+	 	$kode_skpd="";
+		$nm_skpd="";
+	 }else{
+	 	$nm_skpd=strtoupper($ns['nm_skpd']);
+		$this->kode_skpd=$kode_skpd;
+	 }
+	 $Koloms = array();
+	 $Koloms[] = array('align="center" width="20"', $no.'.' );
+	 if ($Mode == 1) $Koloms[] = array(" align='center'  ", $TampilCheckBox);
+	 $Koloms[] = array('align="center" width="50" ',$kode_skpd);
+ 	 $Koloms[] = array('align="left" width="75"',$nm_skpd);	 	 	 	 
+	 $Koloms[] = array('align="center" width="50" ',$kode_barang);
+ 	 $Koloms[] = array('align="left" width="75"',$isi['nm_barang']);	
+ 	 $Koloms[] = array('align="center" width="75"',$isi['jml_barang']);
+	 return $Koloms;
+	}
+	
+	function genDaftarOpsi(){
+	 global $Ref, $Main,  $HTTP_COOKIE_VARS;
+	 
+
+	$fmBIDANG = cekPOST('fmBIDANG');
+	$fmKELOMPOK = cekPOST('fmKELOMPOK');
+	$fmSUBKELOMPOK = cekPOST('fmSUBKELOMPOK');
+	$fmSUBSUBKELOMPOK = cekPOST('fmSUBSUBKELOMPOK');
+	$fmKODE = cekPOST('fmKODE');
+	$fmNAMA = cekPOST('fmNAMA');
+	$fmAKUN = cekPOST('fmAKUN');
+	$fmThnAnggaran=  $_COOKIE['coThnAnggaran'];			
+		
+	//$fmPILCARI = $_REQUEST['fmPILCARI'];	
+	//$fmPILCARIvalue = $_REQUEST['fmPILCARIvalue'];		
+	//$fmORDER1 = cekPOST('fmORDER1');
+	//$fmDESC1 = cekPOST('fmDESC1');
+	
+	
+	 $arr = array(
+			//array('selectAll','Semua'),
+			array('selectfg','Kode Skpd'),
+			array('selectbarang','Nama Skpd'),	
+			);
+		
+		
+	//data order ------------------------------
+	 $arrOrder = array(
+	  	         array('1','Kode Skpd'),
+			     array('2','Nama Skpd'),	
+	 );	
+	 
+	 if($Main->WITH_THN_ANGGARAN){
+		$aqry1 = "select Max(thn_akun) as thnMax from ref_jurnal where 
+				thn_akun<=$fmThnAnggaran";
+				$qry1=mysql_query($aqry1);			
+				$qry_jurnal=mysql_fetch_array($qry1);
+				$thn_akun=$qry_jurnal['thnMax'];
+				//$arrKondisi[] = " thn_akun = '$thn_akun'";														
+		$vthnakun = " and thn_akun=$thn_akun ";
+			
+	}	
+	 
+				
+	$TampilOpt =
+			//<table width=\"100%\" class=\"adminform\">
+			"<table width=\"100%\" class=\"adminform\">	<tr>		
+			<td width=\"100%\" valign=\"top\">" . 
+				WilSKPD_ajx3($this->Prefix.'Skpd') . 
+			"</td>
+			<td >" . 		
+			"</td></tr>
+			<!--<tr><td>
+				<input type='button' id='btTampil' value='Tampilkan' onclick='".$this->Prefix.".refreshList(true)'>
+			</td></tr>			-->
+			</table>".
+			"<tr><td>".
+			"<div id='skpd_pegawai' ></div>".
+			$vOrder=			
+			genFilterBar(
+				array(							
+					cmbArray('fmPILCARI',$fmPILCARI,$arr,'-- Cari Data --',''). //generate checkbox					
+					"&nbsp&nbsp<input type='text' value='".$fmPILCARIvalue."' name='fmPILCARIvalue' id='fmPILCARIvalue'>&nbsp&nbsp"
+					//<input type='button' id='btTampil' value='Cari' onclick='".$this->Prefix.".refreshList(true)'>"
+					
+					.cmbArray('fmORDER1',$fmORDER1,$arrOrder,'--Urutkan--','').
+					"<input $fmDESC1 type='checkbox' id='fmDESC1' name='fmDESC1' value='checked'>&nbspmenurun."
+					),			
+				$this->Prefix.".refreshList(true)");
+			"<input type='button' id='btTampil' value='Tampilkan' onclick='".$this->Prefix.".refreshList(true)'>";
+			
+		return array('TampilOpt'=>$TampilOpt);
+	}			
+	
+	function getDaftarOpsi($Mode=1){
+		global $Main, $HTTP_COOKIE_VARS;
+		$UID = $_COOKIE['coID']; 
+		//kondisi -----------------------------------
+		$arrKondisi = array();	
+		$fmPILCARI = $_REQUEST['fmPILCARI'];	
+		$fmPILCARIvalue = $_REQUEST['fmPILCARIvalue'];
+		$ref_skpdSkpdfmSEKSI = $_REQUEST['ref_skpdSkpdfmSEKSI'];//ref_skpdSkpdfmSKPD
+		$ref_skpdSkpdfmSKPD = $_REQUEST['ref_skpdSkpdfmSKPD'];
+		$ref_skpdSkpdfmUNIT = $_REQUEST['ref_skpdSkpdfmUNIT'];
+		$ref_skpdSkpdfmSUBUNIT = $_REQUEST['ref_skpdSkpdfmSUBUNIT'];
+		//Cari 
+		$isivalue=explode('.',$fmPILCARIvalue);
+		switch($fmPILCARI){			
+			//case 'selectKode': $arrKondisi[] = " c='".$isivalue[0]."' and d='".$isivalue[1]."' and e='".$isivalue[2]."' and e1='".$isivalue[3]."'"; break;
+			case 'selectKode': $arrKondisi[] = " concat(c,'.',d,'.',e,'.',e1) like '$fmPILCARIvalue%'"; break;
+			case 'selectNama': $arrKondisi[] = " nm_skpd like '%$fmPILCARIvalue%'"; break;	
+								 	
+		}	
+		if($ref_skpdSkpdfmSKPD!='00' and $ref_skpdSkpdfmSKPD !='')$arrKondisi[]= "c='$ref_skpdSkpdfmSKPD'";
+		if($ref_skpdSkpdfmUNIT!='00' and $ref_skpdSkpdfmUNIT !='')$arrKondisi[]= "d='$ref_skpdSkpdfmUNIT'";
+		if($ref_skpdSkpdfmSUBUNIT!='00' and $ref_skpdSkpdfmSUBUNIT !='')$arrKondisi[]= "e='$ref_skpdSkpdfmSUBUNIT'";
+		if($ref_skpdSkpdfmSEKSI!='00' and $ref_skpdSkpdfmSEKSI !='')$arrKondisi[]= "e1='$ref_skpdSkpdfmSEKSI'";
+		/*$arrKondisi = array();		
+		
+		$fmPILCARI = $_REQUEST['fmPILCARI'];	
+		$fmPILCARIvalue = $_REQUEST['fmPILCARIvalue'];
+		//cari tgl,bln,thn
+		$fmFiltTglBtw = $_REQUEST['fmFiltTglBtw'];			
+		$fmFiltTglBtw_tgl1 = $_REQUEST['fmFiltTglBtw_tgl1'];
+		$fmFiltTglBtw_tgl2 = $_REQUEST['fmFiltTglBtw_tgl2'];
+		//Cari 
+		switch($fmPILCARI){			
+			case 'selectNama': $arrKondisi[] = " nama_pasien like '%$fmPILCARIvalue%'"; break;
+			case 'selectAlamat': $arrKondisi[] = " alamat like '%$fmPILCARIvalue%'"; break;						 	
+		}
+		if(!empty($fmFiltTglBtw_tgl1)) $arrKondisi[]= " tgl_daftar>='$fmFiltTglBtw_tgl1'";
+		if(!empty($fmFiltTglBtw_tgl2)) $arrKondisi[]= " tgl_daftar<='$fmFiltTglBtw_tgl2'";	*/
+		$Kondisi= join(' and ',$arrKondisi);		
+		$Kondisi = $Kondisi =='' ? '':' Where '.$Kondisi;
+		
+		//Order -------------------------------------
+		$fmORDER1 = cekPOST('fmORDER1');
+		$fmDESC1 = cekPOST('fmDESC1');			
+		$Asc1 = $fmDESC1 ==''? '': 'desc';		
+		$arrOrders = array();
+		switch($fmORDER1){
+			case '1': $arrOrders[] = " c,d,e,e1 $Asc1 " ;break;
+			case '2': $arrOrders[] = " nm_skpd $Asc1 " ;break;
+			
+		}	
+		$Order= join(',',$arrOrders);	
+		$OrderDefault = '';// Order By no_terima desc ';
+		$Order =  $Order ==''? $OrderDefault : ' Order By '.$Order;
+		//$Order ="";
+		//limit --------------------------------------
+		/**$HalDefault=cekPOST($this->Prefix.'_hal',1);	//Cat:Settingan Lama				
+		$Limit = " limit ".(($HalDefault	*1) - 1) * $Main->PagePerHal.",".$Main->PagePerHal; //$LimitHal = '';
+		$Limit = $Mode == 3 ? '': $Limit;
+		//noawal ------------------------------------
+		$NoAwal= $Main->PagePerHal * (($HalDefault*1) - 1);							
+		$NoAwal = $Mode == 3 ? 0: $NoAwal;		
+		**/
+		$pagePerHal = $this->pagePerHal =='' ? $Main->PagePerHal: $this->pagePerHal; 
+		$HalDefault=cekPOST($this->Prefix.'_hal',1);					
+		//$Limit = " limit ".(($HalDefault	*1) - 1) * $Main->PagePerHal.",".$Main->PagePerHal; //$LimitHal = '';
+		$Limit = " limit ".(($HalDefault	*1) - 1) * $pagePerHal.",".$pagePerHal; //$LimitHal = '';
+		$Limit = $Mode == 3 ? '': $Limit;
+		//noawal ------------------------------------
+		$NoAwal= $pagePerHal * (($HalDefault*1) - 1);							
+		$NoAwal = $Mode == 3 ? 0: $NoAwal;	
+		
+		return array('Kondisi'=>$Kondisi, 'Order'=>$Order ,'Limit'=>$Limit, 'NoAwal'=>$NoAwal);
+		
+	}
+}
+$refstdbutuh = new refstdbutuhObj();
+?>

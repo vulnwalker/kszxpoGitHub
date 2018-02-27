@@ -1,0 +1,668 @@
+//penggunaan barcode  -----------------------------------
+//sensus.filterRenderAfter : function(){
+//		barcodeSensus.loading();
+//	},
+
+var BarcodeCls = function(params_){
+	this.params=params_;
+	this.onscan = 0;
+	this.name = '';//barcode';
+	this.kode = '';
+	//this.elinputname = this.name+'_input';	
+	//this.elreadymsg = this.name+'_msg';
+	
+	
+	
+	this.setInputReady = function(){
+		if(document.getElementById(this.elinputname)){
+			document.getElementById(this.elinputname).readOnly=false;
+			document.getElementById(this.elinputname).value='';
+			document.getElementById(this.elinputname).focus();
+		}
+	}
+	this.cekBarcode = function(){ 
+		var me = this;
+		//console.info('cek '+ me.onscan+' name:'+me.name);
+		//console.info('cek el'+ document.getElementById(this.elinputname));
+		if (this.onscan==0){
+			if (document.getElementById(this.elinputname)){
+				//cek focus				
+				$("#"+this.elinputname).blur(function () {
+    				document.getElementById(me.elreadymsg).innerHTML = //'Not Ready!';
+						"<a style='color:red;' href=\"javascript:"+me.name+".setInputReady()\">Not Ready! (click for ready)</a>";
+				});
+				$("#"+this.elinputname).focus(function () {
+    				document.getElementById(me.elreadymsg).innerHTML = 'Ready';
+				});
+				
+				
+				//cek str length
+				var e = document.getElementById(this.elinputname);
+				var str = e.value;
+				//console.info('str.length '+ str.length);
+				if (str.length>=32){
+					//trigger input barcode to filter
+					//alert(str);
+					me.onscan = 1; 
+					e.readOnly = true;
+					//console.info('request'+this.onscan);
+					this.kode = str;
+					//this.setInputReady();
+					//console.info('cek '+ me.onscan+' name:'+me.name);
+					this.execBarcode(); //Penatausaha.refreshList(true);
+				}
+				//console.info('cek '+ this.onscan);
+			}
+		}
+	}
+	
+	this.execBarcode=function(){
+		//Penatausaha.refreshList(true);
+	}
+	
+	this.loading = function(){
+		var me= this;
+		this.reset();
+		//cekinput barcode
+		/*setInterval(
+			function(){				
+				if (this.onscan==0){
+					if (document.getElementById(this.elinputname)){
+						barcode.inputBarcode();	
+					}
+				}		
+			},1000
+		);
+		*/
+		//setInterval(function(){barcode.cekBarcode()},1000);	
+		setInterval(function(){
+			eval(me.name+'.cekBarcode()')
+			},
+			1000
+		);	
+	} 
+	
+	this.reset = function(){
+		
+		if(document.getElementById(this.elinputname)){
+			
+		
+		this.onscan = 0; 
+		document.getElementById(this.elinputname).readOnly=false;
+		document.getElementById(this.elinputname).focus();
+		document.getElementById(this.elreadymsg).innerHTML = 'Ready';
+		//console.info('succses'+this.onscan); 
+		if (document.getElementById(this.elinputname)) {
+			document.getElementById(this.elinputname).value='';
+		}
+		}
+	}
+	
+	this.printlabel = function(jmlcetak,jnslabel,nmbidang,nmopd,nmbiro,nmbarang,kode) {
+	
+    	//console.log('masuk');
+      	var applet = document.jzebra;
+        //console.log(applet);
+      	if (applet != null) {
+			//kode = '11 10 00 04 04 08 04     02 03 01 01 01 0001';
+			//        12 28 01 01 01 00 01 001 01 01 11 01 004 0002
+			// 		  12 28 01 01 01 00 01 001 03 11 01 01 001 0001
+			
+			// KIB C 12280101010001001031101010010001
+			// kib A
+			
+			
+			kode1 = kode.substr(0,2)+'.'+ kode.substr(2,2)+'.'+ kode.substr(4,2)+'.'+
+				kode.substr(6,2)+'.'+kode.substr(8,2)+'.'+kode.substr(10,2)+'.'+
+				kode.substr(12,2)+'.'+
+				kode.substr(14,3);//'11.10.00.04.04.08.04';
+	    	kode2 = 
+				' '+kode.substr(17,2)+'.'+ kode.substr(19,2)+'.'+ kode.substr(21,2)+'.'+
+				kode.substr(23,2)+'.'+kode.substr(25,3)+'.'+kode.substr(28,4);//' 02.03.01.01.01.0001';
+			//alert(jnslabel+' - '+kode1+' '+kode2);
+            
+			for(var i=0;i<jmlcetak;i++){
+				
+			
+			switch(jnslabel){
+            case '1':
+
+                applet.append("^XA");
+                applet.append("^MMT");
+                applet.append("^PW799");
+                applet.append("^LL0400");
+                applet.append("^LS0");
+                applet.append("^FT20,170^A0N,28,26^FH\^FD"+nmopd+"^FS");
+                applet.append("^FT20,205^A0N,20,16^FH\^FD"+nmbiro+"^FS");
+                applet.append("^FT510,170^A0N,30,32^FH\^FD"+kode1+"^FS");
+                applet.append("^FT510,207^A0N,30,32^FH\^FD"+kode2+"^FS");
+                applet.append("^BY4,3,85^FT20,328^BCN,,N,N");
+                applet.append("^FD>;"+kode+"^FS");
+                applet.append("^FT20,369^A0N,26,20^FH\^FD"+nmbarang+"^FS");
+                applet.append("^PQ1,0,1,Y^XZ");
+                //applet.print();
+                break;
+             case '2':
+                applet.append("^XA");
+                applet.append("^MMT");
+                applet.append("^PR5");
+                applet.append("^PW718");
+                applet.append("^LL1200");
+                applet.append("^LS0");
+                applet.append("^FT410,60^A0R,56,55^FH\^FD"+nmopd+"^FS");
+                applet.append("^FT340,60^A0R,34,33^FH\^FD"+nmbiro+"^FS");
+                applet.append("^FT410,740^A0R,56,55^FH\^FD"+kode1+"^FS");
+                applet.append("^FT330,740^A0R,56,55^FH\^FD"+kode2+"^FS");
+                applet.append("^BY6,3,160^FT260,1200^BCB,,N,N");
+                applet.append("^FD>;"+kode+"^FS");
+                applet.append("^FT40,60^A0R,42,40^FH\^FD"+nmbarang+"^FS");
+                applet.append("^PQ1,0,1,Y^XZ");
+                //applet.print();
+                break;
+                
+            
+            case '3':
+                applet.append("^XA");
+                applet.append("^MMT");
+                applet.append("^PW719");
+                applet.append("^LL1600");
+                applet.append("^LS0");
+                applet.append("^FT350,30^A0R,68,67^FH\^FD"+nmopd+"^FS");
+                applet.append("^FT280,30^A0R,45,45^FH\^FD"+nmbiro+"^FS");
+                applet.append("^FT350,1092^A0R,56,55^FH\^FD"+kode1+"^FS");
+                applet.append("^FT280,1092^A0R,56,55^FH\^FD"+kode2+"^FS");
+                applet.append("^BY8,3,160^FT260,1545^BCB,,N,N");
+                applet.append("^FD>;"+kode+"^FS");
+                applet.append("^FT40,30^A0R,51,50^FH\^FD"+nmbarang+"^FS");
+                applet.append("^PQ1,0,1,Y^XZ");
+                //applet.print();
+                break;
+            case '4':
+                applet.append("^XA");
+                applet.append("^MMT");
+                applet.append("^PW480");
+                applet.append("^LL0300");
+                applet.append("^LS0");
+                applet.append("^FT14,118^A0N,20,19^FH\^FD"+nmopd+"^FS");
+                applet.append("^FT14,135^A0N,11,12^FH\^FD"+nmbiro+"^FS");
+                applet.append("^FT260,115^A0N,17,16^FH\^FD"+kode1+"^FS"); //21-320
+                applet.append("^FT260,135^A0N,17,16^FH\^FD"+kode2+"^FS"); //21-320
+                applet.append("^BY2,3,40^FT17,180^BCN,,N,N");
+                applet.append("^FD>;"+kode+"^FS");
+                applet.append("^FT14,195^A0N,14,14^FH\^FD"+nmbarang+"^FS");
+                applet.append("^PQ1,0,1,Y^XZ");
+                //applet.print();
+                break;
+            case '5':
+                applet.append("^XA");
+                applet.append("^MMT");
+                applet.append("^PW480");
+                applet.append("^LL0300");
+                applet.append("^LS0");
+                applet.append("^FT87,135^A0N,17,16^FH\^FD"+kode1+ kode2+"^FS");
+                applet.append("^BY2,3,40^FT92,180^BCN,,N,N");
+                applet.append("^FD>;"+kode+"^FS");
+                applet.append("^FT87,195^A0N,14,14^FH\^FD"+nmbiro+"^FS");
+                applet.append("^FT290,195^A0N,14,14^FH\^FD"+nmbarang+"^FS");
+                applet.append("^PQ1,0,1,Y^XZ");
+                //applet.print();
+                break;
+            }
+	   		}
+			applet.print();
+	    //*/
+		}else{
+			alert('Java Aplet Gagal!');
+		}
+	}
+	
+	/*
+	this.cetak_ = function(){ //tombol cetak
+		var me= this;
+		var jnslabel = document.getElementById('jnslabel').value;
+		var jmlcetak = document.getElementById('jmlcetak').value;
+		var err = '';
+		
+		if(err=='' && jnslabel =='' ) err = 'Jenis Label Belum Dipilih'
+		
+		if(err == ''){
+			
+		
+			document.body.style.overflow='hidden';
+					
+					addCoverPage('coverpage',100);
+					
+					$.ajax({
+						type:'POST', 		
+						url: 'pages.php?Pg=genxmlbar', 
+						data:$('#adminForm').serialize()+'&jnslabel='+jnslabel+'&jmlcetak='+jmlcetak, 
+						success: function(response) {
+							
+							var resp = eval('(' + response + ')');
+							document.body.style.overflow='auto';
+							delElem('coverpage');
+							if(resp.err != ''){
+								alert(resp.err);
+							}else{
+								me.Close();
+							}
+							
+						}
+					});
+		}else{
+			alert('Jenis Label Belum Dipilih!');
+		}
+		
+	}
+	*/
+	
+	this.cetaklabelcbx_ = function(cbno){
+		var cb = document.getElementById('cb'+cbno.toString());
+		if(cb.checked){
+			var kode = cb.getAttribute('kode');
+			var nmbarang = cb.getAttribute('nmbarang');
+			var nmbidang = cb.getAttribute('bidang');
+			var nmopd = cb.getAttribute('opd');
+			var nmseksi = cb.getAttribute('seksi');
+			//console.log//alert('kode='+kode+' barang='+nmbarang+' bidang='+nmbidang+' opd='+nmopd);
+			this.printlabel(jmlcetak,jnslabel,nmbidang,nmopd,nmbarang,kode)
+		}
+	}
+	
+	this.cetak_ = function(){ //tombol cetak
+		var me= this;
+		var jnslabel = document.getElementById('jnslabel').value;
+		var jmlcetak = document.getElementById('jmlcetak').value;
+		var err = '';
+		var applet = document.qz;
+//		applet.findPrinter("printer barcode");
+		if(err=='' && jnslabel =='' ) err = 'Jenis Label Belum Dipilih!';
+		if(err=='' && applet == null) err = 'Java Applet Gagal!';
+		if(err == ''){
+			if(document.getElementById('jmPerHal')){
+				var jmPerHal = document.getElementById('jmPerHal').value;				
+			}else{
+				var jmPerHal = 25;
+			}
+			
+			for (var i=0;i<jmPerHal;i++){
+				//this.cetaklabelcbx_(i);
+				//*
+				var cb = document.getElementById('cb'+i.toString());
+				if (cb ){
+					
+				
+				if(cb.checked){
+					var kode = cb.getAttribute('kode');
+					var nmbarang = cb.getAttribute('nmbarang');
+					var nmbidang = cb.getAttribute('bidang');
+					var nmopd = cb.getAttribute('opd');
+					var nmbiro = cb.getAttribute('biro');
+					var nmseksi = cb.getAttribute('seksi');					
+					var nm_gedung = cb.getAttribute('nm_gedung');
+					var nm_ruang = cb.getAttribute('nm_ruang');
+					//console.log
+					// alert('kode='+kode+' barang='+nmbarang+' bidang='+nmbidang+' opd='+nmopd);
+					//this.printlabel(jmlcetak,jnslabel,nmbidang,nmopd,nmbarang,kode)
+					//--------------------------------
+					
+			        //console.log(applet);
+			      	//if (applet != null) {
+						//kode = '1110000404080402030101010001';
+						// 12 28 01 01 01 00 01 001 03 11 01 01 001 0001
+						
+			/*kode1 = kode.substr(0,2)+'.'+ kode.substr(2,2)+'.'+ kode.substr(4,2)+'.'+
+				kode.substr(6,2)+'.'+kode.substr(8,2)+'.'+kode.substr(10,2)+'.'+
+				kode.substr(12,2)+'.'+
+				kode.substr(14,3);//'11.10.00.04.04.08.004';
+	    	kode2 = 
+				' '+kode.substr(17,2)+'.'+ kode.substr(19,2)+'.'+ kode.substr(21,2)+'.'+
+				kode.substr(23,2)+'.'+kode.substr(25,3)+'.'+kode.substr(28,4);*///' 02.03.01.01.01.0001';
+			kode1 = kode;
+			kode2 = kode;
+			//alert(jnslabel+' - '+kode1+' '+kode2);
+						//alert(jnslabel+' - '+kode1+' '+kode2);
+			            if(nm_gedung=='' || nm_ruang=='' || nm_ruang==null || nm_gedung==null){
+			    			nmgedang=' ';						
+						}else{
+							nmgedang=nm_gedung+' - '+nm_ruang;
+						}
+						for(var j=0;j<jmlcetak;j++){
+							
+						
+						switch(jnslabel){
+			            case '1':
+/*
+			                applet.append("^XA");
+			                applet.append("^MMT");
+			                applet.append("^PW799");
+			                applet.append("^LL0400");
+			                applet.append("^LS0");
+			                applet.append("^FT20,170^A0N,28,26^FH\^FD"+nmopd+"^FS");
+			                applet.append("^FT20,205^A0N,20,16^FH\^FD"+nmseksi+"^FS");
+			                applet.append("^FT510,170^A0N,30,32^FH\^FD"+kode1+"^FS");
+			                applet.append("^FT510,207^A0N,30,32^FH\^FD"+kode2+"^FS");
+			                applet.append("^BY4,3,85^FT20,328^BCN,,N,N");
+			                applet.append("^FD>;"+kode+"^FS");
+			                applet.append("^FT20,369^A0N,26,20^FH\^FD"+nmbarang+"^FS");
+			                applet.append("^PQ1,0,1,Y^XZ");
+*/			
+			                applet.append("^XA");
+			                applet.append("^MMT");
+			                applet.append("^PW799");
+			                applet.append("^LL0400");
+			                applet.append("^LS0");
+			                applet.append("^FT20,185^A0N,28,26^FH\^FD"+nmopd+"^FS");
+			                applet.append("^FT20,220^A0N,20,16^FH\^FD"+nmseksi+"^FS");
+			                applet.append("^FT440,185^A0N,30,32^FH\^FD"+kode1+"^FS");
+			                applet.append("^FT475,220^A0N,30,32^FH\^FD"+kode2+"^FS");
+			                applet.append("^BY3,3,85^FT20,328^BCN,,N,N");
+			                applet.append("^FD>;"+kode+"^FS");
+			                applet.append("^FT20,369^A0N,26,20^FH\^FD"+nmbarang+"^FS");
+			                applet.append("^PQ1,0,1,Y^XZ");
+			                //applet.print();
+			                break;
+			             case '2':
+                			applet.append("^XA");
+                			applet.append("^MMT");
+                			applet.append("^PR5");
+                			applet.append("^PW718");
+                			applet.append("^LL1200");
+                			applet.append("^LS0");
+                			applet.append("^FT390,60^A0R,56,55^FH\^FD"+nmopd+"^FS");
+                			applet.append("^FT330,60^A0R,34,33^FH\^FD"+nmseksi+"^FS");
+                			applet.append("^FT390,800^A0R,34,33^FH\^FD"+kode1+"^FS");
+                			applet.append("^FT330,840^A0R,34,33^FH\^FD"+kode2+"^FS");
+                			applet.append("^BY4,3,160^FT260,905^BCB,,N,N");
+                			applet.append("^FD>;"+kode+"^FS");
+                			applet.append("^FT40,60^A0R,42,40^FH\^FD"+nmbarang+"^FS");
+                			applet.append("^PQ1,0,1,Y^XZ");
+			                //applet.print();
+			                break;
+			                
+			            
+			            case '3':
+/*			                applet.append("^XA");
+			                applet.append("^MMT");
+			                applet.append("^PW719");
+			                applet.append("^LL1600");
+			                applet.append("^LS0");
+			                applet.append("^FT350,30^A0R,68,67^FH\^FD"+nmopd+"^FS");
+			                applet.append("^FT280,30^A0R,45,45^FH\^FD"+nmseksi+"^FS");
+			                applet.append("^FT350,1092^A0R,56,55^FH\^FD"+kode1+"^FS");
+			                applet.append("^FT280,1092^A0R,56,55^FH\^FD"+kode2+"^FS");
+			                applet.append("^BY8,3,160^FT260,1545^BCB,,N,N"); 1485
+			                applet.append("^FD>;"+kode+"^FS");
+			                applet.append("^FT40,30^A0R,51,50^FH\^FD"+nmbarang+"^FS");
+			                applet.append("^PQ1,0,1,Y^XZ");
+*/
+			                applet.append("^XA");
+			                applet.append("^MMT");
+			                applet.append("^PW719");
+			                applet.append("^LL1600");
+			                applet.append("^LS0");
+			                applet.append("^FT350,80^A0R,68,67^FH\^FD"+nmopd+"^FS");
+			                applet.append("^FT280,80^A0R,45,45^FH\^FD"+nmseksi+"^FS");
+			                applet.append("^FT350,1050^A0R,45,45^FH\^FD"+kode1+"^FS");
+			                applet.append("^FT280,1100^A0R,45,45^FH\^FD"+kode2+"^FS");
+			                applet.append("^BY4,3,160^FT260,925^BCB,,N,N"); 
+			                applet.append("^FD>;"+kode+"^FS");
+			                applet.append("^FT40,80^A0R,51,50^FH\^FD"+nmbarang+"^FS");
+			                applet.append("^PQ1,0,1,Y^XZ");
+			                //applet.print();
+			                break;
+			            case '4':
+			                applet.append("^XA");
+			                applet.append("^MMT");
+			                applet.append("^PW480");
+			                applet.append("^LL0300");
+			                applet.append("^LS0");
+			                applet.append("^FT14,118^A0N,20,19^FH\^FD"+nmopd+"^FS");
+			                applet.append("^FT14,135^A0N,11,12^FH\^FD"+nmseksi+"^FS");
+			                applet.append("^FT290,115^A0N,17,16^FH\^FD"+kode1+"^FS");
+			                applet.append("^FT310,135^A0N,17,16^FH\^FD"+kode2+"^FS");
+			                applet.append("^BY2,3,40^FT17,180^BCN,,N,N");
+			                applet.append("^FD>;"+kode+"^FS");
+			                applet.append("^FT14,195^A0N,14,14^FH\^FD"+nmbarang+"^FS");
+			                applet.append("^PQ1,0,1,Y^XZ");
+			                //applet.print();
+			                break;
+			            case '5':
+			                applet.append("^XA");
+			                applet.append("^MMT");
+			                applet.append("^PW480");
+			                applet.append("^LL0300");
+			                applet.append("^LS0");
+			                applet.append("^FT87,135^A0N,17,16^FH\^FD"+kode1+ kode2+"^FS");
+			                applet.append("^BY2,3,40^FT92,180^BCN,,N,N");
+			                applet.append("^FD>;"+kode+"^FS");
+			                applet.append("^FT87,195^A0N,14,14^FH\^FD"+nmseksi+"^FS");
+			                applet.append("^FT290,195^A0N,14,14^FH\^FD"+nmbarang+"^FS");
+			                applet.append("^PQ1,0,1,Y^XZ");
+			                //applet.print();
+			                break;
+						case '6':
+			                /*applet.append("^XA");
+			                applet.append("^MMT");
+			                applet.append("^PW799");
+			                applet.append("^LL0400");
+			                applet.append("^LS0");
+			                applet.append("^FT50,165^A0N,28,26^FH\^FD"+nmopd+"^FS");  //FT kiri, atas
+			                applet.append("^FT50,200^A0N,20,16^FH\^FD"+nmseksi+"^FS");
+			                applet.append("^FT400,165^A0N,30,32^FH\^FD"+kode1+"^FS");
+			                applet.append("^FT435,200^A0N,30,32^FH\^FD"+kode2+"^FS");
+			                applet.append("^BY3,3,85^FT20,328^BCN,,N,N");
+			                applet.append("^FD>;"+kode+"^FS");
+			                applet.append("^FT20,369^A0N,26,20^FH\^FD"+nmbarang+"^FS");
+			                applet.append("^PQ1,0,1,Y^XZ");*/
+							
+							applet.append("^XA"); //start new label format
+			                applet.append("^MMT"); //print mode T (tear-off))
+			                //applet.append("^PW480");
+							applet.append("^PW580"); //print width 
+			                applet.append("^LL0300"); //label length?
+			                applet.append("^LS0"); //label shift
+			                //applet.append("^FT14,118^A0N,20,19^FH\^FD"+nmopd+"^FS");//FT kiri, atas
+			                //applet.append("^FT14,135^A0N,11,12^FH\^FD"+nmseksi+"^FS");
+			                //applet.append("^FT290,115^A0N,17,16^FH\^FD"+kode1+"^FS");
+			                //applet.append("^FT310,135^A0N,17,16^FH\^FD"+kode2+"^FS");
+							applet.append("^FT-5,160^A0N,20,19^FH\^FD"+nmopd+"^FS");//FT kiri, atas , 
+							applet.append("^FT5,180^A0N,15,14^FH\^FD"+nmseksi+"^FS");
+			                applet.append("^FT405,160^A0N,17,16^FH\^FD"+kode1+"^FS");
+			                applet.append("^FT425,180^A0N,17,16^FH\^FD"+kode2+"^FS");							
+			                applet.append("^FT5,200^A0N,15,14^FH\^FD"+nmgedang+"^FS");
+			                //applet.append("^BY2,3,70^FT25,250^BCN,,N,N"); //BY width, ratio, height barcode
+							//applet.append("^BY2,3,40^FT92,180^BCN,,N,N");
+							applet.append("^BY2,3,40^FT5,250^BCN,,N,N");
+			                applet.append("^FD>;"+kode+"^FS");
+			                applet.append("^FT5,280^A0N,14,14^FH\^FD"+nmbarang+"^FS");
+			                applet.append("^PQ1,0,1,Y^XZ");
+			                break;
+			            }
+				   	}
+						//applet.print();
+				    //*/
+					//}else{
+					//	alert('Java Aplet Gagal!');
+					//}
+					
+					//--------------------------------------
+				}
+				//*/
+				}
+			}
+			//alert(nmbiro);
+			applet.print();
+			this.Close();
+		}else{
+			//alert('Jenis Label Belum Dipilih!');
+			alert(err);
+		}
+		
+	}
+	this.cetak = function(){
+		//this.setFormCetak();
+			if (adminForm.boxchecked.value >0 ){
+				if(confirm('Yakin '+adminForm.boxchecked.value+' barcode akan di cetak?')){
+					this.setFormCetak();
+				}
+			}
+	}
+	this.Close= function(){
+		delElem('barcode_formCetakCover');
+	}
+	this.setFormCetak= function(){
+		var form_judul = 'Cetak Label Barcode';
+		var form_width = '400';
+		var form_height = '150';
+		var cover ='barcode_formCetakCover';
+		//document.body.style.overflow='hidden';
+		addCoverPage2(cover,999,true,false);
+		
+		var form_menu =
+			"<div style='padding: 0 8 9 8;height:22; '>"+
+			"<div style='float:right;'>"+
+				"<input type='button' value='Cetak' onclick='barcode.cetak_()'>"+
+				"<input type='button' value='Batal' onclick='barcode.Close()'>"+
+				"<input type='hidden' id='Sensus_idplh' name='Sensus_idplh' value='109'><input type='hidden' id='Sensus_fmST' name='Sensus_fmST' value='1'>"+
+				"<input type='hidden' id='sesi' name='sesi' value=''>"+
+			"</div>"+
+			"</div>";
+		
+		var content = 
+			"<div id='Sensus_form_div' style='margin:9 8 8 8; overflow:auto; border:1px solid #E5E5E5;width:"+(form_width-20)+";height:"+(form_height-80)+";'>"+
+				"<table style='width:100%' class='tblform'><tr><td style='padding:4'>"+
+					"<table style='width:100%:height:100%'>"+
+						"<tr>"+
+							"<td style='width:100'>Jenis Label</td>"+
+							"<td style='width:10'>:</td>"+
+							"<td>"+
+								"<select name='jnslabel' id='jnslabel'>"+
+								"<option value=''>Pilih</option>"+
+								"<option selected value='1'>Label 1 (9 x 5 cm)</option>"+
+								"<option value='2'>Label 2 (16 x 9 cm)</option>"+
+								"<option value='3'>Label 3 (20 x 9 cm)</option>"+
+								"<option value='4'>Label 4 (6 x 2,6 cm)</option>"+
+								"<option value='5'>Label 5 (6 x 1,38 cm)</option>"+
+								"<option value='6'>Label 6 (8 x 4 cm)</option>"+
+								"</select>"+
+							"</td>"+
+						"</tr>"+
+						"<tr>"+
+							"<td style='width:100'>Jumlah Cetak</td>"+
+							"<td style='width:10'>:</td>"+
+							"<td><input type='text' id='jmlcetak' name='jmlcetak' style='width:100;' value=1></td>"+
+						"</tr>"+						
+					"</table>"+
+				"</td></tr></table>"+
+			"</div>";
+		
+		
+		document.getElementById(cover).innerHTML= 
+			"<table width='100%' height='100%'><tbody><tr><td align='center'>"+
+			//"rtera"+
+			"<div id='div_border' style='width:"+form_width+";height:"+form_height+"; background-color:white; border-color: rgba(0, 0, 0, 0.3);   border-style: solid;  border-width:1; box-shadow: 6px 6px 5px rgba(0, 0, 0, 0.3);'>"+
+			"<table class='' width='100%' cellspacing='0' cellpadding='0' border='0'><tbody><tr><td style='padding:0'>"+
+				"<div class='menuBar2' style='height:20'>"+			
+				"<span style='cursor:default;position:relative;left:6;top:2;color:White;font-size:12;font-weight:bold'>"+form_judul+"</span>"+
+				"</div>"+
+			"</td></tr></tbody></table>"+			
+			content+
+			form_menu+		
+			"</div>"+
+				
+			"</td></tr>"+
+			"</table>";
+		
+			
+	}
+	this.initial = function(){	
+		//change param default	
+		for (var name in this.params) {
+			eval( 'if(this.params.'+name+' != null) this.'+name+'= this.params.'+name+'; ');
+		}
+		this.elinputname = this.name+'_input';	
+		this.elreadymsg = this.name+'_msg';
+	}
+	this.initial();
+	
+} 
+var barcode = new BarcodeCls({
+	name:'barcode',
+	execBarcode : function(){
+		Penatausaha.refreshList(true);
+		
+	}
+});
+var barcodeSensus = new BarcodeCls({
+	name:'barcodeSensus',
+	execBarcode : function(){
+		//alert('tes');
+		Sensus.refreshList(true);
+		//this.reset();
+		/*var me = this;
+		var kode = this.kode;
+		var cover = 'coverinsertbarcode';	
+		addCoverPage(cover,100);
+					
+		$.ajax({		
+			type:'POST', 		
+			url: 'pages.php?Pg=sensus&tipe=insertsensus&kode='+kode, 
+			data:$('#Sensus_form').serialize(), 
+			success: function(response) {
+				var resp = eval('(' + response + ')');
+				delElem('coverinsertbarcode');
+				if(resp.err != ''){
+				}else{
+				}
+				me.reset();
+				Sensus.refreshList(true);
+			}
+		});*/
+		
+	}
+});
+var barcodeSensusBaru = new BarcodeCls({
+	name : 'barcodeSensusBaru',
+	execBarcode : function(){
+		var me = this;
+		var kode = this.kode;
+		var cover = 'coverinsertbarcode';	
+		addCoverPage(cover,100);
+					
+		$.ajax({		
+			type:'POST', 		
+			url: 'pages.php?Pg=sensustmp&tipe=insertsensus&kode='+kode, 
+			data:$('#Sensus_form').serialize(), 
+			success: function(response) {
+				var resp = eval('(' + response + ')');
+				delElem('coverinsertbarcode');
+				if(resp.err != ''){
+				}else{
+				}
+				me.reset();
+				SensusTmp.refreshList(true);
+			}
+		});
+		
+	}
+});
+
+var barcodeCariBarang = new BarcodeCls({
+	name:'barcodeCariBarang',
+	execBarcode : function(){
+		Penatausaha.refreshList(true);
+		
+	}
+});
+barcodeCariBarang.loading();
+
+var barcodeUsulanHapusBA = new BarcodeCls({
+	name:'barcodeUsulanHapusBA',
+	execBarcode : function(){
+		UsulanHapusbadetail.refreshList(true);
+		
+	}
+});
+barcodeUsulanHapusBA.loading();
+

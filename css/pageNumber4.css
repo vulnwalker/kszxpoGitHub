@@ -1,0 +1,40 @@
+body {
+  text-align: justify;
+}
+
+@page {
+  size: Folio;
+  padding: 0 0 10%;
+}
+
+h5.pag {
+  display: none;
+  position: absolute;
+  page-break-before: always;
+  page-break-after: always;
+  bottom: -10px;
+  right: 0;
+  border: 1px solid #000;
+  border-top-color: transparent;
+  float: right;
+  width: 33cm;
+  height: 20cm;
+}
+
+h5::before {
+  position: relative;
+  bottom: -19.5cm;
+  float: right;
+  text-align: right;
+}
+
+@media print {
+  h5.pag {
+  display: initial;
+  }
+  .print {
+    display: none;
+  }
+  @page {size: landscape;}
+
+}

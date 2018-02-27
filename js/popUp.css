@@ -1,0 +1,63 @@
+
+.popup {
+    width: 80%;
+    max-width: 450px;
+    background-color: #FFF;
+    display: inline-block;
+    border: 1px solid black;
+    left: 50%;
+    opacity: 0;
+    padding: 0 20px 30px 20px;
+    position: fixed;
+    text-align: center;
+    top: 30%;
+    visibility: hidden;
+    z-index: 9999;
+    margin: 0 20px 0 0px;
+    color: #1FB5BF;
+    font-family: sans-serif;
+
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    -o-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+
+    -webkit-transition: opacity .5s, top .5s;
+    -moz-transition: opacity .5s, top .5s;
+    -ms-transition: opacity .5s, top .5s;
+    -o-transition: opacity .5s, top .5s;
+    transition: opacity .5s, top .5s;
+}
+.overlay:target+.popup  {
+    top: 50%;
+    opacity: 1;
+    visibility: visible;
+}
+
+.popup div {
+    margin-bottom: 5px;
+}
+
+.popup p {
+    color: #3C5069;
+    font-size: 12px;
+}
+
+.popup input[type="text"],
+.popup input[type="password"] ,
+.popup input[type="email"] ,
+
+.popup div.label {
+	margin-left:20px;
+	text-align:left;
+	color:#E6EAF2;
+	font-size:14px;
+}
+
+.popup div.label {
+	margin-left:20px;
+	text-align:left;
+	color:#E6EAF2;
+	font-size:14px;
+}

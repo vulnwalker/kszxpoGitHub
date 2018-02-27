@@ -1,0 +1,860 @@
+<?php
+
+class ref_masa_manfaatObj  extends DaftarObj2{
+	var $Prefix = 'ref_masa_manfaat';
+	var $elCurrPage="HalDefault";
+	var $SHOW_CEK = TRUE;
+	var $TblName = 'ref_barang'; //daftar
+	var $TblName_Hapus = 'ref_barang';
+	var $MaxFlush = 10;
+	var $TblStyle = array( 'koptable', 'cetak','cetak'); //berdasar mode
+	var $ColStyle = array( 'GarisDaftar', 'GarisCetak','GarisCetak');
+	var $KeyFields = array('f1','f2','f','g','h','i','j','j1');
+	var $FieldSum = array();//array('jml_harga');
+	var $SumValue = array();
+	var $FieldSum_Cp1 = array( 14, 13, 13);//berdasar mode
+	var $FieldSum_Cp2 = array( 1, 1, 1);
+	var $checkbox_rowspan = 1;
+	var $PageTitle = 'Referensi Data';
+	var $PageIcon = 'images/masterData_01.gif';
+	var $pagePerHal ='';
+	var $cetak_xls=TRUE ;
+	var $fileNameExcel='usulansk.xls';
+	var $Cetak_Judul = 'BARANG';
+	var $Cetak_Mode=2;
+	var $Cetak_WIDTH = '30cm';
+	var $Cetak_OtherHTMLHead;
+	var $FormName = 'ref_masa_manfaatForm';
+
+	function setTitle(){
+		return 'Daftar Masa Manfaat';
+	}
+	function setMenuEdit(){
+		return 
+		//	"<td>".genPanelIcon("javascript:".$this->Prefix.".Baru()","new_f2.png","Baru",'Baru')."</td>".
+			"<td>".genPanelIcon("javascript:".$this->Prefix.".Edit()","edit_f2.png","Edit", 'Edit')."</td>".
+			"<td>".genPanelIcon("javascript:".$this->Prefix.".Hapus()","delete_f2.png","Hapus", 'Hapus').
+			"</td>";
+	}
+
+	function setCetak_Header($Mode=''){
+		global $Main, $HTTP_COOKIE_VARS;
+
+		return
+			"<table style='width:100%' border=\"0\">
+			<tr>
+				<td class=\"judulcetak\">".$this->setCetakTitle()."</td>
+			</tr>
+			</table>";
+	}
+
+	function simpan(){
+	 global $HTTP_COOKIE_VARS;
+	 global $Main;
+	 $uid = $HTTP_COOKIE_VARS['coID'];
+	 $cek = ''; $err=''; $content=''; $json=TRUE;
+	//get data -----------------
+	 $fmST = $_REQUEST[$this->Prefix.'_fmST'];
+	 $idplh = $_REQUEST[$this->Prefix.'_idplh'];
+	 $kode0 = $_REQUEST['fmf'];
+     $kode1= $_REQUEST['fmg'];
+	 $kode2= $_REQUEST['fmh'];
+	 $kode3= $_REQUEST['fmi'];
+	 $kode4= $_REQUEST['j'];
+	 $nama_barang = $_REQUEST['nama'];
+	 $masa_manfaat = $_REQUEST['masa_manfaat'];
+	// $e1 = $_REQUEST['e1'];
+		
+	 if( $err=='' && $kode0 =='' ) $err= 'Kode Jenis Belum Di Isi !!';
+	 if( $err=='' && $kode1 =='' ) $err= 'Kode Objek Belum Di Isi !!';
+	 if( $err=='' && $kode2 =='' ) $err= 'Kode Rincian Objek Belum Di Isi !!';
+	 if( $err=='' && $kode3 =='' ) $err= 'Kode Sub Rincian Objek Belum Di Isi !!';
+	 if( $err=='' && $kode4 =='' ) $err= 'Kode Sub-Sub Rincian Objek Belum Di Isi !!';
+	 if( $err=='' && $nama_barang =='' ) $err= 'Nama SUB UNIT Belum Di Isi !!';
+	 if( $err=='' && $masa_manfaat =='') $err= 'Nama Barcode Belum Di Isi !!';
+	// if( $err=='' && $e1 =='') $err= 'Kode Urusan Belum Di Pilih !!';
+	 	if($fmST == 0){
+			$ck1=mysql_fetch_array(mysql_query("Select * from ref_barang where f1='0' and f2='0' and f= '$kode0' and g='$kode1' and h ='$kode2' and i ='$kode3' and j='$kode4'"));
+			if ($ck1>=1)$err= 'Gagal Simpan'.mysql_error();
+				if($err==''){
+					$aqry = "INSERT into ref_barang (f1,f2,f,g,h,i,j,nm_barang,masa_manfaat) values('0','0','$kode0','$kode1','$kode2','$kode3','$kode4','$nama_barang','$masa_manfaat')";	$cek .= $aqry;	
+					$qry = mysql_query($aqry);
+				}
+			}
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);	
+    }
+	
+	function simpanEdit(){
+	global $HTTP_COOKIE_VARS;
+	global $Main;
+	 
+		$uid = $HTTP_COOKIE_VARS['coID'];
+		$cek = ''; $err=''; $content=''; $json=TRUE;
+		//get data -----------------
+		$fmST = $_REQUEST[$this->Prefix.'_fmST'];
+	 	$idplh = $_REQUEST[$this->Prefix.'_idplh'];
+		$dtf1= $_REQUEST['f1'];
+		$dtf2= $_REQUEST['f2'];
+		$dtf= $_REQUEST['f'];
+		$dtg= $_REQUEST['g'];
+		$dth= $_REQUEST['h'];
+		$dti= $_REQUEST['i'];
+		$dtj= $_REQUEST['j'];
+		
+		$nama= $_REQUEST['nm_barang'];
+		$masaManfaat= $_REQUEST['masaManfaat'];
+		
+	//	if( $err=='' && $nama =='' ) $err= 'Nama SUB - SUB RINCIAN OBJEK Belum Di Isi !!';
+		
+			if($err==''){
+				$aqry = "UPDATE ref_barang set masa_manfaat='$masaManfaat' where f1='$dtf1' and f2='$dtf2' and f='$dtf' and g='$dtg' and h='$dth' and i='$dti' and j='$dtj' and concat (f1,' ',f2,' ',f,' ',g,' ',h,' ',i,' ',j,' ',j1)='".$idplh."'";$cek .= $aqry;
+				$qry = mysql_query($aqry);
+			}
+			return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);	
+    }			
+
+	
+	function set_selector_other2($tipe){
+	 global $Main;
+	 $cek = ''; $err=''; $content=''; $json=TRUE;
+
+	 return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+	}
+
+	function set_selector_other($tipe){
+	 global $Main;
+	 $cek = ''; $err=''; $content=''; $json=TRUE;
+
+	  switch($tipe){
+		
+		case 'pilihJenis':{				
+			global $Main;
+			$f = $_REQUEST['fmf'];
+			$g = $_REQUEST['fmg'];
+			$h = $_REQUEST['fmh'];
+			$i = $_REQUEST['fmi'];
+			$j = $_REQUEST['fmj'];
+			
+			$cek = ''; $err=''; $content=''; $json=TRUE;
+			$queryg="SELECT g, concat(g, '. ', nm_barang) as vnama FROM ref_barang WHERE f1='0' and f2='0' and f='$f' and g!='00' and h='00' and i='00' and j='000'" ;$cek.=$queryg;
+			$content->g=cmbQuery('fmg',$fmg,$queryg,'style="width:500px;"onchange="'.$this->Prefix.'.pilihObjek()"','-------- Pilih KODE OBJEK ------------')."";
+			
+			$queryh="SELECT h, concat(h, '. ', nm_barang) as vnama FROM ref_barang WHERE f1='0' and f2='0' and f='$f' and g='$g' and h!='00' and i='00' and j='000'" ;$cek.=$queryd;
+			$content->h=cmbQuery('fmh',$fmh,$queryh,'style="width:500px;"onchange="'.$this->Prefix.'.pilihRincianObjek()"','-------- Pilih KODE RINCIAN OBJEK ----------------')."";
+			
+			$queryi="SELECT i, concat(i,' . ', nm_barang) as vnama  FROM ref_barang WHERE f1='0' and f2='0' and f='$f' and g!='00' and h='$h' and i!='00' and j='000'" ;$cek.=$queryi;
+			$content->i=cmbQuery('fmi',$fmi,$queryi,'style="width:500px;"onchange="'.$this->Prefix.'.pilihSubRincianObjek()"','-------- Pilih KODE SUB RINCIAN OBJEK -----------------')."";
+			
+			$queryj="SELECT j, concat(j,' . ', nm_barang) as vnama FROM ref_barang WHERE f1='0' and f2='0' and f='$f' and g='$g' and h = '$h' and i='$i' and j!='000'" ;$cek.=$queryj;
+
+		$content->j='';
+	
+			return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);								
+			break;
+			}
+			
+		case 'pilihObjek':{				
+		global $Main;
+			
+			$f = $_REQUEST['fmf'];
+			$g = $_REQUEST['fmg'];
+			$cek = ''; $err=''; $content=''; $json=TRUE;
+	 
+			$queryh="SELECT h, concat(h, '. ', nm_barang) as vnama FROM ref_barang WHERE f1='0' and f2='0' and f='$f' and g='$g' and h !='00' and i='00' and j='000'" ;$cek.=$queryh;
+			$content->h=cmbQuery('fmh',$fmh,$queryh,'style="width:500px;"onchange="'.$this->Prefix.'.pilihRincianObjek()"','-------- Pilih KODE RINCIAN OBJEK ----------------')."";
+			
+			$queryi="SELECT i, concat(i,' . ', nm_barang) as vnama  FROM ref_barang WHERE f1='0' and f2='0' and f='$f' and g='$g' and h='$h' and i!='00' and j='000'" ;$cek.=$queryi;
+			$content->i=cmbQuery('fmi',$fmi,$queryi,'style="width:500px;"onchange="'.$this->Prefix.'.pilihSubRincianObjek()"','-------- Pilih KODE SUB RINCIAN OBJEK -----------------')."";
+			
+			$queryj="SELECT j, concat(j,' . ', nm_barang) as vnama FROM ref_barang WHERE f1='0' and f2='0' and f='$f' and g='$g' and h ='$h' and i='$i' and j!='000'" ;$cek.=$queryj;
+			$content->j='';
+			
+	 		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);											break;
+			}
+			
+		case 'pilihRincianObjek':{				
+		global $Main;
+			
+			$f = $_REQUEST['fmf'];
+			$g = $_REQUEST['fmg'];
+			$h = $_REQUEST['fmh'];
+			$cek = ''; $err=''; $content=''; $json=TRUE;
+		 
+			$queryi="SELECT i, concat(i,' . ', nm_barang) as vnama  FROM ref_barang WHERE f1='0' and f2='0' and f='$f' and g='$g' and h='$h' and i!='00' and j='000'" ;$cek.=$queryi;
+			$content->i=cmbQuery('fmi',$fmi,$queryi,'style="width:500px;"onchange="'.$this->Prefix.'.pilihSubRincianObjek()"','-------- Pilih KODE SUB RINCIAN OBJEK -----------------')."";
+			
+			$queryj="SELECT j, concat(j,' . ', nm_barang) as vnama FROM ref_barang WHERE f1='0' and f2='0' and f='$f' and g='$g' and h = '$h' and i='$i' and j!='000'" ;$cek.=$queryj;
+			$content->j='';
+				
+		 	return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);									
+			break;
+			}
+			
+		case 'pilihSubRincianObjek':{				
+		global $Main;
+			
+			$f = $_REQUEST['fmf'];
+			$g = $_REQUEST['fmg'];
+			$h = $_REQUEST['fmh'];
+			$i = $_REQUEST['fmi'];
+			$cek = ''; $err=''; $content=''; $json=TRUE;
+			if($f!=00 && $g!=00 && $h!=00 && $i!=00){
+			$queryj="SELECT max(j) as j, nm_barang FROM ref_barang WHERE f1='0' and f2='0' and f='$f' and g='$g' and h = '$h' and i='$i'" ;$cek.=$queryj;
+			$get=mysql_fetch_array(mysql_query($queryj));
+			$lastkode=$get['j'] + 1;	
+			$kode_j = sprintf("%03s", $lastkode);
+			$content->j=$kode_j;	
+			}else{
+				$content->j='';		
+			}
+		 	
+		 
+		 	return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);								
+			break;
+			}					
+		
+		case 'formBaru':{
+			$fm = $this->setFormBaru();
+			$cek = $fm['cek'];
+			$err = $fm['err'];
+			$content = $fm['content'];
+		break;
+		}
+		case 'jenisChanged':{
+			foreach ($_REQUEST as $key => $value) {
+						$$key = $value;
+		 }
+
+		if($jenisBarang == "1"){
+			$isiSpanKodeBarang = " <input type='text' id='f' name='f' style='width:25px;' maxlength='2' onkeypress='return event.charCode >= 48 && event.charCode <= 57' value='$f' $chmod644> &nbsp <input type='text' id='g' name='g' style='width:25px;' maxlength='2' onkeypress='return event.charCode >= 48 && event.charCode <= 57' value='$g' $chmod644> &nbsp <input type='text' id='h' name='h' style='width:25px;' maxlength='2' onkeypress='return event.charCode >= 48 && event.charCode <= 57' value='$h' $chmod644> &nbsp <input type='text' id='i' name='i' style='width:25px;' maxlength='2' onkeypress='return event.charCode >= 48 && event.charCode <= 57' value='$i' $chmod644> &nbsp <input type='text' id='j' name='j' style='width:30px;' maxlength='3' onkeypress='return event.charCode >= 48 && event.charCode <= 57' value='$j' $chmod644>";
+		}else{
+			$isiSpanKodeBarang = " <input type='text' id='f' name='f' style='width:25px;' maxlength='2' onkeypress='return event.charCode >= 48 && event.charCode <= 57' value='$f' $chmod644> &nbsp <input type='text' id='g' name='g' style='width:25px;' maxlength='2' onkeypress='return event.charCode >= 48 && event.charCode <= 57' value='$g' $chmod644> &nbsp <input type='text' id='h' name='h' style='width:25px;' maxlength='2' onkeypress='return event.charCode >= 48 && event.charCode <= 57' value='$h' $chmod644> &nbsp <input type='text' id='i' name='i' style='width:25px;' maxlength='2' onkeypress='return event.charCode >= 48 && event.charCode <= 57' value='$i' $chmod644>&nbsp <input type='text' id='j' name='j' style='width:30px;' maxlength='3' onkeypress='return event.charCode >= 48 && event.charCode <= 57' value='$j' $chmod644>&nbsp <input type='text' id='j1' name='j1' style='width:30px;' maxlength='4' onkeypress='return event.charCode >= 48 && event.charCode <= 57' value='$j1' $chmod644>";
+			}
+		$content = array('isiSpanKodeBarang'=> $isiSpanKodeBarang);
+		break;
+		}
+
+		case 'formEdit':{
+			$fm = $this->setFormEdit();
+			$cek = $fm['cek'];
+			$err = $fm['err'];
+			$content = $fm['content'];
+		break;
+		}
+		case 'Hapus':{
+			$fm = $this->Hapus_data();
+			$cek = $fm['cek'];
+			$err = $fm['err'];
+			$content = $fm['content'];
+		break;
+		}
+		
+		case 'simpanEdit':{
+			$get= $this->simpanEdit();
+			$cek = $get['cek'];
+			$err = $get['err'];
+			$content = $get['content'];
+		break;
+	    }
+		
+		case 'windowshow':{
+				$fm = $this->windowShow();
+				$cek = $fm['cek'];
+				$err = $fm['err'];
+				$content = $fm['content'];
+			break;
+		}
+
+	   	case 'simpan':{
+			$get= $this->simpan();
+			$cek = $get['cek'];
+			$err = $get['err'];
+			$content = $get['content'];
+		break;
+	   }
+
+	   default:{
+			$other = $this->set_selector_other2($tipe);
+			$cek = $other['cek'];
+			$err = $other['err'];
+			$content=$other['content'];
+			$json=$other['json'];
+	 break;
+	 }
+	 }//end switch
+
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
+   }
+
+	function setPage_OtherScript(){
+		$scriptload =
+					"<script>
+						$(document).ready(function(){
+							".$this->Prefix.".loading();
+						});
+					</script>";
+
+		return
+			 "<script type='text/javascript' src='js/master/ref_masa_manfaat/ref_masa_manfaat.js' language='JavaScript' ></script>".
+			$scriptload;
+	}
+
+	function Hapus_Validasi($id){//id -> multi id with space delimiter
+		$errmsg ='';
+		$kode_barang = explode(' ',$id);
+		$f1=$kode_barang[0];
+		$f2=$kode_barang[1];
+		$f=$kode_barang[2];
+		$g=$kode_barang[3];
+		$h=$kode_barang[4];
+		$i=$kode_barang[5];
+		$j=$kode_barang[6];
+
+		if($f2 =='0'){
+		  $hasRow = mysql_num_rows(mysql_query("select * from ref_barang where f1 ='$f1' and f2!='0' "));
+		  if($hasRow > 0){
+		  	$errmsg = "Data tidak dapat di hapus";
+		  }
+		}else{
+		   if($f =='0' ){
+		   $hasRow = mysql_num_rows(mysql_query("select * from ref_barang where f1 ='$f1' and f2='$f2' and f !='0' and g ='00' and h ='00' and i ='00' and j = '000' "));
+			  if($hasRow > 0){
+			  	$errmsg = "Data tidak dapat di hapus";
+		 	 }
+		  }else{
+			  	if( $g=='00'){
+			  $hasRow = mysql_num_rows(mysql_query("select * from ref_barang where f1 ='$f1' and f2='$f2' and f='$f' and g !='00' and h ='00' and i ='00' and j = '000' "));
+			  if($hasRow > 0){
+			  	$errmsg = "Data tidak dapat di hapus";
+			  }
+			}else{
+				if( $h=='00'){
+		  $hasRow = mysql_num_rows(mysql_query("select * from ref_barang where f1 ='$f1' and f2='$f2' and f='$f' and g ='$g' and h !='00' and i ='00' and j = '000' "));
+		  if($hasRow > 0){
+		  	$errmsg = "Data tidak dapat di hapus";
+		  }
+		}else{
+			if( $i=='00'){
+		  $hasRow = mysql_num_rows(mysql_query("select * from ref_barang where f1 ='$f1' and f2='$f2' and f='$f' and g ='$g' and h='$h' and i!='00'  and j = '000' "));
+		  if($hasRow > 0){
+		  	$errmsg = "Data tidak dapat di hapus";
+		  }
+		}else{
+			if( $j=='000'){
+		  $hasRow = mysql_num_rows(mysql_query("select * from ref_barang where f1 ='$f1' and f2='$f2' and f='$f' and g ='$g' and h='$h'  and i='$i' and j!='000' "));
+		  if($hasRow > 0){
+		  	$errmsg = "Data tidak dapat di hapus";
+		  						}
+							}
+						}
+					}
+				}
+		  	}
+		}
+		return $errmsg;
+}
+
+	//form ==================================
+	function setFormBaru(){
+		$cbid = $_REQUEST[$this->Prefix.'_cb'];
+		$c = $_REQUEST[$this->Prefix.'SkpdfmSKPD'];
+		$d = $_REQUEST[$this->Prefix.'SkpdfmUNIT'];
+		$e = $_REQUEST[$this->Prefix.'SkpdSUBUNIT'];
+		$cek =$cbid[0];
+
+		$this->form_idplh = $cbid[0];
+		$kode = explode(' ',$this->form_idplh);
+		$this->form_fmST = 0;
+		$dt['readonly']='';
+		$fmBIDANG = $_REQUEST['fmBIDANG'];
+		$fmKELOMPOK = $_REQUEST['fmKELOMPOK'];
+		$fmSUBKELOMPOK = $_REQUEST['fmSUBKELOMPOK'];
+		$fmSUBSUBKELOMPOK = $_REQUEST['fmSUBSUBKELOMPOK'];
+		if(!empty($fmBIDANG) && empty($fmKELOMPOK) && empty($fmSUBKELOMPOK) && empty($fmSUBSUBKELOMPOK))
+		{
+			$dt['kode_barang']=$fmBIDANG.'.';
+		}
+		elseif(!empty($fmBIDANG) && !empty($fmKELOMPOK) && empty($fmSUBKELOMPOK) && empty($fmSUBSUBKELOMPOK))
+		{
+			$dt['kode_barang']=$fmBIDANG.'.'.$fmKELOMPOK.'.';
+		}
+		elseif(!empty($fmBIDANG) && !empty($fmKELOMPOK) && !empty($fmSUBKELOMPOK) && empty($fmSUBSUBKELOMPOK))
+		{
+			$dt['kode_barang']=$fmBIDANG.'.'.$fmKELOMPOK.'.'.$fmSUBKELOMPOK.'.';
+		}
+		elseif(!empty($fmBIDANG) && !empty($fmKELOMPOK) && !empty($fmSUBKELOMPOK) && !empty($fmSUBSUBKELOMPOK))
+		{
+			$dt['kode_barang']=$fmBIDANG.'.'.$fmKELOMPOK.'.'.$fmSUBKELOMPOK.'.'.$fmSUBSUBKELOMPOK.'.';
+		}
+		$fm = $this->setForm($dt);
+
+		return	array ('cek'=>$cek.$fm['cek'], 'err'=>$fm['err'], 'content'=>$fm['content']);
+	}
+	
+	function setFormEdit(){
+	$cek ='';
+		$cbid = $_REQUEST[$this->Prefix.'_cb'];
+		$this->form_idplh = $cbid[0];
+		$kode = explode(' ',$this->form_idplh);
+		$f1=$kode[0];
+		$f2=$kode[1];
+		$f=$kode[2];
+		$g=$kode[3];
+		$h=$kode[4];
+		$i=$kode[5];
+		$j=$kode[6];
+		$this->form_fmST = 1;				
+		//get data 
+		$aqry = "SELECT * FROM  ref_barang WHERE f1='$f1' and f2='$f2' and f='$f' and g='$g' and h='$h' and i='$i' and j='$j' "; $cek.=$aqry;
+		$dt = mysql_fetch_array(mysql_query($aqry));
+		$fm = $this->setFormEditdata($dt);
+			
+		return	array ('cek'=>$cek.$fm['cek'], 'err'=>$fm['err'], 'content'=>$fm['content']);
+	}
+	
+	function setFormEditdata($dt){	
+	 global $SensusTmp ,$Main;
+	 
+	 $cek = ''; $err=''; $content=''; 
+	 $json = TRUE;	//$ErrMsg = 'tes';
+	 $form_name = $this->Prefix.'_form';				
+	 $this->form_width = 670;
+	 $this->form_height = 150;
+	  if ($this->form_fmST==1) {
+		$this->form_caption = 'MASA MANFAAT EDIT';
+	  }
+	 
+		$cbid = $_REQUEST[$this->Prefix.'_cb'];
+		$this->form_idplh = $cbid[0];
+		$kode = explode(' ',$this->form_idplh);
+		$this->form_fmST = 1;	
+		$f1=$kode[0];
+		$f2=$kode[1];
+		$f=$kode[2];
+		$g=$kode[3];
+		$h=$kode[4];
+		$i=$kode[5];
+		$j=$kode[6];
+		
+		$queryf=mysql_fetch_array(mysql_query("SELECT f, nm_barang FROM ref_barang WHERE f1='$f1' and f2='$f2' and f='$f' and g = '00' and h='00' and i='00' and j='000'")) ;
+		$queryg=mysql_fetch_array(mysql_query("SELECT g, nm_barang FROM ref_barang WHERE f1='$f1' and f2='$f2' and f='$f' and g='$g' and h= '00' and i='00' and j='000'")) ;// $cek.="SELECT g, nm_barang FROM ref_barag WHERE f1='$f1' and f2='$f2' and f='$f' and g='$g' and h= '00' and i='00' and j='000'";
+		$queryh=mysql_fetch_array(mysql_query("SELECT h, nm_barang FROM ref_barang WHERE f1='$f1' and f2='$f2' and f='$f' and g='$g' and h='$h' and i='00' and j='000'")) ;
+		$queryi=mysql_fetch_array(mysql_query("SELECT i, nm_barang FROM ref_barang WHERE f1='$f1' and f2='$f2' and f='$f' and g='$g' and h='$h' and i='$i' and j='000'")) ;
+		$queryj=mysql_fetch_array(mysql_query("SELECT j, nm_barang FROM ref_barang WHERE f1='$f1' and f2='$f2' and f='$f' and g='$g' and h='$h' and i='$i' and j='$j'")) ;
+		
+		$datf=$queryf['f'].".  ".$queryf['nm_barang'];
+		$datg=$queryg['g'].". ".$queryg['nm_barang'];
+		$dath=$queryh['h'].". ".$queryh['nm_barang'];
+		$dati=$queryi['i'].". ".$queryi['nm_barang'];
+		$datj=$queryj['j'].". ".$queryj['nm_barang'];
+		
+       //items ----------------------
+		  $this->form_fields = array(
+		  
+		 'jenis' => array( 
+						'label'=>'JENIS',
+						'labelWidth'=>200, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='fx' id='fx' value='".$datf."' style='width:490px;' readonly>
+						<input type ='hidden' name='f' id='f' value='".$queryf['f']."'>
+						</div>", 
+						 ),
+						 
+			'objek' => array( 
+						'label'=>'OBJEK',
+						'labelWidth'=>120, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='gx' id='gx' value='".$datg."' style='width:490px;' readonly>
+						<input type ='hidden' name='g' id='g' value='".$queryg['g']."'>
+						</div>", 
+						 ),
+						 
+			'rincianObjek' => array( 
+						'label'=>'RINCIAN OBJEK',
+						'labelWidth'=>100, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='hx' id='hx' value='".$dath."' style='width:490px;' readonly>
+						<input type ='hidden' name='h' id='h' value='".$queryh['h']."'>
+						</div>", 
+						 ),
+						 
+			'subRincianObjek' => array( 
+						'label'=>'SUB RINCIAN OBJEK',
+						'labelWidth'=>100, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='ix' id='ix' value='".$dati."' style='width:490px;' readonly>
+						<input type ='hidden' name='i' id='i' value='".$queryi['i']."'>
+						</div>", 
+						 ),
+			
+			'subsubRincianObjek' => array( 
+						'label'=>'SUB - SUB RINCIAN OBJEK',
+						'labelWidth'=>100, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='jx' id='jx' value='".$datj."' style='width:490px;' readonly>
+						<input type ='hidden' name='j' id='j' value='".$queryj['j']."'>
+						
+						</div>", 
+						 ),			 			 			 
+			
+			'masaManfaat' => array( 
+						'label'=>'MASA MANFAAT',
+						'labelWidth'=>100, 
+						'value'=>"<div style='float:left;'>
+						
+						<input type='text' name='masaManfaat' id='masaManfaat' value='".$dt['masa_manfaat']."'  onkeypress='return event.charCode >= 48 && event.charCode <= 57' maxlength='4' style='width:50px;'>
+						</div>", 
+						 )	
+						 	 
+			);
+		//tombol
+		$this->form_menubawah =	
+		"<input type=hidden id='f1' name='f1' value='".$f1."'> ".
+		"<input type=hidden id='f2' name='f2' value='".$f2."'> ".
+		"<input type='button' value='Simpan' onclick ='".$this->Prefix.".SimpanEdit()' title='Simpan' >"."&nbsp&nbsp".
+		"<input type='button' value='Batal' onclick ='".$this->Prefix.".Close()' >";					
+		$form = $this->genForm();		
+		$content = $form;//$content = 'content';
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);
+	}	
+	
+	function setForm($dt){	
+	 global $SensusTmp ,$Main;
+	 
+	 $cek = ''; $err=''; $content=''; 
+	 $json = TRUE;	//$ErrMsg = 'tes';
+	 $form_name = $this->Prefix.'_form';				
+	 $this->form_width = 730;
+	 $this->form_height = 120;
+	  if ($this->form_fmST==0) {
+		$this->form_caption = 'MASA MANFAAT - BARU';
+	  }
+	  	
+		$fmf = $_REQUEST['fmf'];
+		$fmg = $_REQUEST['fmg'];
+		$fmh = $_REQUEST['fmh'];
+		$fmi = $_REQUEST['fmi'];
+		$fmj = $_REQUEST['fmj'];
+							
+		$query_f="SELECT f, concat(f, '. ', nm_barang) as vnama FROM ref_barang where f1 = '0' and f2 = '0' and f in(2,3,4,5,7)  and g ='00' and h ='00' and i='00' and j = '000'";
+		$query_g="SELECT g,concat(g, '. ', nm_barang) as vnama FROM ref_barang where f1 = '0' and f2 = '0' and f=$fmf  and g!='00' and h ='00' and i='00' and j = '000'";
+		$queryd="SELECT d,concat(d, '. ', nm_skpd) as vnama FROM ref_skpd where c1='".$dt['c1']."' and c='".$dt['c']."' and d!='00' and e=00 and e1=000";
+		$querye="SELECT e,concat(e, '. ', nm_skpd) as vnama FROM ref_skpd where c1='".$dt['c1']."' and c='".$dt['c']."' and d='".$dt['d']."' and e!='00' and e1=000";
+		$querye1="SELECT e1,concat(e1, '. ', nm_skpd) as vnama FROM ref_skpd where c1='".$dt['c1']."' and c='".$dt['c']."' and d='".$dt['d']."' and e='$fme'";
+		
+	
+		$dt_c1= mysql_fetch_array(mysql_query($max_c1));
+		
+		if($dt['f']=='00' && $dt['g']=='00' && $dt['h']=='00' && $dt['i']=='00'){
+			$newke=='';
+		}elseif($dt['f']!='00' && $dt['g']=='00' && $dt['h']=='00' && $dt['i']=='00'){
+			$newke=='';
+		}elseif($dt['f']!='00' && $dt['g']!='00' && $dt['h']=='00' && $dt['i']=='00'){
+			$newke=='';
+		}elseif($dt['f']!='00' && $dt['g']!='00' && $dt['h']!='00' && $dt['i']=='00'){
+			$newke=='';
+		}else{
+			
+		$queryJ="SELECT max(j) as j, nm_barang FROM ref_barang WHERE f1='".$dt['f1']."' and f2='".$dt['f2']."' and f='".$dt['f']."' and g='".$dt['g']."' and h = '".$dt['h']."' and i='".$dt['i']."'" ;$cek.=$queryJ;
+		$get=mysql_fetch_array(mysql_query($queryJ));
+		$lastkode=$get['j'] + 1;	
+		$newke = sprintf("%03s", $lastkode);	
+		}
+		
+       //items ----------------------
+	   
+		  $this->form_fields = array(
+		  
+		  	'JENIS' => array( 
+						'label'=>'JENIS',
+						'labelWidth'=>200, 
+						'value'=>"<div id='cont_f'>".cmbQuery('fmf',$dt['f'],$query_f,'style="width:500px;"onchange="'.$this->Prefix.'.pilihJenis()"','-------- Pilih KODE JENIS ------------')."</div>",
+						 ),		
+						 	
+			'OBJEK' => array( 
+						'label'=>'OBJEK',
+						'labelWidth'=>100, 
+						'value'=>
+						"<div id='cont_g'>".cmbQuery('fmg',$dt['g'],$query_g,'style="width:500px;"onchange="'.$this->Prefix.'.pilihObjek()"','-------- Pilih KODE OBJEK -----------')."</div>",
+						 ),
+						 		 
+			'RINCIAN_OBJEK' => array( 
+						'label'=>'RINCIAN OBJEK',
+						'labelWidth'=>100, 
+						'value'=>
+						"<div id='cont_h'>".cmbQuery('fmd',$dt['h'],$query_h,'style="width:500px;"onchange="'.$this->Prefix.'.pilihRincianObjek()"','-------- Pilih KODE RINCIAN OBJEK ---------------')."</div>",
+						 ),	
+						 
+			'SUB_RINCIAN_OBJEK' => array( 
+						'label'=>'SUB RINCIAN OBJEK',
+						'labelWidth'=>100, 
+						'value'=>
+						"<div id='cont_i'>".cmbQuery('fme',$dt['i'],$query_i,'style="width:500px;"onchange="'.$this->Prefix.'.pilihsubRincianObjek()"','-------- Pilih KODE SUB RINCIAN OBJEK -----------------')."</div>",
+						 ),		
+				
+			'SUB_SUB_RINCIAN_OBJEK' => array( 
+						'label'=>'SUB - SUB RINCIAN OBJEK',
+						'labelWidth'=>100, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='j' id='j' value='".$new_j."' style='width:50px;' readonly>
+						<input type='text' name='nama' id='nama' value='".$nama."' placeholder='Sub - Sub Rincian Objek' style='width:449px;'>
+						</div>", 
+						 ),
+			'masa_manfaat' => array( 
+						'label'=>'MASA MANFAAT',
+						'labelWidth'=>100, 
+						'value'=>"<div style='float:left;'>
+						<input type='text' name='masa_manfaat' id='masa_manfaat' value='".$nama."'  onkeypress='return event.charCode >= 48 && event.charCode <= 57' maxlength='4' style='width:50px;'>
+						</div>", 
+						 )			 
+			);
+		//tombol
+		$this->form_menubawah =	
+		"<input type=hidden id='datac1' name='datac1' value='".$dt_c1['maxc1']."'> ".
+		"<input type='button' value='Simpan' onclick ='".$this->Prefix.".Simpan()' title='Simpan' >"."&nbsp&nbsp".
+		"<input type='button' value='Batal' onclick ='".$this->Prefix.".Close()' >";
+		$form = $this->genForm();		
+		$content = $form;//$content = 'content';
+		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);
+	}
+	
+	//daftar =================================
+	function setKolomHeader($Mode=1, $Checkbox=''){
+	 $NomorColSpan = $Mode==1? 2: 1;
+	 $fmBIDANG = $_REQUEST['fmBIDANG'];
+	 $fmKELOMPOK = $_REQUEST['fmKELOMPOK'];
+	 $fmSUBKELOMPOK = $_REQUEST['fmSUBKELOMPOK'];
+	 $fmSUBSUBKELOMPOK = $_REQUEST['fmSUBSUBKELOMPOK'];
+	if(empty($fmBIDANG) && empty($fmKELOMPOK) && empty($fmSUBKELOMPOK) && empty($fmSUBSUBKELOMPOK))
+	{
+		$nama_barang="NAMA BIDANG";
+	}
+	elseif(!empty($fmBIDANG) && empty($fmKELOMPOK) && empty($fmSUBKELOMPOK) && empty($fmSUBSUBKELOMPOK) || empty($fmKELOMPOK))
+	{
+		$nama_barang="NAMA KELOMPOK";
+	}
+	elseif(!empty($fmBIDANG) && !empty($fmKELOMPOK) && empty($fmSUBKELOMPOK) && empty($fmSUBSUBKELOMPOK) || empty($fmSUBKELOMPOK))
+	{
+		$nama_barang="NAMA SUB KELOMPOK";
+	}
+	elseif(!empty($fmBIDANG) && !empty($fmKELOMPOK) && !empty($fmSUBKELOMPOK) && empty($fmSUBSUBKELOMPOK))
+	{
+		$nama_barang="NAMA SUB SUB KELOMPOK";
+	}
+	elseif(!empty($fmBIDANG) && !empty($fmKELOMPOK) && !empty($fmSUBKELOMPOK) && !empty($fmSUBSUBKELOMPOK))
+	{
+		$nama_barang="NAMA BARANG";
+	}
+	 $headerTable =
+	 "<thead>
+	 <tr>
+	   <th class='th01' width='5%' >No.</th>
+	   $Checkbox
+	   <th class='th01' align='left' width='10%'>KODE BARANG</th>
+	   <th class='th01' align='left' width='800'>NAMA BARANG</th>
+	   <th class='th01' align='left' width='7%'>MASA MANFAAT</th>
+	   </tr>
+	   </thead>";
+
+		return $headerTable;
+	}
+	
+
+	function setKolomData($no, $isi, $Mode, $TampilCheckBox){
+	 global $Ref;
+	 global $Main;
+
+	 $kode_barang=$isi['f1'].".".$isi['f2'].".".$isi['f'].'.'.$isi['g'].'.'.$isi['h'].'.'.$isi['i'].'.'.$isi['j'];
+	 $Koloms = array();
+	 $Koloms[] = array('align="center" width="20"', $no.'.' );
+	 if ($Mode == 1) $Koloms[] = array(" align='center'  ", $TampilCheckBox);
+	$Koloms[] = array('align="left" width="100" style="font-weight : bold;" ',$isi['f'].'.'.$isi['g'].'.'.$isi['h'].'.'.$isi['i'].'.'.$isi['j']);
+	 $Koloms[] = array('align="left" width="200"',$isi['nm_barang']);
+	 $Koloms[] = array('align="right" width="100"',$isi['masa_manfaat']);
+	 
+	 return $Koloms;
+	}
+
+	function genDaftarOpsi(){
+	 global $Ref, $Main;
+
+	$cmbAkun = '0';
+	$cmbKelompok = '0';
+	$cmbJenis = $_REQUEST['cmbJenis'];
+	$cmbObyek = $_REQUEST['cmbObyek'];
+	$cmbRincianObyek = $_REQUEST['cmbRincianObyek'];
+	$cmbSubRincianObyek = $_REQUEST['cmbSubRincianObyek'];
+	$cmbSubSubRincianObyek = $_REQUEST['cmbSubSubRincianObyek'];
+	$fmKODE = $_REQUEST['fmKODE'];
+	$fmBARANG = $_REQUEST['fmBARANG'];
+
+	$arr = array(
+		array('selectfg','Kode Barang'),
+		array('selectbarang','Nama Barang'),
+		);
+
+	//data order ------------------------------
+	 $arrOrder = array(
+	  	         array('1','Kode Barang'),
+			     array('2','Nama Barang'),
+	 			);
+
+	 $arrayJenisbarang = array(
+						array('1', 'ASET'),
+						array('2', 'PERSEDIAAN'),
+						);
+	
+	$filterJenisBarang = $_REQUEST['filterJenisBarang'];
+	$filterItem = "<tr>
+		 <td style='width:170px;' >JENIS </td><td>:</td>
+		 <td>".
+		 cmbQuery1("cmbJenis",$cmbJenis,"select f as valueCmbJenis, nm_barang from ref_barang where f1 = '$cmbAkun' and f2 = '$cmbKelompok' and f in(2,3,4,5,7)  and g ='00' and h ='00' and i='00' and j = '000'","onChange=\"$this->Prefix.refreshList(true)\"",'Pilih','').
+		 "</td>
+		 </tr>
+		 <tr>
+		 <td style='width:170px;'>OBYEK</td><td>:</td>
+		 <td>".
+		 cmbQuery1("cmbObyek",$cmbObyek,"select g as valueCmbObyek, nm_barang from ref_barang where f1 = '$cmbAkun' and f2 = '$cmbKelompok' and f = '$cmbJenis'  and g !='00' and h ='00' and i='00' and j = '000'","onChange=\"$this->Prefix.refreshList(true)\"",'Pilih','').
+		 "</td>
+		 </tr><tr>
+		 <td style='width:170px;'>RINCIAN OBYEK</td><td>:</td>
+		 <td>".
+		 cmbQuery1("cmbRincianObyek",$cmbRincianObyek,"select h as valueCmbRincianObyek, nm_barang from ref_barang where f1 = '$cmbAkun' and f2 = '$cmbKelompok' and f = '$cmbJenis'  and g ='$cmbObyek' and h !='00' and i='00' and j = '000'","onChange=\"$this->Prefix.refreshList(true)\"",'Pilih','').
+		 "</td>
+			 </tr>
+		 <tr>
+		 <td style='width:170px;'>SUB RINCIAN OBYEK</td><td>:</td>
+		 <td>".
+		 cmbQuery1("cmbSubRincianObyek",$cmbSubRincianObyek,"select i as valueCmbSubRincianObyek, nm_barang from ref_barang where f1 = '$cmbAkun' and f2 = '$cmbKelompok' and f = '$cmbJenis'  and g ='$cmbObyek' and h ='$cmbRincianObyek' and i != '00' and j = '000'","onChange=\"$this->Prefix.refreshList(true)\"",'Pilih','').
+		 "</td>
+			 </tr>
+		 <tr>
+		 <td style='width:170px;'>SUB-SUB RINCIAN OBYEK</td><td>:</td>
+		 <td>".
+		 cmbQuery1("cmbSubSubRincianObyek",$cmbSubSubRincianObyek,"select j as valueCmbSubSubRincianObyek, nm_barang from ref_barang where f1 = '$cmbAkun' and f2 = '$cmbKelompok' and f = '$cmbJenis'  and g ='$cmbObyek' and h ='$cmbRincianObyek' and i='$cmbSubRincianObyek' and j != '000'","onChange=\"$this->Prefix.refreshList(true)\"",'Pilih','').
+		 "</td>
+			 </tr>";
+
+	$TampilOpt =
+			"<div class='FilterBar'>".
+			"<table style='width:100%'>
+			<tr>	
+			<td>".
+			$comboJenisBarang.
+			"</td>
+			</tr>
+			$filterItem
+			</table>".
+			"</div>".
+			"<div class='FilterBar'>".
+			"<table style='width:100%'>
+			<tr><td>
+				Kode Barang : <input type='text' id='fmKODE' name='fmKODE' value='".$fmKODE."' size=20px>&nbsp
+				Nama Barang : <input type='text' id='fmBARANG' name='fmBARANG' value='".$fmBARANG."' size=30px>&nbsp
+				<input type='button' id='btTampil' value='Tampilkan' onclick='".$this->Prefix.".refreshList(true)'>
+			</td></tr>
+			</table>".
+			"</div>".
+			"<input type='hidden' id='fmORDER18' name='fmORDER18' value='".$fmORDER18."'>".
+			"<input type='hidden' id='fmORDER19' name='fmORDER19' value='".$fmORDER19."'>";
+		return array('TampilOpt'=>$TampilOpt);
+	}
+
+	function getDaftarOpsi($Mode=1){
+		global $Main, $HTTP_COOKIE_VARS;
+
+		//kondisi -----------------------------------
+		$arrKondisi = array();
+		$fmPILCARI = $_REQUEST['fmPILCARI'];
+		$fmPILCARIvalue = $_REQUEST['fmPILCARIvalue'];
+		$cmbAkun = '0';
+		$cmbKelompok = '0';
+		$cmbJenis = $_REQUEST['cmbJenis'];
+		$cmbObyek = $_REQUEST['cmbObyek'];
+		$cmbRincianObyek = $_REQUEST['cmbRincianObyek'];
+		$cmbSubRincianObyek = $_REQUEST['cmbSubRincianObyek'];
+		$cmbSubSubRincianObyek = $_REQUEST['cmbSubSubRincianObyek'];
+		$fmMERK = $_REQUEST['fmMERK'];
+		$fmTYPE = $_REQUEST['fmTYPE'];
+		$filterJenisBarang = $_REQUEST['filterJenisBarang'];
+
+		switch($fmPILCARI){
+			case 'selectfg': $arrKondisi[] = " concat(f,g) like '%$fmPILCARIvalue%'"; break;
+			case 'selectbarang': $arrKondisi[] = " nama_barang like '%".$fmPILCARIvalue."%'"; break;
+		}
+
+		if(empty($cmbJenis)) {
+			$cmbObyek='';
+			$cmbRincianObyek='';
+			$cmbSubRincianObyek = '';
+			$cmbSubSubRincianObyek = '';
+		}else{
+			$arrKondisi[]= "f =$cmbJenis";
+		}
+		if(empty($cmbObyek)) {
+			$cmbRincianObyek='';
+			$cmbSubRincianObyek = '';
+			$cmbSubSubRincianObyek = '';
+		}else{
+			$arrKondisi[]= "g =$cmbObyek";
+		}
+		if(empty($cmbRincianObyek)) {
+			$cmbSubRincianObyek = '';
+			$cmbSubSubRincianObyek = '';
+		}else{
+			$arrKondisi[]= "h =$cmbRincianObyek";
+		}
+		if(empty($cmbSubRincianObyek)) {
+			$cmbSubSubRincianObyek = '';
+		}else{
+			$arrKondisi[]= "i =$cmbSubRincianObyek";
+		}
+		if(empty($cmbSubSubRincianObyek)) {
+		}else{
+			$arrKondisi[]= "j =$cmbSubSubRincianObyek";
+		}
+		if(!empty($filterJenisBarang)){
+				if($filterJenisBarang == '1'){
+						$arrKondisi[] = "f !='08'";
+				}else{
+					$arrKondisi[] = "f ='08'";
+					$arrKondisi[] = "j1 !='0000'";
+				}
+				if($filterJenisBarang == '2' && !empty($_REQUEST['cmbSubSubSubRincianObyek'])){
+						$arrKondisi[]= "j1 =".$_REQUEST['cmbSubSubSubRincianObyek']."";
+				}
+		}
+
+		if(!empty($_POST['fmKODE'])) $arrKondisi[] = " concat(f1,f2,f,g,h,i,j) like '%".str_replace('.','',$_POST['fmKODE'])."%'";
+		if(!empty($_POST['fmBARANG'])) $arrKondisi[] = " nm_barang like '%".$_POST['fmBARANG']."%'";
+		$arrKondisi[] = "f in(2,3,4,5,7) ";
+		$arrKondisi[] = "j !='000' ";
+		$Kondisi= join(' and ',$arrKondisi);
+		$Kondisi = $Kondisi =='' ? '':' Where '.$Kondisi;
+
+		//Order -------------------------------------
+		$fmORDER1 = cekPOST('fmORDER1');
+		$fmDESC1 = cekPOST('fmDESC1');
+		$Asc1 = $fmDESC1 ==''? '': 'desc';
+		$arrOrders = array();
+			$arrOrders[] = " concat(f1,f2,f,g,h,i,j) ASC " ;
+			$Order= join(',',$arrOrders);
+			$OrderDefault = '';// Order By no_terima desc ';
+			$Order =  $Order ==''? $OrderDefault : ' Order By '.$Order;
+
+		$pagePerHal = $this->pagePerHal =='' ? $Main->PagePerHal: $this->pagePerHal;
+		$HalDefault=cekPOST($this->Prefix.'_hal',1);
+
+		$Limit = " limit ".(($HalDefault	*1) - 1) * $pagePerHal.",".$pagePerHal;
+		$Limit = $Mode == 3 ? '': $Limit;
+		$NoAwal= $pagePerHal * (($HalDefault*1) - 1);
+		$NoAwal = $Mode == 3 ? 0: $NoAwal;
+
+		return array('Kondisi'=>$Kondisi, 'Order'=>$Order ,'Limit'=>$Limit, 'NoAwal'=>$NoAwal);
+
+	}
+
+}
+$ref_masa_manfaat = new ref_masa_manfaatObj();
+
+?>
