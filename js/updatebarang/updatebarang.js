@@ -321,7 +321,10 @@ var updatebarang = new DaftarObj2({
 							document.getElementById('hrg2').innerHTML = resp.content.hrg2;
 						}else{
 							document.getElementById('fmHARGA_AWAL').value = resp.content.hrg;
-							//document.getElementById('fmHARGA_AWAL2').innerHTML = resp.content.hrg2;
+							document.getElementById('fmHARGA_BUKU2').value = resp.content.fmHARGA_BUKU2;
+							document.getElementById('fmHARGA_BUKU').value = resp.content.fmHARGA_BUKU;
+							document.getElementById('fmAKUMSUSUT2').value = resp.content.fmAKUMSUSUT2;
+							document.getElementById('fmAKUMSUSUT').value = resp.content.fmAKUMSUSUT;
 						}
 						
 					}else{
@@ -334,6 +337,39 @@ var updatebarang = new DaftarObj2({
 		//document.getElementById('hrg_baru').value=hrg;
 	},
 	
+	GetHrg_Buku : function (){
+		var me = this;
+		var formName = document.getElementById('updatebarangForm');
+		//var idbukuinduk = this.GetCbxCheckedBi().value;
+		//var tgl=document.getElementById('tgl').value;
+		//var tgl_perolehan=document.getElementById('tgl_perolehan').value;
+		//var idbi=document.getElementById('idbi').value;
+		var trans=document.getElementById('trans').value;
+			$.ajax({
+				type:'POST', 
+				data:$('#'+this.formName).serialize(),
+			  	//url: this.url+'&tipe=GetHrg_Asal&tgl='+tgl+'&tgl_perolehan='+tgl_perolehan+'&idbukuinduk='+idbukuinduk,
+			  	url: this.url+'&tipe=GetHrg_Buku&trans='+trans,
+			  	success: function(data) {		
+					var resp = eval('(' + data + ')');			
+					if (resp.err ==''){
+						if(trans==1){
+							document.getElementById('hrg').value = resp.content.hrg;
+							document.getElementById('hrg2').innerHTML = resp.content.hrg2;
+						}else{
+							document.getElementById('fmHARGA_Buku').value = resp.content.hrg;
+							//document.getElementById('fmHARGA_AWAL2').innerHTML = resp.content.hrg2;
+						}
+						
+					}else{
+						alert(resp.err);						
+					}	
+					
+				}
+			});	
+		//var hrg = document.getElementById('hrg2').value;
+		//document.getElementById('hrg_baru').value=hrg;
+	},	
 		
 	formatCurrency:function(num){
 		num = num.toString().replace(/\$|\,/g,'');

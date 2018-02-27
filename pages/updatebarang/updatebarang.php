@@ -75,16 +75,18 @@ class updatebarangObj extends DaftarObj2{
 		$idawal = $bi['idawal'];
 		$kdbarang = $bi['f'].'.'.$bi['g'].'.'.$bi['h'].'.'.$bi['i'].'.'.$bi['j'];
 		$harga = getNilaiBuku($bi['id'],$bi['tgl_buku'],0);
-		$tglperoleh = $bi['tgl_perolehan'] = $bi['tgl_buku']!=NULL?TglInd($bi['tgl_buku']):$bi['thn_perolehan'].'-00-00';
-		$tglperoleh2 = $bi['tgl_perolehan'] = $bi['tgl_buku']!=NULL?TglInd($bi['tgl_buku']):$bi['thn_perolehan'].'-00-00';
-		//$tglperoleh2 = $bi['tgl_ba']!=NULL?TglInd($bi['tgl_ba']):TglInd($bi['thn_perolehan'].'-'.date("m", strtotime($bi['tgl_buku'])).'-'.date("d",strtotime($bi['tgl_buku'])));
+		
+		$tgl = $bi['tgl_ba']!=null?substr($bi['tgl_ba'],8,2).'-'.substr($bi['tgl_ba'],5,2):substr($bi['tgl_buku'],8,2).'-'.substr($bi['tgl_buku'],5,2);
+		$tglperolehan = $tgl.'-'.$bi['thn_perolehan'];
+		
 		//$tgl_bast = date('d-m-Y');
 		$tgl_bast = date('d-m');
 		$tgl_bi = TglInd($bi['tgl_buku']);
 		$fmHARGA_AWAL = $bi['harga'];
 		$nilai_buku = getNilaiBuku($bi['id'],$bi['tgl_perolehan'],0);
 		$nilai_susut = getAkumPenyusutan($bi['id'],$bi['tgl_perolehan']);	
-		$fmHARGA_BUKU = $nilai_buku - $nilai_susut;
+		$fmHARGA_BUKU = $nilai_buku;
+		$fmAKUMSUSUT = $nilai_susut;
 		//TglInd($bi['tgl_perolehan']);
 		if($bi['staset'] = 3){
 			$staset = 'Aset Tetap';
@@ -312,7 +314,7 @@ class updatebarangObj extends DaftarObj2{
 									'label'=>'TANGGAL NILAI PEROLEHAN',
 									'name'=>'tgl_perolehan',
 									'label-width'=>'200px;',
-									'value'=>"<input type='text' name='tgl_perolehan' id='tgl_perolehan' value='$tglperoleh' size='6' class='datepicker3' onkeyup='".$this->Prefix.".GetHrg_Asal()'>",
+									'value'=>"<input type='text' name='tgl_perolehan' id='tgl_perolehan' value='$tglperolehan' size='6' class='datepicker3' onkeyup='".$this->Prefix.".GetHrg_Asal()'>",
 							),
 							array(
 									'label'=>'HARGA PEROLEHAN ASAL RP. ',
@@ -416,7 +418,7 @@ class updatebarangObj extends DaftarObj2{
 								'label'=>'TANGGAL NILAI PEROLEHAN',
 								'name'=>'tgl_bast',
 								'label-width'=>'200px;',
-								'value'=>"<input type='text' name='tgl_perolehangabung' id='tgl_perolehangabung' value='$tgl_bi' class='datepicker' size='6'>"
+								'value'=>"<input type='text' name='tgl_perolehangabung' id='tgl_perolehangabung' value='$tglperolehan' class='datepicker' size='6'>"
 								,
 							),
 							array(
@@ -442,7 +444,7 @@ class updatebarangObj extends DaftarObj2{
 								'label'=>'TANGGAL NILAI PEROLEHAN',
 								'name'=>'tgl_bast',
 								'label-width'=>'200px;',
-								'value'=>"<input type='text' name='tgl_perolehanhpsbagian' id='tgl_perolehanhpsbagian' value='$tglperoleh2' class='datepicker3' size='6' class='datepicker3' onkeyup='".$this->Prefix.".GetHrg_Asal()'>"
+								'value'=>"<input type='text' name='tgl_perolehanhpsbagian' id='tgl_perolehanhpsbagian' value='$tglperolehan' class='datepicker3' size='6' class='datepicker3' onkeyup='".$this->Prefix.".GetHrg_Asal()'>"
 								,
 							),
 							/*array(
@@ -467,6 +469,13 @@ class updatebarangObj extends DaftarObj2{
 								'label-width'=>'200px;',
 								'value'=>"<input type='text' name='fmHARGA_BUKU2' id='fmHARGA_BUKU2' value='".number_format($fmHARGA_BUKU,2,',','.')."' readonly align='right' 
 							style='width:150px;text-align:right;'><input type='hidden' name='fmHARGA_BUKU' id='fmHARGA_BUKU' value='$fmHARGA_BUKU'",	
+							),							
+							array(
+								'label'=>'AKUMULASI PENYUSUTAN',
+								'name'=>'fmAKUMSUSUT',
+								'label-width'=>'200px;',
+								'value'=>"<input type='text' name='fmAKUMSUSUT2' id='fmAKUMSUSUT2' value='".number_format($fmAKUMSUSUT,2,',','.')."' readonly align='right' 
+							style='width:150px;text-align:right;'><input type='hidden' name='fmAKUMSUSUT' id='fmAKUMSUSUT' value='$fmAKUMSUSUT'",	
 							),
 							array(
 								'label'=>'NILAI PENGHAPUSAN',
@@ -1491,6 +1500,7 @@ class updatebarangObj extends DaftarObj2{
 		$fmHARGA_HAPUS = $_REQUEST['fmHARGA_HAPUS'];
 		$fmHARGA_SCRAP = $_REQUEST['fmHARGA_SCRAP'];
 		$fmHARGA_BUKU = $_REQUEST['fmHARGA_BUKU'];
+		$fmAKUMSUSUT = $_REQUEST['fmAKUMSUSUT'];
 		$fmKET = $_REQUEST['fmKET'];
 		$fmSURATTANGGAL = date('Y-m-d', strtotime($_REQUEST['tgl_bast'].'-'.$_REQUEST['thn_ba']));
 		//$tgl = date('Y-m-d', strtotime($_REQUEST['tgl']));		
@@ -1558,10 +1568,10 @@ class updatebarangObj extends DaftarObj2{
 		
 		if ($err==''){
 			$aqry = "insert into penghapusan_sebagian (id_bukuinduk,tgl_penghapusan,". 
-					"surat_no, surat_tgl, harga_awal,harga_hapus,harga_scrap,  ket, idbi_awal, tgl_update, uid, tgl_perolehan  )". 
+					"surat_no, surat_tgl, harga_awal,harga_hapus,harga_scrap,  ket, idbi_awal, tgl_update, uid, tgl_perolehan,nilai_buku,nilai_susut)". 
 					"values ('$idbi','$fmTANGGALPENGHAPUSAN',".    
 						"'$fmSURATNOMOR', '$fmSURATTANGGAL', '$fmHARGA_AWAL', '$fmHARGA_HAPUS', '$fmHARGA_SCRAP',  '$fmKET',".
-						"'$idbi_awal', now(), '$uid','$fmTANGGALPEROLEHAN') ";
+						"'$idbi_awal', now(), '$uid','$fmTANGGALPEROLEHAN','$fmHARGA_BUKU','$fmAKUMSUSUT') ";
 				//$cek.='cek='.$aqry;
 				$sukses = mysql_query($aqry);
 				//$idhps = mysql_insert_id();				
@@ -1598,8 +1608,8 @@ class updatebarangObj extends DaftarObj2{
 		//$tgl_= $_REQUEST['tgl'];			
 		$tgl = date('Y-m-d', strtotime($_REQUEST['tgl'].'-'.$_REQUEST['thn_buku']));		
 		$gettgl_perolehan = $trans==1?$_REQUEST['tgl_perolehan']:$_REQUEST['tgl_perolehanhpsbagian'];//1=KOREKSI HARGA		
-		$tgl_perolehan = date('Y-m-d', strtotime($gettgl_perolehan));$cek.='cek='.$gettgl_perolehan;
-		$idbukuinduk= $_REQUEST['idubah'];			
+		$tgl_perolehan = date('Y-m-d', strtotime($gettgl_perolehan));$cek.='cek='.$tgl_perolehan;
+		$idbukuinduk= $_REQUEST['idubah'];$cek.='idbi='.$idbukuinduk;			
 		$nilai_buku = getNilaiPerolehan($idbukuinduk,$tgl_perolehan);
 		$content->hrg2 = number_format($nilai_buku,2,',','.');		
 		$content->hrg = $nilai_buku;	
@@ -1607,9 +1617,11 @@ class updatebarangObj extends DaftarObj2{
 		
 		$nilai_buku = getNilaiBuku($idbukuinduk,$tgl_perolehan,0);
 		$nilai_susut = getAkumPenyusutan($idbukuinduk,$tgl_perolehan);	
-		$fmHARGA_BUKU = $nilai_buku - $nilai_susut;
-		$content->fmHARGA_BUKU2 = number_format($fmHARGA_BUKU,2,',','.');		
-		$content->fmHARGA_BUKU = $fmHARGA_BUKU;		
+		
+		$content->fmHARGA_BUKU2 = number_format($nilai_buku,2,',','.');		
+		$content->fmHARGA_BUKU = $nilai_buku;	
+		$content->fmAKUMSUSUT2 = number_format($nilai_susut,2,',','.');		
+		$content->fmAKUMSUSUT = $nilai_susut;		
 		
 		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content);	 	
 	}
