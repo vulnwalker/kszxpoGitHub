@@ -6,12 +6,12 @@ class pemusnahanObj extends DaftarObj2{
 	var $TblName_Hapus = 'pemusnahan_det';
 	var $TblName_Edit = 'pemusnahan_det';
 	var $KeyFields = array('Id');
-	var $FieldSum = array('jumlah_harga');
-	var $fieldSum_lokasi = array(11);
+	var $FieldSum = array('jumlah_harga','nilai_susut');
+	var $fieldSum_lokasi = array(11,12);
 	var $SumValue = array();
 	var $FieldSum_Cp1 = array( 10, 6, 6);
 	var $FieldSum_Cp2 = array( 5, 5, 5);	
-	var $totalCol = 15; //total kolom daftar
+	var $totalCol = 16; //total kolom daftar
 	//var $FormName = 'Sensus_form';
 	//var $pagePerHal = 7;
 	//var $thnsensus_default = 2013;

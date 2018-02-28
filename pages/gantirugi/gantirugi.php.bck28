@@ -11,12 +11,12 @@ class gantirugiObj  extends DaftarObj2{
 	var $TblStyle = array( 'koptable', 'cetak','cetak'); //berdasar mode
 	var $ColStyle = array( 'GarisDaftar', 'GarisCetak','GarisCetak');
 	var $KeyFields = array('id');
-	var $FieldSum = array('jml_harga','nilai_susut','harga');//array('jml_harga');
+	var $FieldSum = array('jml_harga','harga');//array('jml_harga');
 	var $SumValue = array();
 	var $totalCol = 21; //total kolom daftar
 	var $FieldSum_Cp1 = array();//berdasar mode
 	var $FieldSum_Cp2 = array();
-	var $fieldSum_lokasi = array(11,12,18);	
+	var $fieldSum_lokasi = array(11,18);	
 	var $checkbox_rowspan = 2;
 	var $PageTitle = 'Tuntutan Ganti Rugi';
 	var $PageIcon = 'images/gantirugi_ico.gif';
@@ -1274,7 +1274,7 @@ class gantirugiObj  extends DaftarObj2{
 					$Koloms[] = array('align="left" ',$Main->KondisiBarang[$dtbi['kondisi']-1][1]);
 					$Koloms[] = array('align="right" ',$harga_perolehan);
 					//$Koloms[] = array('align="right" ',number_format($nilai_buku, 2, ',' , '.'));
-					$Koloms[] = array('align="right" ',number_format($isi['nilai_susut'], 2, ',' , '.'));
+					$Koloms[] = array('align="right" ',number_format($nilai_susut, 2, ',' , '.'));
 					$Koloms[] = array('align="left" ',$dtTGR['kepada_nama']);
 					$Koloms[] = array('align="left" ',$dtTGR['kepada_alamat']);
 					$Koloms[] = array('align="left" ',$dtTGR['uraian']);

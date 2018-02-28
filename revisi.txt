@@ -13,8 +13,14 @@
 - js/updatebarang/updatebarang.js
 
 //2018.02.28 Iwan --------------------------------------------------
+github https://github.com/vulnwalker/kszxpoGitHub/commit/3cb21017839db552fcf2dd4efaea619bc2615fa8
 - DB: edit v1_pindahtangan,v_pemusnahan,v_pemanfaat --> /var/www/atisisbada/database/2018.02.28Iwan.sql
 - common/fnasetlainlain.php
 - common/fnpemanfaat.php
 - common/fnpindahtangan.php
 - pages/pemusnahan/pemusnahan.php
+
+
+//2018.02.28 Iwan --------------------------------------------------
+github https://github.com/vulnwalker/kszxpoGitHub/commit/3cb21017839db552fcf2dd4efaea619bc2615fa8
+- pages/gantirugi/gantirugi.php
