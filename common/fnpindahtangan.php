@@ -11,12 +11,12 @@ class PindahTanganObj extends DaftarObj{
 	var $TblStyle = array( 'koptable', 'cetak','cetak'); //berdasar mode
 	var $ColStyle = array( 'GarisDaftar', 'GarisCetak','GarisCetak');
 	var $KeyFields = array('id'); //daftar/hapus
-	var $FieldSum = array('jml_harga');
+	var $FieldSum = array('jml_harga','nilai_susut');
+	var $fieldSum_lokasi = array(10,11);
 	var $SumValue = array();
-	//var $totalCol = 21;
 	var $FieldSum_Cp1 = array( 9,8,8);//berdasar mode
 	var $FieldSum_Cp2 = array( 9,8,8);	
-	//var $fieldSum_lokasi = array(11,18);
+	var $totalCol = 18;
 	var $checkbox_rowspan = 1;
 	var $PageTitle = 'Pemindahtanganan ';
 	var $PageIcon = 'images/pemindahtanganan_ico.gif';
@@ -271,6 +271,8 @@ class PindahTanganObj extends DaftarObj{
 			$isi = array_map('utf8_encode', $isi);
 			$no++;
 			$jmlDataPage++;
+			$jmlTotalHargaDisplay += $isi['jml_harga'];
+			$jmlTotalSusutDisplay += $isi['nilai_susut'];
 			if($Mode == 1) $RowAtr = $no % 2 == 1? "class='row0'" : "class='row1'";
 			
 			$KeyValue = array();
@@ -324,23 +326,29 @@ class PindahTanganObj extends DaftarObj{
 			flush();
 			$ListData='';			
 		}
-			$SumHal = $this->genSumHal($Kondisi); 			
+			//$SumHal = $this->genSumHal($Kondisi); 			
 		
-		$ContentSum = $this->genRowSum($ColStyle, $Mode, $SumHal['sum']);
-		/*$TampilTotalHalRp = number_format($TotalHalRp,2, ',', '.');		
+		//$ContentSum = $this->genRowSum($ColStyle, $Mode, $SumHal['sum']);
+		//$TampilTotalHalRp = number_format($TotalHalRp,2, ',', '.');		
 		$TotalColSpan = $this->FieldSum_Cp1[$Mode-1];//$Mode ==1 ? 5 : 4;
+		$aqry = "select count(*) as cnt, sum(jml_harga) as total, sum(nilai_susut) as totalsusut  from $this->TblName $Kondisi ";  //echo " $aqry<br>";
+		$IsiTot = mysql_fetch_array (mysql_query($aqry));
+		$jmlTotalHarga =  $IsiTot['total'];
+		$jmlTotalSusut =  $IsiTot['totalsusut'];
 		$ContentTotalHal =
 			"<tr>
 				<td class='$ColStyle' colspan='$TotalColSpan' align='center'><b>Total per Halaman</td>
-				<td class='$ColStyle' align='right'><b>$TampilTotalHalRp</td>
-				<td class='$ColStyle' colspan='4'></td>
+				<td class='$ColStyle' align='right'><b>".number_format($jmlTotalHargaDisplay, 2,',','.')."</td>
+				<td class='$ColStyle' align='right'><b>".number_format($jmlTotalSusutDisplay, 2,',','.')."</td>
+				<td class='$ColStyle' colspan='8'></td>
 			</tr>" ;
 			
 		$ContentTotal = 
 				"<tr>
 					<td class='$ColStyle' colspan='$TotalColSpan' align='center'><b>Total</td>
-					<td class='$ColStyle' align='right'><b><div  id='cntDaftarTotal'>".$SumHal['sum']."</div></td>
-					<td class='$ColStyle' colspan='4'></td>
+					<td class='$ColStyle' align='right'><b><div  id='cntDaftarTotal'>".number_format($jmlTotalHarga, 2,',','.')."</div></td>
+					<td class='$ColStyle' align='right'><b><div  id='cntDaftarTotal'>".number_format($jmlTotalSusut, 2,',','.')."</div></td>
+					<td class='$ColStyle' colspan='8'></td>
 				</tr>" ;
 		
 		if($Mode == 2){			
@@ -349,7 +357,7 @@ class PindahTanganObj extends DaftarObj{
 			$ContentTotalHal='';			
 		}
 		$ContentSum=$ContentTotalHal.$ContentTotal;
-		*/
+		
 		
 		$ListData .= 
 				//$ContentTotalHal.$ContentTotal.
@@ -410,7 +418,7 @@ class PindahTanganObj extends DaftarObj{
 		$Koloms[] = array('align=right', $no.'.' );
 		if ($Mode == 1) $Koloms[] = array(" align='center'  ", $TampilCheckBox);
 		$Koloms[] = array(" align='center' ", $isiF."<br>".$isi['id_bukuinduk']);
-		$Koloms[] = array(" align='center' ", $isi['noreg'] );
+		$Koloms[] = array(" align='center' ", $isi['noreg']);
 		$Koloms[] = array(" align='left' ", $isi['nm_barang'] );
 		$Koloms[] = array(" align='left' ", $tampilMerk );
 		$Koloms[] = array(" align='left' ", $tampilSert );		

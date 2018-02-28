@@ -897,7 +897,7 @@ class AsetLainLainObj  extends DaftarObj2{
 		if(!empty($_POST['idbi_awal'])) $arrKondisi[] = " idbi_awal = '".$_POST['idbi_awal']."'";
 		if(!empty($kd_brg)) $arrKondisi[] = " concat($concatkd) like '".$kd_brg."%'";
 		//if(!empty($_POST['thn_perolehan'])) 
-		$arrKondisi[] = !empty($_POST['thn_perolehan'])?" thn_perolehan = '".$_POST['thn_perolehan']."'" : " thn_perolehan = '$thn_login'";
+		$arrKondisi[] = !empty($_POST['thn_perolehan'])?" year(tgl) = '".$_POST['thn_perolehan']."'" : " year(tgl) = '$thn_login'";
 		if(!empty($_POST['noreg'])) $arrKondisi[] = " noreg = '".$_POST['noreg']."'";
 		//$fmPILGEDUNG = $_REQUEST['fmPILGEDUNG'];
 		//if (!empty($fmPILGEDUNG)) $arrKondisi[] = "p='$fmPILGEDUNG'";

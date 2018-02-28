@@ -1307,23 +1307,28 @@ if($mutasi<>0 && $mutasi<>""){
 		$totseluruhPeroleh = $get['tot_peroleh'];
 		$totseluruhSusut = $get['tot_susut'];
 		$tampilTotalHalPerolehan = "<td class='$clGaris' align=right><b>".number_format( $tothalNilaiPeroleh , 2, ',', '.')."</b></td>
-									<td class='$clGaris' colspan=8><b>".number_format( $tothalNilaiSusut , 2, ',', '.')."</td>";
+									<td class='$clGaris' align=right><b>".number_format( $tothalNilaiSusut , 2, ',', '.')."</td>
+									<td class='$clGaris' colspan=5></td>";
 		$tampilTotalSlrhPerolehan = "<td class='$clGaris' align=right><b>".number_format( $totseluruhPeroleh , 2, ',', '.')."</b></td>
-									<td class='$clGaris' colspan=8><b>".number_format( $totseluruhSusut , 2, ',', '.')."</b></td>";
+									<td class='$clGaris' align=right><b>".number_format( $totseluruhSusut , 2, ',', '.')."</b></td>
+									<td class='$clGaris' colspan=5></td>";
 	}else{
 		/*$get = mysql_fetch_array(mysql_query(
 			"select sum(aa.jml_harga+ifnull(aa.biaya_pemeliharaan,0)+ifnull(aa.biaya_pengamanan,0)) as tot, sum(nilai_buku) as tot_peroleh from v_penghapusan_bi aa 
 			left join ref_barang using(f,g,h,i,j) where $Kondisi "
 		));*/
 		$get = mysql_fetch_array(mysql_query(
-			"select sum(nilai_buku) as tot_peroleh from v_penghapusan_bi aa 
+			"select sum(nilai_buku) as tot_peroleh,sum(nilai_susut) as tot_susut from v_penghapusan_bi aa 
 			left join ref_barang using(f,g,h,i,j) where $Kondisi "
 		));
 		$totseluruhPeroleh = $get['tot_peroleh'];
+		$totseluruhSusut = $get['tot_susut'];
 		$tampilTotalHalPerolehan = "<td class='$clGaris' align=right><b>".number_format( $tothalNilaiPeroleh , 2, ',', '.')."</b></td>
-									<td class='$clGaris' colspan=8></td>";
+									<td class='$clGaris' align=right><b>".number_format( $totseluruhSusut , 2, ',', '.')."</b></td>
+									<td class='$clGaris' colspan=4></td>";
 		$tampilTotalSlrhPerolehan = "<td class='$clGaris' align=right><b>".number_format( $totseluruhPeroleh , 2, ',', '.')."</b></td>
-									<td class='$clGaris' colspan=8></td>";
+									<td class='$clGaris' align=right><b>".number_format( $totseluruhSusut , 2, ',', '.')."</b></td>
+									<td class='$clGaris' colspan=4></td>";
 	}
 	
 }else{
@@ -1332,14 +1337,17 @@ if($mutasi<>0 && $mutasi<>""){
 			left join ref_barang using(f,g,h,i,j) where $Kondisi "
 		));*/
 		$get = mysql_fetch_array(mysql_query(
-			"select sum(nilai_buku) as tot_peroleh from v_penghapusan_bi aa 
+			"select sum(nilai_buku) as tot_peroleh,sum(nilai_susut) as tot_susut from v_penghapusan_bi aa 
 			left join ref_barang using(f,g,h,i,j) where $Kondisi "
 		));
 	$totseluruhPeroleh = $get['tot_peroleh'];
+	$totseluruhSusut = $get['tot_susut'];
 	$cols = "10";
 	$tampilTotalHalPerolehan = "<td class='$clGaris' align=right><b>".number_format( $tothalNilaiPeroleh , 2, ',', '.')."</b></td>
+								<td class='$clGaris' align=right><b>".number_format( $tothalNilaiSusut , 2, ',', '.')."</b></td>
 								<td class='$clGaris' colspan=4></td>";
 	$tampilTotalSlrhPerolehan = "<td class='$clGaris' align=right><b>".number_format( $totseluruhPeroleh , 2, ',', '.')."</b></td>
+								<td class='$clGaris' align=right><b>".number_format( $totseluruhSusut , 2, ',', '.')."</b></td>
 								<td class='$clGaris' colspan=4></td>";
 }
 $totseluruh = $get['tot'];
