@@ -124,7 +124,7 @@ class penghapusan_insObj extends DaftarObj2{
 	
 		if($err==''){
 			$limit=2;
-			$getcnt = "select * from buku_induk where id in ($idplh) and idawal not in(select idbi_awal from penghapusan where idbi_awal in($idplh) )limit 0,$limit";			
+			$getcnt = "select * from buku_induk where id in ($idplh) and status_barang=1 and id not in(select id_bukuinduk from penghapusan)limit 0,$limit";			
 			$jml = mysql_num_rows(mysql_query($getcnt));
 			$content->jml = $jml;	
 				$result = mysql_query($getcnt);
@@ -208,7 +208,7 @@ class penghapusan_insObj extends DaftarObj2{
 		$jmlcek = count($cekid);			
 		$uid = $HTTP_COOKIE_VARS['coID'];			
 		$tgl_buku = date('d-m');
-		$tgl_sk = date('d-m-Y');	
+		$tgl_sk = date('d-m-').$thn_login;	
 	$progress = 
 			"<div id='progressbox' style='display:block;'>".
 			"<div id='progressbck' style='display:block;width:520px;height:4px;background-color:silver; margin: 6 5 0 0;float:left;border-radius: 3px;'>".

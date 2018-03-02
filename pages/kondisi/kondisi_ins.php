@@ -152,7 +152,7 @@ class kondisi_insObj extends DaftarObj2{
 	}
 	$vkondisi = $Main->KondisiBarang[2][1];
 	$stkondisi_baru = "<input type='hidden' id='kondisi_baru' name='kondisi_baru' value ='".$Main->KondisiBarang[2][0]."' size=2>";
-	$tgl_sk = date('d-m-Y');	
+	$tgl_sk = date('d-m-').$thn_login;	
 	$progress = 
 			"<div id='progressbox' style='display:block;'>".
 			"<div id='progressbck' style='display:block;width:520px;height:4px;background-color:silver; margin: 6 5 0 0;float:left;border-radius: 3px;'>".

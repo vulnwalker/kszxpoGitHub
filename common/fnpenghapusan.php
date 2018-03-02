@@ -251,9 +251,9 @@ function Penghapusan_Proses(){
 					break;
 				}
 			}			
-			
+			//$errmsg='mutasi'.$old['mutasi'];
 			if ($old['mutasi']==4){
-				$cekpemeliharaan =" select count(*)as cnt from pemeliharaan where cara_perolehan=4 and idasal=$idbi and id_bukuinduk='".$idbi_penggabungan."' ";
+				$cekpemeliharaan = mysql_fetch_array(mysql_query(" select count(*)as cnt from pemeliharaan where cara_perolehan=4 and idasal='$idbi' and id_bukuinduk='$idbi_penggabungan' "));
 				if($cekpemeliharaan['cnt']==0){
 					$errmsg = 'Gagal,pemeliharaan tidak ada !';
 				}

@@ -404,21 +404,27 @@ class pemasukan_insObj  extends DaftarObj2{
 		if($err == "")$err=$this->SimpanSemua_ValidasiDPA($idplh);
 		
 		if($err == ''){
+			$whereIdTerima = "WHERE refid_terima='$idplh' ";
 			//Penerimaan Barang Detail
 			$qrybrgdet = "UPDATE t_penerimaan_barang_det SET status='0', sttemp='0' WHERE refid_terima='$idplh' AND status='1'";$cek.=$qrybrgdet;
-			$aqrybrgdet = mysql_query($qrybrgdet);
+			$aqrybrgdet = mysql_query($qrybrgdet);			
 			
-			$qrybrgdel = "DELETE FROM t_penerimaan_barang_det WHERE refid_terima='$idplh' AND status='2' ";$cek.=$qrybrgdel;
-			$aqrybrgdel = mysql_query($qrybrgdel);
+			$DelPenDet = $DataPengaturan->QryDelData("t_penerimaan_barang_det",$whereIdTerima." AND status='2' ");
+			$cek.=$DelPenDet["cek"];
 			
 			//Penerimaan Data Rekening
 			$qrybrgRek = "UPDATE t_penerimaan_rekening SET sttemp='0' WHERE refid_terima='$idplh' AND status='0'";$cek.=$qrybrgRek;
-			$aqrybrgRek = mysql_query($qrybrgRek);
+			$aqrybrgRek = mysql_query($qrybrgRek);			
 			
-			$qrybrgRekdel = "DELETE FROM t_penerimaan_rekening WHERE status='2' AND  refid_terima='$idplh' ";$cek.=$qrybrgRekdel;
-			$aqrybrgRekdel = mysql_query($qrybrgRekdel);
+			
+			$DelRek = $DataPengaturan->QryDelData("t_penerimaan_rekening",$whereIdTerima." AND status='2' ");
+			$cek.=$DelRek["cek"];
 			
 			$this->BUATBarcode($idpenerimaan,'PENGADAAN',$idplh);
+			
+			if($biayaatribusi == "0"){ //UPDATE 28Feb2018 Hapus Atribusi
+				$DelAtr = $DataPengaturan->QryDelData("t_atribusi",$whereIdTerima);$cek.=$DelAtr["cek"];
+			}
 			
 			$prog = explode(".",$prog);
 			$bknya = $prog[0];
@@ -1397,7 +1403,7 @@ class pemasukan_insObj  extends DaftarObj2{
 		;
 		$jml_harga = $this->Get_JumlahHargaTotalBelanja($jml_harga);
 		//UPDATE 08 Januari 2018 Modul Persediaan -----------------------------------------------------	
-		$Get_BTN_TERMIN=$this->Get_Btn_CariTermin(TRUE);
+		/*$Get_BTN_TERMIN=$this->Get_Btn_CariTermin(TRUE);
 		$BTN_Termin = $cara_bayar!="3"?$Get_BTN_TERMIN["content"]:"";
 		$Fm_Pembayaran = 
 			array(
@@ -1408,9 +1414,9 @@ class pemasukan_insObj  extends DaftarObj2{
 					cmbArray('cara_bayar',$cara_bayar,$DataPengaturan->arr_cara_bayar,"--- PILIH JENIS PEMBAYARAN ---", "style='width:150px;' onchange='".$this->Prefix.".reload_carabayar();'")." ".
 					LabelSPan1("reload_carabayar",$BTN_Termin),
 			);
-		$Hidden_Fm_Pembayaran = "";
+		$Hidden_Fm_Pembayaran = "";*/
 		if($DataPemasukan->STATUS_MODULPERSEDIAAN() && cekPOST2("jns_transaksi") == "3"){
-			$Fm_Pembayaran = array("kosong"=>"");
+			//$Fm_Pembayaran = array("kosong"=>"");
 			$Hidden_Fm_Pembayaran = InputTypeHidden("cara_bayar","3");
 		}
 		//END UPDATE 08 Januari 2018 Modul Persediaan -----------------------------------------------------			
@@ -1428,7 +1434,7 @@ class pemasukan_insObj  extends DaftarObj2{
 											LabelSPan1("jml_sesuai1","TOTAL HARGA SESUAI", "style='font-weight:bold;color:red;'")
 										),								
 								),
-								$Fm_Pembayaran,
+								//$Fm_Pembayaran,
 						)
 				);
 		$content['atasbutton'] = "<a href='javascript:pemasukan_ins.tabelRekening()' /><img src='datepicker/cancel.png' style='width:20px;height:20px;' /></a>";
@@ -1710,6 +1716,7 @@ class pemasukan_insObj  extends DaftarObj2{
 	function caraperolehan(){
 		global $Ref, $Main, $HTTP_COOKIE_VARS, $DataPengaturan, $DataPemasukan;
 		$cek = '';$err='';
+		$coThnAnggaran = $_COOKIE['coThnAnggaran']; 
 				
 		$kode_account_ap = cekPOST2("kode_account_ap");
 		$databaru = cekPOST2("databaru");
@@ -1727,6 +1734,7 @@ class pemasukan_insObj  extends DaftarObj2{
 			$tgl_dok='';
 			$tgl_dokcopy='';
 			$nomdok='';
+			$cara_bayar="3";
 						
 		}else{
 			$IDUBAH = cekPOST2('idubah');
@@ -1755,6 +1763,8 @@ class pemasukan_insObj  extends DaftarObj2{
 			$tgl_dok=$dataqrytmpl['tgl_kontrak'];
 			$tgl_dokcopy=explode("-", $tgl_dok);
 			$tgl_dokcopy=$tgl_dokcopy[2]."-".$tgl_dokcopy[1]."-".$tgl_dokcopy[0];
+			
+			$cara_bayar = $dataqrytmpl["cara_bayar"];
 			
 			$nomdok=$dataqrytmpl['nomor_kontrak'];
 			if($kode_account_ap == "")$kode_account_ap=$dataqrytmpl['refid_t_birm'];
@@ -1790,11 +1800,28 @@ class pemasukan_insObj  extends DaftarObj2{
 		//CEK DPA -----------------------------------------------------------------------------
 		$cekDPA=$this->tabelRekening_cekDariDPA();
 		$status_dpa = $cekDPA?"1":"0";
-		$btnCariDPA = $Main->DPA == 1?InputTypeButton("BtnCariDPA","DPA","onclick='".$this->Prefix.".cariDPA();'").InputTypeHidden("status_dpa",$status_dpa):"";
-		
+		$btnCariDPA = $Main->DPA == 1?InputTypeButton("BtnCariDPA","DPA","onclick='".$this->Prefix.".cariDPA();'").InputTypeHidden("status_dpa",$status_dpa):"";		
 		
 	
-		$qrynomdok = "SELECT nomor_dok,nomor_dok FROM ref_nomor_dokumen  WHERE c1='$c1' AND c='$c' AND d='$d' ";
+		$qrynomdok = "SELECT nomor_dok,nomor_dok FROM ref_nomor_dokumen  WHERE c1='$c1' AND c='$c' AND d='$d' AND YEAR(tgl_dok)='$coThnAnggaran' ";
+		
+		//UPDATE 08 Januari 2018 Modul Persediaan -----------------------------------------------------	
+		$Get_BTN_TERMIN=$this->Get_Btn_CariTermin(TRUE);
+		$BTN_Termin = $cara_bayar!="3"?$Get_BTN_TERMIN["content"]:"";
+		$Fm_Pembayaran = 
+			array(
+				'label'=>'PEMBAYARAN',
+				'label-width'=>'200px;',
+				'value'=>
+					InputTypeHidden("status_kdp",cekPOST2("status_kdp",$dataqrytmpl["status_kdp"])).
+					cmbArray('cara_bayar',$cara_bayar,$DataPengaturan->arr_cara_bayar,"--- PEMBAYARAN ---", "style='width:100px;' onchange='".$this->Prefix.".reload_carabayar();'")." ".
+					LabelSPan1("reload_carabayar",$BTN_Termin),
+			);
+		$Hidden_Fm_Pembayaran = "";
+		if($DataPemasukan->STATUS_MODULPERSEDIAAN() && cekPOST2("jns_transaksi") == "3"){
+			$Fm_Pembayaran = array("kosong"=>"");
+		}
+		
 			
 		$content = $DataPengaturan->isiform(
 						array(
@@ -1810,6 +1837,7 @@ class pemasukan_insObj  extends DaftarObj2{
 								'label-width'=>'200px;',
 								'value'=>cmbArray('pencairan_dana',$pencairan_dana,$DataPengaturan->arr_pencairan_dana,"--- PILIH MEKANISME PENCAIRAN DANA ---", "style='width:300px;'"),
 							),
+							$Fm_Pembayaran,
 							array(
 								'label'=>'PROGRAM',
 								'name'=>'program',
@@ -2494,6 +2522,8 @@ class pemasukan_insObj  extends DaftarObj2{
 				if($jumlah_barang < 1)$err = "Jumlah Barang Tidak Boleh 0 !";
 			}			
 		}		
+		
+		if($err =='' && $satuan == '' && $jns_transaksi == "1")$err = "Satuan Belum Diisi !";
 		if($err == '' && $harga_satuan < 1)$err = "Harga Satuan Belum Diisi !";
 		if($err == ''){
 			if($jns_transaksi == '2')if($err == '' && $kuantitas < 1)$err = "Jumlah Kuantitas Tidak Boleh 0 !";
@@ -3806,6 +3836,7 @@ class pemasukan_insObj  extends DaftarObj2{
 					$content['penyedian']=$dt["refid_penyedia"];
 					$content['penerima']=$dt["refid_penerima"];
 					$content['keterangan_penerimaan']=$dt["keterangan_penerimaan"];
+					$content['keterangan_penerimaan']=$dt["keterangan_penerimaan"];
 					
 				}
 			}
@@ -4274,6 +4305,9 @@ class pemasukan_insObj  extends DaftarObj2{
 			$content["dafkeg"]=
 				cmbQuery('kegiatan1',$dt["q"],$qrykegitan," style='width:500px;' onchange='document.getElementById(`kegiatan`).value=this.value;' ",'--- PILIH KEGIATAN ---').
 				InputTypeHidden("kegiatan",$dt["q"]);
+			$content["penyedian"]=$dt["refid_penyedia"];
+			$content["penerima"]=$dt["refid_penerima"];
+			$content["keterangan_penerimaan"]=$dt["keterangan_penerimaan"];
 			//Masukan Data Ke Rekening	
 			$cek.=$this->cariDokumenKontrak_After_InsRekBelanja($dt);
 			$cek.=$this->cariDokumenKontrak_After_InsBarang($dt);

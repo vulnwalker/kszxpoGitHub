@@ -1400,7 +1400,6 @@ class updatebarangObj extends DaftarObj2{
 		$thn_perolehan = $old['thn_perolehan'];
 		$tgl_update = $old['tgl_update'];
 		$nilai_buku = getNilaiBuku($idbi,$tgl_buku,0);
-		$nilai_susut = getAkumPenyusutan($idbi,$tgl_buku);
 		//cek tgl hapus				
 		if($err=='' && $dok_sumber=='') $err = 'DOKUMEN SUMBER belum dipilih !';
 		if($err=='' && $no_bast=='') $err = 'NOMOR belum diisi !';
@@ -1443,28 +1442,22 @@ class updatebarangObj extends DaftarObj2{
 		if($err=='' && compareTanggal($tgl, $maxtrans['maxtgl'])==0  ) $err = 'TANGGAL BUKU tidak lebih kecil dari tanggal transaksi sebelumnya!';
 		
 		//cek tgl BA
-		/*if($err==''){
+		if($err==''){
 			//$idbi = $fmIDBUKUINDUK;
 			$cekba = mysql_fetch_array(mysql_query(
 					"select * from buku_induk where id='$idbi'"
 			));
 			if($cekba['tgl_ba'] == '') $err = 'Tanggal Berita Acara Perolehan Barang belum diisi! Isi di Penatausahaan - Edit';
-		}*/
+		}
 		if($err == ''){
 			$ceksusut = mysql_fetch_array(mysql_query("select tgl as tgl_penyusutan from penyusutan where idbi=$idbi order by Id desc limit 0,1"));
 			if($tgl <= $ceksusut['tgl_penyusutan']) $err = 'Gagal penghapusan, sudah penyusutan !';
 		}
-		
-		$oldbi = mysql_fetch_array(mysql_query(
-			"select status_barang from buku_induk where id='$idbibaru'"
-		));
-		
 		//if ($bi['status_barang'] <> 1) $err = 'Gagal penghapusan , status barang bukan inventaris!';
-		if ($err=='' && $idbibaru == $idbiawal) $err = 'Barang sama !';
-		if ($err=='' && $oldbi['status_barang'] != 1) $err = 'Status Barang bukan Inventaris !';
-		if ($err=='' && $bi['status_barang'] == 3) $err = 'Barang sudah di Penghapusan!';
+		if ($idbibaru == $idbiawal) $err = 'Barang sama !';
+		if ($bi['status_barang'] == 3) $err = 'Barang sudah di Penghapusan!';
 		//if ($bi['status_barang'] == 4) $err = 'Barang sudah di Pemindahtanganan!';
-		if ($err=='' && $bi['status_barang'] == 5) $err = 'Barang sudah di Tuntutan Ganti Rugi!';
+		if ($bi['status_barang'] == 5) $err = 'Barang sudah di Tuntutan Ganti Rugi!';
 		//if ($bi['thn_perolehan'] < 1945 ) $err = 'Tahun Perolehan tidak lebih kecil dari 1945!';
 		$transaksi = mysql_fetch_array(mysql_query("select max(tgl_buku) as maxtgl from t_transaksi where idbi = '$idbi'"));
 		if ($err=='' && (compareTanggal( $tgl , $transaksi['maxtgl']  )==0) ) $err = 'TANGGAL BUKU harus lebih besar dari Tanggal Transaksi!';

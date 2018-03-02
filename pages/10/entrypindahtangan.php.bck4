@@ -177,10 +177,9 @@ if($Act=="Hapus" && count($cidPTNG) > 0)
 	for($i = 0; $i<count($cidPTNG); $i++)
 	{
 		$cekIdBI = mysql_fetch_array(mysql_query("select id_bukuinduk from pemindahtanganan where id='{$cidPTNG[$i]}'"));$cekIdBI = $cekIdBI[0];
-		$idbi = $cekIdBI['id_bukuinduk'];
 		$Del = mysql_query("delete from pemindahtanganan where id='{$cidPTNG[$i]}' limit 1");
-		$UpdateBI = mysql_query("update buku_induk set status_barang='1' where id='$idbi'");
-		$Info = "<script>alert('Data telah di batalkan')</script>";
+		$UpdateBI = mysql_query("update buku_induk set status_barang='1' where id='$cekIdBI'");
+		$Info = "<script>alert('Data telah di hapus')</script>";
 	}
 }
 

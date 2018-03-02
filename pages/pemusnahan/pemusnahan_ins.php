@@ -102,7 +102,7 @@ class pemusnahan_insObj extends DaftarObj2{
 			$id_musnah = mysql_insert_id();	
 			
 			$limit=2;
-			$getcnt = "select * from buku_induk where id in ($idplh) and idawal not in(select idbi_awal from pemusnahan_det where idbi_awal in($idplh) )limit 0,$limit";			
+			$getcnt = "select * from buku_induk where id in ($idplh) and id not in(select id_bukuinduk from pemusnahan_det )limit 0,$limit";			
 			$jml = mysql_num_rows(mysql_query($getcnt));
 			$content->jml = $jml;	
 				$result = mysql_query($getcnt);
@@ -147,7 +147,7 @@ class pemusnahan_insObj extends DaftarObj2{
 					$kf = $brg['kf'];	
 					$thn_akun = $jurnal['thn_akun'];
 					if($err==''){
-						//insert pemindahtanganan
+						//insert pemusnahan_det
 						$exequery= "INSERT pemusnahan_det (id_bukuinduk,idbi_awal,c1,c,d,e,e1,f1,f2,f,g,h,i,j,".
 					    "thn_perolehan,noreg,jumlah_harga,nilai_susut,kondisi,refid_pemusnahan,ket,".
 					    "k,l,m,n,o,p,thn_akun,tgl_buku,staset,tgl_create,uid_create,tgl_update,sttemp)".
@@ -155,7 +155,11 @@ class pemusnahan_insObj extends DaftarObj2{
 						"'$f1','$f2','$f','$g','$h','$i','$j','$thn_perolehan','$noreg','$nilai_buku','$nilai_susut','$kondisi','$id_musnah','$ket',".
 						"'$ka','$kb','$kc','$kd','$ke','$kf','$thn_akun','$tgl_buku','$staset',NOW(),'$uid',NOW(),1)";
 						$qry = mysql_query($exequery);
-						//$cek.='cek='.$exequery;							
+						//$cek.='cek='.$exequery;	
+						if($qry){
+							$updbi = "UPDATE buku_induk set staset=14 where id='$idbi'";
+							$resultbi = mysql_query($updbi);
+						}						
 					}
 				}//end while	
 			if($qry==TRUE){					
@@ -197,7 +201,7 @@ class pemusnahan_insObj extends DaftarObj2{
 			$tgl_buku = date($thn_login.'-m-d');	
 		}
 	}
-	$tgl_sk = date('d-m-Y');	
+	$tgl_sk = date('d-m-').$thn_login;	
 	$progress = 
 			"<div id='progressbox' style='display:block;'>".
 			"<div id='progressbck' style='display:block;width:520px;height:4px;background-color:silver; margin: 6 5 0 0;float:left;border-radius: 3px;'>".

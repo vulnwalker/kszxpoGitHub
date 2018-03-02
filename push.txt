@@ -1,0 +1,9 @@
+01-03-2018 09:54
+SERVER  : KAB SERANG
+        //  BANDUNG BARAT
+          PANDEGLANG
+          BOGOR
+DATABASE : - 2018-02-28iwan.sql
+           - add_column_onpengapusansebagian.sql
+           - add_idasal_onpemeliharaan.sql
+           - view_penghapusan_sebagian.sql

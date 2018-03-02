@@ -1,7 +1,7 @@
 <?php
 
-class pemindahtanganan_insObj extends DaftarObj2{
-	var $Prefix = 'pemindahtanganan_ins';
+class kondisi_insObj extends DaftarObj2{
+	var $Prefix = 'kondisi_ins';
 	var $SHOW_CEK = TRUE;	
 	var $TblName = 'pemindahtanganan';//view2_sensus';
 	var $TblName_Hapus = 'pemindahtanganan';
@@ -11,16 +11,16 @@ class pemindahtanganan_insObj extends DaftarObj2{
 	var $SumValue = array('nilai_buku','nilai_susut');
 	var $FieldSum_Cp1 = array( 9, 8, 8);
 	var $FieldSum_Cp2 = array( 3, 3, 3);	
-	var $FormName = 'pemindahtanganan_insForm';
+	var $FormName = 'kondisi_insForm';
 	var $pagePerHal = 25;
 	
-	var $PageTitle = 'PEMINDAHTANGANAN';
+	var $PageTitle = 'RECLASS RB';
 	var $PageIcon = 'images/penatausahaan_ico.gif';
 	var $ico_width = '20';
 	var $ico_height = '30';
 	
-	var $fileNameExcel='Daftar PEMINDAHTANGANAN.xls';
-	var $Cetak_Judul = 'PEMINDAHTANGANAN';	
+	var $fileNameExcel='Daftar KONDISI.xls';
+	var $Cetak_Judul = 'RECLASS RB';	
 	var $Cetak_Mode=2;
 	var $Cetak_WIDTH = '30cm';
 	var $Cetak_OtherHTMLHead;
@@ -31,7 +31,7 @@ class pemindahtanganan_insObj extends DaftarObj2{
 	
 	function setTitle(){
 		global $Main;
-		return 'PEMINDAHTANGANAN';	
+		return 'RECLASS RB';	
 
 	}
 	
@@ -78,56 +78,49 @@ class pemindahtanganan_insObj extends DaftarObj2{
 	 $idubah= $_REQUEST['idubah'];
 	 $idplh = str_replace(" ",",",$idubah);
 	 $gen_tgl = $_REQUEST['tgl_buku'].'-'.$_REQUEST['thn_buku'];	 
-	 $tgl_buku = date('Y-m-d', strtotime($gen_tgl));
+	 $tgl = date('Y-m-d', strtotime($gen_tgl));
 	 $no_sk= $_REQUEST['no_sk'];
 	 $tgl_sk= date('Y-m-d', strtotime($_REQUEST['tgl_sk']));
-	 $fmBENTUKPEMINDAHTANGANAN= $_REQUEST['fmBENTUKPEMINDAHTANGANAN'];
+	 //$kondisi_baru= $_REQUEST['kondisi_baru'];
+	 $kondisi_baru = $Main->KondisiBarang[2][0];
 	 $ket= $_REQUEST['ket'];
-	 //$err.='tgll='.$tgl_sk;
+	 //$err.='err='.$tgl_sk;
 	
 	if($err=='' && $no_sk=='') $err = 'NOMOR belum diisi !';
 	if($err=='' && $_REQUEST['tgl_sk']=='' )$err = 'TANGGAL belum diisi!';
 	if($err=='' && $_REQUEST['tgl_buku']=='') $err = 'TANGGAL BUKU belum diisi!';	
-	if($err=='' && !cektanggal($tgl_buku)) $err = 'TANGGAL BUKU salah!';
-	if($err =='' && compareTanggal($tgl_buku, date('Y-m-d'))==2  ) $err = 'TANGGAL BUKU tidak lebih besar dari Hari ini!';				
-	if($err=='' && $fmBENTUKPEMINDAHTANGANAN=='') $err = 'BENTUK PEMINDAHTANGANAN belum dipilih !';	
-	//$err="select * from buku_induk where id in ($idplh) and idawal not in(select idbi_awal from pemindahtanganan where idbi_awal in($idplh) )";
-		
+	if($err=='' && !cektanggal($tgl)) $err = 'TANGGAL BUKU salah!';
+	if($err =='' && compareTanggal($tgl, date('Y-m-d'))==2  ) $err = 'TANGGAL BUKU tidak lebih besar dari Hari ini!';				
+	
+	/*if($err=='' && sudahClosing($tgl,$old['c'],$old['d'],$old['e'],$old['e1'],$old['c1']))$err = 'Tanggal sudah Closing !';
+	// - tanggal harus <= tgl hari ini
+	//tgl >=tgl_buku
+	if( compareTanggal( $tgl,$old['tgl_buku'])==0  ) $err = "TANGGAL BUKU tidak lebih kecil dari TANGGAL BUKU BARANG!";
+	
+	$maxtrans = mysql_fetch_array(mysql_query("select max(tgl_buku) as maxtgl from t_transaksi where idawal='$idbiawal'"));
+	if($err=='' && compareTanggal($tgl, $maxtrans['maxtgl'])==0  ) $err = 'TANGGAL BUKU tidak lebih kecil dari tanggal transaksi sebelumnya!';*/
+	
 		if($err==''){
 			$limit=2;
-			$getcnt = "select * from buku_induk where id in ($idplh) and status_barang=1 and id not in(select id_bukuinduk from pemindahtanganan )limit 0,$limit";			
+			$getcnt = "select * from buku_induk where id in ($idplh) and kondisi !=$kondisi_baru and idawal not in(select idbi_awal from t_kondisi where idbi_awal in($idplh) and kond_awal !=0) limit 0,$limit";			
+			//$err='qyr='.$getcnt;
 			$jml = mysql_num_rows(mysql_query($getcnt));
 			$content->jml = $jml;	
 				$result = mysql_query($getcnt);
 				while($old = mysql_fetch_array($result)){
 					$idbiawal = $old['idawal'];
 					$idbi = $old['id'];
-					$staset = $old['staset'];
-					$a1_awal = $old['a1'];
-					$a_awal = $old['a'];
-					$b_awal = $old['b'];
-					$c1_awal = $old['c1'];
-					$c_awal = $old['c'];
-					$d_awal = $old['d'];
-					$e_awal = $old['e'];
-					$e1_awal = $old['e1'];
-					$f_awal = $old['f'];
-					$g_awal = $old['g'];
-					$h_awal = $old['h'];
-					$i_awal = $old['i'];
-					$j_awal = $old['j'];
-					$kondisi = $old['kondisi'];
-					$noreg = $old['noreg'];
-					$thn_perolehan = $old['thn_perolehan'];
-					$nilai_buku = getNilaiBuku($idbi,$tgl_buku,0);
-					$nilai_susut = getAkumPenyusutan($idbi,$tgl_buku);	
-						
+					$kondisi = $old['kondisi'];					
+					$staset_lama = $old['staset'];					
+					$dif_kondisi = $kondisi_baru-$kondisi;					
+					
 					if($err==''){
-						//insert pemindahtanganan
-						$exequery= "INSERT pemindahtanganan (id_bukuinduk,uid,tgl_pemindahtanganan,bentuk_pemindahtanganan,".
-						"nosk,tglsk,ket,nilai_buku,nilai_susut,idbi_awal,staset)".
-						"values ('$idbi','$uid','$tgl_buku','$fmBENTUKPEMINDAHTANGANAN','$no_sk','$tgl_sk',".
-						"'$ket','$nilai_buku','$nilai_susut','$idbiawal','$staset')";
+						$bi = mysql_fetch_array(mysql_query("select * from buku_induk where id='$idbi'"));
+						$aqry = "insert into t_kondisi (tgl,idbi,uid,tgl_update,ket, kond_awal,kond_akhir,idbi_awal,dif_kondisi,no_bast,tgl_bast,dokumen_sumber,staset_lama) ".
+						" values('$tgl','$idbi','$uid',now(),'$ket', '$kondisi','$kondisi_baru','".$bi['idawal']."','$dif_kondisi','$no_sk','$tgl_sk','6','$staset_lama') "; $cek .= $aqry;
+						$qry = mysql_query($aqry);		
+					
+						$exequery= "UPDATE buku_induk set kondisi='$kondisi_baru',staset=9 where id='$idbi' ";
 						$qry = mysql_query($exequery);
 						//$cek.='cek='.$exequery;							
 					}
@@ -157,7 +150,9 @@ class pemindahtanganan_insObj extends DaftarObj2{
 			$tgl_buku = date($thn_login.'-m-d');	
 		}
 	}
-	$tgl_sk = date('d-m-').$thn_login;	
+	$vkondisi = $Main->KondisiBarang[2][1];
+	$stkondisi_baru = "<input type='hidden' id='kondisi_baru' name='kondisi_baru' value ='".$Main->KondisiBarang[2][0]."' size=2>";
+	$tgl_sk = date('d-m-Y');	
 	$progress = 
 			"<div id='progressbox' style='display:block;'>".
 			"<div id='progressbck' style='display:block;width:520px;height:4px;background-color:silver; margin: 6 5 0 0;float:left;border-radius: 3px;'>".
@@ -195,7 +190,7 @@ class pemindahtanganan_insObj extends DaftarObj2{
 				),'','','').
 				genFilterBar(
 				array(
-					"<span id='inputpenerimaanbarang' style='color:black;font-size:14px;font-weight:bold;'/>SK PEMINDAHTANGANAN</span>",
+					"<span id='inputpenerimaanbarang' style='color:black;font-size:14px;font-weight:bold;'/>SK RECLASS RB</span>",
 				),'','','').
 				genFilterBar(
 				array(
@@ -223,12 +218,18 @@ class pemindahtanganan_insObj extends DaftarObj2{
 										
 								,
 							),
-							array(
-									'label'=>'BENTUK PEMINDAHTANGANAN ',
-									'name'=>'fmBENTUKPEMINDAHTANGANAN',
+							/*array(
+									'label'=>'KONDISI AWAL',
+									'name'=>'kondisi',
 									'label-width'=>'200px;',
-									'value'=>cmb2D('fmBENTUKPEMINDAHTANGANAN',$fmBENTUKPEMINDAHTANGANAN,$Main->BentukPemindahtanganan,''),
-							),
+									'value'=>$vkondisi.$stkondisi,
+							),*//*
+							array(
+									'label'=>'KONDISI AKHIR',
+									'name'=>'kondisi_baru',
+									'label-width'=>'200px;',
+									'value'=>$vkondisi.$stkondisi_baru,
+							),*/
 							array(
 									'label'=>'KETERANGAN ',
 									'name'=>'ket_koreksi',
@@ -490,7 +491,7 @@ class pemindahtanganan_insObj extends DaftarObj2{
 		"<script src='datepicker/jquery-1.12.4.js' type='text/javascript' language='JavaScript'></script>".
 		"<script src='datepicker/jquery-ui.js' type='text/javascript' language='JavaScript' ></script>".
 		//"<script src='js/skpd.js' type='text/javascript'></script>".
-		"<script type='text/javascript' src='js/pemindahtanganan/".strtolower($this->Prefix).".js' language='JavaScript' ></script>".
+		"<script type='text/javascript' src='js/kondisi/".strtolower($this->Prefix).".js' language='JavaScript' ></script>".
 		$scriptload;
 	}
 	
@@ -699,6 +700,26 @@ class pemindahtanganan_insObj extends DaftarObj2{
 		global $Main;
 		$cek = ''; $err=''; $content=''; $json=TRUE;
 		switch($tipe){
+		
+				
+			case 'cek_kondisi':{
+				$cbid= $_POST['cidBI'];
+				//$cek =$cbid[0];	
+				$errmsg='';
+				for($i = 0; $i<count($cbid); $i++)	{
+				$cekdata=mysql_fetch_array(mysql_query("select kondisi from view_buku_induk2 where id='".$cbid[$i]."'"));
+						
+					if($cekdata['kondisi']==$Main->KondisiBarang[2][0]){
+						//$errmsg="Id Barang ".$cbid[$i]." sudah ".$Main->KondisiBarang[2][1];
+						//$get= $this->cek_kondisi();
+						$cek = $get['cek'];
+						$err = $errmsg;
+						$content = $get['content'];
+					}	
+				}
+				
+			break;
+		    }
 			case 'simpan':{
 				$get= $this->Simpan();
 				$cek = $get['cek'];
@@ -710,6 +731,6 @@ class pemindahtanganan_insObj extends DaftarObj2{
 		return	array ('cek'=>$cek, 'err'=>$err, 'content'=>$content, 'json'=>$json);
 	}
 }
-$pemindahtanganan_ins = new pemindahtanganan_insObj();
+$kondisi_ins = new kondisi_insObj();
 
 ?>
